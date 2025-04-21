@@ -8,6 +8,7 @@
 
 import React from 'react';
 import Entry from './app/Entry';
+import SensorScreen from './app/SensorScreen';
 
 const App: () => React$Node = () => {
   return (

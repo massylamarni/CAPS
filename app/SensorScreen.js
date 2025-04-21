@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Button } from 'react-native';
-import { Text } from '@/components/Text';
-import { Accelerometer, Gyroscope } from 'expo-sensors';
-import { initDatabase, addSensorData, getAllData, resetDatabase } from '@/utils/sqlite_db';
+import { Text, View, StyleSheet, Button } from 'react-native';
+import { accelerometer, gyroscope, setUpdateIntervalForType, SensorTypes } from 'react-native-sensors';
+import { initDatabase, addSensorData, getAllData, resetDatabase } from '../utils/sqlite_db';
 
 const SEGMENT_SIZE = 10 // 1sec at 10Hz
 
@@ -15,8 +14,8 @@ export default function SensorScreen() {
   const intermediateSensorData = useRef({ xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 });
 
   useEffect(() => {
-    Accelerometer.setUpdateInterval(100); // 100ms = 10Hz
-    Gyroscope.setUpdateInterval(100);
+    setUpdateIntervalForType(SensorTypes.accelerometer, 100);
+    setUpdateIntervalForType(SensorTypes.gyroscope, 100);
 
     const assembleSensorData = (data, type) => {
       if (type == 'accel') {
@@ -44,17 +43,12 @@ export default function SensorScreen() {
       }
     }
 
-    const accelSubscription = Accelerometer.addListener((data) => {
-      assembleSensorData(data, 'accel');
-    });
-
-    const gyroSubscription = Gyroscope.addListener((data) => {
-      assembleSensorData(data, 'gyro');
-    });
+    const accelSub = accelerometer.subscribe(data => assembleSensorData(data, 'accel'));
+    const gyroSub = gyroscope.subscribe(data => assembleSensorData(data, 'gyro'));
 
     return () => {
-      accelSubscription.remove();
-      gyroSubscription.remove();
+      accelSub.remove();
+      gyroSub.remove();
     };
   }, [isRecording]);
 
@@ -63,7 +57,7 @@ export default function SensorScreen() {
     resetDatabase();
     setInterval(async () => {
       const tempDbData = await getAllData();
-      tempDbData.length !== 0 ? setDbData(tempDbData) : console.log("isEmpty");;
+      tempDbData.length !== 0 ? setDbData(tempDbData) : console.log("DB isEmpty");;
     }, 3000);
   }, []);
 
@@ -85,14 +79,14 @@ export default function SensorScreen() {
   return (
     <View style={styles.container}>
       <Text>Accelerometer:</Text>
-      <Text>X: {sensorData.at(-1)?.xa.toFixed(2) ?? "N/A"}</Text>
-      <Text>Y: {sensorData.at(-1)?.ya.toFixed(2) ?? "N/A"}</Text>
-      <Text>Z: {sensorData.at(-1)?.za.toFixed(2) ?? "N/A"}</Text>
+      <Text>X: {sensorData[sensorData.length-1].xa.toFixed(2) ?? "N/A"}</Text>
+      <Text>Y: {sensorData[sensorData.length-1].ya.toFixed(2) ?? "N/A"}</Text>
+      <Text>Z: {sensorData[sensorData.length-1].za.toFixed(2) ?? "N/A"}</Text>
 
       <Text>Gyroscope:</Text>
-      <Text>X: {sensorData.at(-1)?.xg.toFixed(2) ?? "N/A"}</Text>
-      <Text>Y: {sensorData.at(-1)?.yg.toFixed(2) ?? "N/A"}</Text>
-      <Text>Z: {sensorData.at(-1)?.zg.toFixed(2) ?? "N/A"}</Text>
+      <Text>X: {sensorData[sensorData.length-1].xg.toFixed(2) ?? "N/A"}</Text>
+      <Text>Y: {sensorData[sensorData.length-1].yg.toFixed(2) ?? "N/A"}</Text>
+      <Text>Z: {sensorData[sensorData.length-1].zg.toFixed(2) ?? "N/A"}</Text>
 
       <Text>Database:</Text>
       <Text>ID: {dbData[0].id}</Text>

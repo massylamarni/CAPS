@@ -342,7 +342,7 @@ class Entry extends Component {
   render() {
     return (
       <SafeAreaView>
-        <View style={styles.body}>
+        <View style={styles.bleSection}>
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>BLE Advertiser Demo</Text>
             <Text style={styles.sectionDescription}>Advertising:{' '}
@@ -421,7 +421,7 @@ class Entry extends Component {
             </TouchableOpacity>
           </View>
 
-          <View>
+          <View style={styles.sensorSection}>
             <SensorScreen />
           </View>
         </View>
@@ -431,8 +431,11 @@ class Entry extends Component {
 }
 
 const styles = StyleSheet.create({
-  body: {
-    height: '100%',
+  bleSection: {
+    height: '50%',
+  },
+  sensorSection: {
+    height: '50%',
   },
   sectionContainerFlex: {
     flex: 1,
