@@ -5,6 +5,7 @@ import {
   SafeAreaView,
   StyleSheet,
   View,
+  ScrollView,
   Text,
   TouchableOpacity,
   FlatList,
@@ -280,7 +281,7 @@ class Entry extends Component {
 
 
     this.onDeviceFound = eventEmitter.addListener('onDeviceFound', (event) => {
-      console.log('onDeviceFound', event);
+      //console.log('onDeviceFound', event);
       this.addDevice(
         event.advFlags,
         event.deviceAddress,
@@ -294,7 +295,7 @@ class Entry extends Component {
 
     console.log(this.state.uuid, 'Starting Scanner');
     BLEAdvertiser.scan(SCAN_MANUF_DATA, {
-      scanMode: BLEAdvertiser.SCAN_MODE_LOW_LATENCY,
+      scanMode: BLEAdvertiser.SCAN_MODE_LOW_POWER,
     })
       .then((sucess) => console.log(this.state.uuid, 'Scan Successful', sucess))
       .catch((error) => console.log(this.state.uuid, 'Scan Error', error));
@@ -311,7 +312,7 @@ class Entry extends Component {
       .catch((error) => console.log(this.state.uuid, 'Stop Broadcast Error', error));
 
     this.setState({
-      isAdvertising: true,
+      isAdvertising: false,
     });
   }
 
@@ -330,6 +331,11 @@ class Entry extends Component {
     });
   }
 
+  connect(addr) {
+    const connectionResponse = safelyConnect(addr);
+    console.log(connectionResponse);
+  }
+
   short(str) {
     if (!str || str.length < 8) return str ?? 'unknown';
     return (
@@ -341,166 +347,168 @@ class Entry extends Component {
 
   render() {
     return (
-      <SafeAreaView>
-        <View style={styles.bleSection}>
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>BLE Advertiser Demo</Text>
-            <Text style={styles.sectionDescription}>Advertising:{' '}
-              <Text style={styles.highlight}>
-                {this.state.uuid}
-              </Text>
-            </Text>
-          </View>
+      <SafeAreaView style={styles.body}>
+        <ScrollView>
+          <View style={styles.bleSection}>
+            <View style={styles.sectionContainer}>
+              <Text style={styles.masterTitle}>BLE Advertiser Demo</Text>
+            </View>
 
-          <View style={styles.sectionContainer}>
-            {this.state.isAdvertising ? (
-              <TouchableOpacity
-                onPress={() => this.stopAdvertising()}
-                style={styles.stopLoggingButtonTouchable}>
-                <Text style={styles.stopLoggingButtonText}>Stop Advertising</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={() => this.startAdvertising()}
-                style={styles.startLoggingButtonTouchable}>
-                <Text style={styles.startLoggingButtonText}>Start Advertising</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <View style={styles.sectionContainer}>
-            {this.state.isScanning ? (
-              <TouchableOpacity
-                onPress={() => this.stopScanning()}
-                style={styles.stopLoggingButtonTouchable}>
-                <Text style={styles.stopLoggingButtonText}>Stop Scanning</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={() => this.startScanning()}
-                style={styles.startLoggingButtonTouchable}>
-                <Text style={styles.startLoggingButtonText}>Start Scanning</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <View style={styles.sectionContainerFlex}>
-            <Text style={styles.sectionTitle}>Devices Scanned</Text>
-            <FlatList
-              data={this.state.devicesFound}
-              renderItem={({item}) => (
-                <Text style={styles.itemPastConnections}>
-                  {this.short(item.serviceUuids[0])} {item.deviceAddress} {item.rssi}
-                </Text>
+            <View style={styles.horizontalButtonContainer}>
+              {!this.state.isAdvertising ? (
+                <TouchableOpacity style={[styles.defaultButton, styles.notLastButton]} onPress={() => this.startAdvertising()}>
+                  <Text style={styles.defaultButtonText}>Start Advertising</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity style={[styles.defaultButton, styles.notLastButton, styles.activeStateButton]} onPress={() => this.stopAdvertising()}>
+                  <Text style={styles.defaultButtonText}>Stop Advertising</Text>
+                </TouchableOpacity>
               )}
-              keyExtractor={(item) => item.serviceUuids[0]}
-            />
-          </View>
+              {!this.state.isScanning ? (
+                <TouchableOpacity style={styles.defaultButton} onPress={() => this.startScanning()}>
+                  <Text style={styles.defaultButtonText}>Start Scanning</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity style={[styles.defaultButton, styles.activeStateButton]} onPress={() => this.stopScanning()}>
+                  <Text style={styles.defaultButtonText}>Stop Scanning</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
-          <View style={styles.sectionContainer}>
-            <TouchableOpacity
-              onPress={() => {
-                for (let i = 0; i < this.state.devicesFound.length; i++) {
-                  if (this.state.devicesFound[i].serviceUuids.length !== 0) {
-                    const connectionResponse = safelyConnect(this.state.devicesFound[i].deviceAddress);
-                    console.log(connectionResponse);
-                  }
-                }
-              }}
-              
-              style={styles.startLoggingButtonTouchable}>
-              <Text style={styles.startLoggingButtonText}>COnnect</Text>
-            </TouchableOpacity>
-          </View>
+            <View>
+            {this.state.isAdvertising ? (
+              <Text style={styles.sectionDescription}>Advertising:{' '}
+                <Text style={styles.highlight}>{this.state.uuid}</Text>
+              </Text>
+            ) : (
+              <Text style={styles.sectionDescription}>Advertising is{' '}
+                <Text style={styles.highlight}>off</Text>
+              </Text>
+            )}
+            </View>
 
-          <View style={styles.sectionContainer}>
-            <TouchableOpacity
-              onPress={() => this.setState({devicesFound: []})}
-              style={styles.startLoggingButtonTouchable}>
-              <Text style={styles.startLoggingButtonText}>Clear Devices</Text>
-            </TouchableOpacity>
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Devices Scanned</Text>
+              {this.state.devicesFound.length !== 0 ? (
+                this.state.devicesFound.map((item) => {
+                  const isConnectible = item.serviceUuids.length === 0 ? false : true;
+                  return (
+                    <View key={item.deviceAddress} style={styles.deviceInfoContainer}>
+                      <Text style={styles.deviceInfo}>
+                        {this.short(item.serviceUuids[0])} {item.deviceAddress} {item.rssi}
+                      </Text>
+                      <TouchableOpacity style={[styles.defaultLinkContainer]} onPress={() => {isConnectible ? this.connect(item.deviceAddress) : null}}>
+                        <Text style={isConnectible ? styles.listActionLink : styles.listActionLinkGreyed}>{isConnectible ? 'Connect' : 'Not connectible'}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })
+              ) : (
+                this.state.isScanning ? (
+                  <Text style={styles.sectionDescription}>Scanning...</Text>
+                ) : (
+                  <Text style={styles.sectionDescription}>No devices found</Text>
+                )
+              )}
+              {this.state.devicesFound.length !== 0 && (
+                <TouchableOpacity style={styles.defaultLinkContainer} onPress={() => this.setState({devicesFound: []})}>
+                  <Text style={styles.defaultLink}>Clear Devices</Text>
+                </TouchableOpacity>)}
+            </View>
           </View>
-
           <View style={styles.sensorSection}>
             <SensorScreen />
           </View>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
 }
 
 const styles = StyleSheet.create({
+  body: {
+  },
   bleSection: {
-    height: '50%',
   },
   sensorSection: {
-    height: '50%',
   },
-  sectionContainerFlex: {
+  sectionContainer: {
     flex: 1,
     marginTop: 12,
     marginBottom: 12,
     paddingHorizontal: 24,
   },
-  sectionContainer: {
-    flex: 0,
-    marginTop: 12,
-    marginBottom: 12,
-    paddingHorizontal: 24,
+  masterTitle: {
+    fontSize: 22,
+    marginBottom: 5,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   sectionTitle: {
-    fontSize: 24,
-    marginBottom: 8,
+    fontSize: 16,
+    marginBottom: 5,
     fontWeight: '600',
     textAlign: 'center',
   },
   sectionDescription: {
-    fontSize: 18,
+    fontSize: 12,
     fontWeight: '400',
     textAlign: 'center',
+  },
+  horizontalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  defaultButton: {
+    borderRadius: 5,
+    backgroundColor: '#303030',
+    alignSelf: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  defaultButtonText: {
+    fontSize: 10,
+    letterSpacing: 0,
+    textAlign: 'center',
+    color: '#ffffff',
+  },
+  defaultLinkContainer: {
+    alignSelf: 'center',
+    justifyContent: 'center',
+  },
+  defaultLink: {
+    fontSize: 12,
+    textDecorationLine: 'underline',
+    color: '#505050',
+  },
+  listActionLink: {
+    fontSize: 10,
+    textDecorationLine: 'underline',
+    color: '#50a050',
+  },
+  listActionLinkGreyed: {
+    fontSize: 10,
+    color: '#303030',
+  },
+  deviceInfoContainer: {
+    flexDirection: 'row',
+  },
+  deviceInfo: {
+    padding: 3,
+    fontSize: 10,
+    fontWeight: '400',
+  },
+  notLastButton: {
+    marginRight: 15,
+  },
+  activeStateButton: {
+    backgroundColor: '#808080',
   },
   highlight: {
     fontWeight: '700',
-  },
-  startLoggingButtonTouchable: {
-    borderRadius: 12,
-    backgroundColor: '#665eff',
-    height: 52,
-    alignSelf: 'center',
-    width: 300,
-    justifyContent: 'center',
-  },
-  startLoggingButtonText: {
-    fontSize: 14,
-    lineHeight: 19,
-    letterSpacing: 0,
-    textAlign: 'center',
-    color: '#ffffff',
-  },
-  stopLoggingButtonTouchable: {
-    borderRadius: 12,
-    backgroundColor: '#fd4a4a',
-    height: 52,
-    alignSelf: 'center',
-    width: 300,
-    justifyContent: 'center',
-  },
-  stopLoggingButtonText: {
-    fontSize: 14,
-    lineHeight: 19,
-    letterSpacing: 0,
-    textAlign: 'center',
-    color: '#ffffff',
-  },
-  listPastConnections: {
-    width: '80%',
-    height: 200,
-  },
-  itemPastConnections: {
-    padding: 3,
-    fontSize: 18,
-    fontWeight: '400',
   },
 });
 

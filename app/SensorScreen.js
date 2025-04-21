@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Text, View, StyleSheet, Button } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { accelerometer, gyroscope, setUpdateIntervalForType, SensorTypes } from 'react-native-sensors';
 import { initDatabase, addSensorData, getAllData, resetDatabase } from '../utils/sqlite_db';
 
@@ -77,35 +77,138 @@ export default function SensorScreen() {
   }, [isRecording, sensorData]);
 
   return (
-    <View style={styles.container}>
-      <Text>Accelerometer:</Text>
-      <Text>X: {sensorData[sensorData.length-1].xa.toFixed(2) ?? "N/A"}</Text>
-      <Text>Y: {sensorData[sensorData.length-1].ya.toFixed(2) ?? "N/A"}</Text>
-      <Text>Z: {sensorData[sensorData.length-1].za.toFixed(2) ?? "N/A"}</Text>
+    <>
+      <View style={styles.sectionContainer}>
+        <Text style={styles.masterTitle}>Sensor Screen</Text>
+        <Text style={styles.sectionDescription}>Accelerometer:{' '}
+          <Text style={styles.highlight}>{`X: ${sensorData[sensorData.length-1].xa.toFixed(2) ?? "N/A"}, `}</Text>
+          <Text style={styles.highlight}>{`Y: ${sensorData[sensorData.length-1].ya.toFixed(2) ?? "N/A"}, `}</Text>
+          <Text style={styles.highlight}>{`Z: ${sensorData[sensorData.length-1].za.toFixed(2) ?? "N/A"}`}</Text>
+        </Text>
 
-      <Text>Gyroscope:</Text>
-      <Text>X: {sensorData[sensorData.length-1].xg.toFixed(2) ?? "N/A"}</Text>
-      <Text>Y: {sensorData[sensorData.length-1].yg.toFixed(2) ?? "N/A"}</Text>
-      <Text>Z: {sensorData[sensorData.length-1].zg.toFixed(2) ?? "N/A"}</Text>
+        <Text style={styles.sectionDescription}>Gyroscope:{' '}
+          <Text style={styles.highlight}>{`X: ${sensorData[sensorData.length-1].xg.toFixed(2) ?? "N/A"}, `}</Text>
+          <Text style={styles.highlight}>{`Y: ${sensorData[sensorData.length-1].yg.toFixed(2) ?? "N/A"}, `}</Text>
+          <Text style={styles.highlight}>{`Z: ${sensorData[sensorData.length-1].zg.toFixed(2) ?? "N/A"}`}</Text>
+        </Text>
 
-      <Text>Database:</Text>
-      <Text>ID: {dbData[0].id}</Text>
-      <Text>XA: {dbData[0].XA.toFixed(2)}</Text>
-      <Text>YA: {dbData[0].YA.toFixed(2)}</Text>
-      <Text>ZA: {dbData[0].ZA.toFixed(2)}</Text>
-      <Text>XG: {dbData[0].XG.toFixed(2)}</Text>
-      <Text>YG: {dbData[0].YG.toFixed(2)}</Text>
-      <Text>ZG: {dbData[0].ZG.toFixed(2)}</Text>
-      <Text>DateTime: {dbData[0].DateTime}</Text>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>DataBase</Text>
+        </View>
+        <Text style={styles.sectionDescription}>id:{' '}
+          <Text style={styles.highlight}>{dbData[0].id}</Text>
+        </Text>
+        <Text style={styles.sectionDescription}>DateTime:{' '}
+          <Text style={styles.highlight}>{dbData[0].DateTime}</Text>
+        </Text>
+        <Text style={styles.sectionDescription}>Accelerometer:{' '}
+          <Text style={styles.highlight}>{`X: ${dbData[0].XA.toFixed(2)}, `}</Text>
+          <Text style={styles.highlight}>{`Y: ${dbData[0].YA.toFixed(2)}, `}</Text>
+          <Text style={styles.highlight}>{`Z: ${dbData[0].ZA.toFixed(2)}, `}</Text>
+        </Text>
+        <Text style={styles.sectionDescription}>Gyroscope:{' '}
+          <Text style={styles.highlight}>{`X: ${dbData[0].XG.toFixed(2)}, `}</Text>
+          <Text style={styles.highlight}>{`Y: ${dbData[0].YG.toFixed(2)}, `}</Text>
+          <Text style={styles.highlight}>{`Z: ${dbData[0].ZG.toFixed(2)}, `}</Text>
+        </Text>
 
-      <Button 
-        title={isRecording ? "Stop Recording" : "Start Recording"} 
-        onPress={() => setIsRecording(!isRecording)} 
-      />
-    </View>
+        <View style={styles.horizontalButtonContainer}>
+          <TouchableOpacity style={[styles.defaultButton, styles.notLastButton, isRecording ? styles.activeStateButton : null]} onPress={() => setIsRecording(!isRecording)}>
+            <Text style={styles.defaultButtonText}>{isRecording ? "Stop Recording" : "Start Recording"}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.defaultButton]} onPress={() => resetDatabase()}>
+            <Text style={styles.defaultButtonText}>Rest Database</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  body: {
+  },
+  bleSection: {
+  },
+  sensorSection: {
+  },
+  sectionContainer: {
+    flex: 1,
+    marginTop: 12,
+    marginBottom: 12,
+    paddingHorizontal: 24,
+  },
+  masterTitle: {
+    fontSize: 22,
+    marginBottom: 5,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    marginBottom: 5,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  sectionDescription: {
+    fontSize: 12,
+    fontWeight: '400',
+    textAlign: 'center',
+  },
+  horizontalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  defaultButton: {
+    borderRadius: 5,
+    backgroundColor: '#303030',
+    alignSelf: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginVertical: 15,
+  },
+  defaultButtonText: {
+    fontSize: 10,
+    letterSpacing: 0,
+    textAlign: 'center',
+    color: '#ffffff',
+  },
+  defaultLinkContainer: {
+    alignSelf: 'center',
+    justifyContent: 'center',
+  },
+  defaultLink: {
+    fontSize: 12,
+    textDecorationLine: 'underline',
+    color: '#505050',
+  },
+  listActionLink: {
+    fontSize: 10,
+    textDecorationLine: 'underline',
+    color: '#50a050',
+  },
+  listActionLinkGreyed: {
+    fontSize: 10,
+    color: '#303030',
+  },
+  deviceInfoContainer: {
+    flexDirection: 'row',
+  },
+  deviceInfo: {
+    padding: 3,
+    fontSize: 10,
+    fontWeight: '400',
+  },
+  notLastButton: {
+    marginRight: 15,
+  },
+  activeStateButton: {
+    backgroundColor: '#808080',
+  },
+  highlight: {
+    fontWeight: '700',
+  },
 });
