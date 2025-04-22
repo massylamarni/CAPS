@@ -51,7 +51,7 @@ export default function SensorScreen() {
       gyroSub.remove();
     };
   }, [isRecording]);
-
+/*
   // Initialize DB
   useEffect(() => {
     resetDatabase();
@@ -60,7 +60,7 @@ export default function SensorScreen() {
       tempDbData.length !== 0 ? setDbData(tempDbData) : console.log("DB isEmpty");;
     }, 3000);
   }, []);
-
+*/
   const saveToDatabase = async (sensorData) => {
     sensorData.forEach(async (data) => {
       await addSensorData(data);

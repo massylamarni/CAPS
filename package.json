@@ -12,9 +12,10 @@
   "dependencies": {
     "immutability-helper": "^3.1.1",
     "react": "18.1.0",
-    "react-native": "0.70.1",
+    "react-native": "^0.70.1",
     "react-native-ble-advertiser": "file:../react-native-ble-advertiser-0.0.17.tgz",
     "react-native-ble-manager": "^11.5.1",
+    "react-native-bluetooth-client": "^0.1.12",
     "react-native-permissions": "^5.3.0",
     "react-native-sensors": "^7.3.6",
     "react-native-sqlite-storage": "^6.0.1",

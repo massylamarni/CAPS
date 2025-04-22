@@ -1,45 +1,42 @@
-import React, {Component} from 'react';
-
-import {
-  Alert,
-  SafeAreaView,
-  StyleSheet,
-  View,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  Platform,
-} from 'react-native';
-
-import {NativeEventEmitter, NativeModules} from 'react-native';
+import React, { Component, useEffect } from 'react';
+import {Alert, SafeAreaView, StyleSheet, View, ScrollView, Text, TouchableOpacity} from 'react-native';
+import {NativeEventEmitter, NativeModules, Platform, PermissionsAndroid} from 'react-native';
 
 import update from 'immutability-helper';
-import BLEAdvertiser from 'react-native-ble-advertiser';
-import BleManager, { BleState, Peripheral }  from 'react-native-ble-manager';
 import UUIDGenerator from 'react-native-uuid-generator';
-import {PermissionsAndroid} from 'react-native';
 import { Buffer } from 'buffer';
+
+import BleManager, { BleState, Peripheral }  from 'react-native-ble-manager';
+import BLEAdvertiser from 'react-native-ble-advertiser';
+import { startAdvertising, stopAdvertising, addService, addCharacteristicToService, removeAllServices, sendNotificationToDevice} from 'react-native-bluetooth-client';
+import * as BLEPeripheral from 'react-native-bluetooth-client';
+
 import SensorScreen from './SensorScreen';
 
 
-// Uses the Apple code to pick up iPhones
-const APPLE_ID = 0x4c;
-const MANUF_DATA = [1, 0];
-// No scanner filters (finds all devices inc iPhone). Use UUID suffix to filter scans if using.
-const SCAN_MANUF_DATA = Platform.OS === 'android' ? null : MANUF_DATA;
-
-BLEAdvertiser.setCompanyId(APPLE_ID);
-
+// Central connection
 const MAX_CONNECT_WAITING_PERIOD = 30000;
 let connectedDeviceId = "";
-const serviceReadinIdentifier = "D0611E78-BBB4-4591-A5F8-487910AE4366";
-const charNotificationIdentifier = "8667556C-9A37-4C91-84ED-54EE27D90049";
+const serviceReadinIdentifier = "00001234-0000-1000-8000-00805f9b34fb";
+const charNotificationIdentifier = "00005678-0000-1000-8000-00805f9b34fb";
+const SERVICE = "1234";
+const CHARACTERISTIC = "5678";
 
-const BleManagerModule = NativeModules.BleManager;
-const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
+const bleManagerEmitter = new NativeEventEmitter(NativeModules.BleManager);
 
-export async function requestLocationPermission() {
+// Peripheral
+const BluetoothClientEmitter = new NativeEventEmitter(NativeModules.BluetoothClient);
+BluetoothClientEmitter.addListener('onReceiveData', onReceiveData);
+
+const onReceiveData = (event) => {
+  console.log(event);
+};
+
+const ADVERTISE_TIME = 3 * 60 * 1000;
+const NOTIFY_TIME = 3000;
+const PERIPHERAL_NAME = "GALAXY";
+
+export async function requestPermissions() {
   try {
     if (Platform.OS === 'android') {
       const granted = await PermissionsAndroid.requestMultiple(
@@ -61,35 +58,7 @@ export async function requestLocationPermission() {
       }
     }
 
-    const askBluetooth = async () => {
-      await Alert.alert(
-        'Example requires bluetooth to be enabled',
-        'Would you like to enable Bluetooth?',
-        [
-          {
-            text: 'Yes',
-            onPress: () => BLEAdvertiser.enableAdapter(),
-          },
-          {
-            text: 'No',
-            onPress: () => console.log('Do Not Enable Bluetooth Pressed'),
-            style: 'cancel',
-          },
-        ],
-      );
-    }
-
-    const blueoothActive = await BLEAdvertiser.getAdapterState()
-      .then((result) => {
-        console.log('[Bluetooth]', 'Bluetooth Status', result);
-        return result === 'STATE_ON';
-      })
-      .catch((error) => {
-        console.log('[Bluetooth]', 'Bluetooth Not Enabled');
-        return false;
-      });
-
-      if (!blueoothActive) askBluetooth();
+    BLEPeripheral.enableBluetooth();
   } catch (err) {
     console.warn(err);
   }
@@ -137,15 +106,52 @@ export const safelyConnect = async (deviceId) => {
     console.log(deviceSupportedCharacteristics);
     console.log(deviceSupportedServices);
     
-    if (!deviceSupportedServices.includes(serviceReadinIdentifier) || !deviceSupportedCharacteristics.includes(charNotificationIdentifier)) { 
+    if (!deviceSupportedServices.includes(SERVICE) || !deviceSupportedCharacteristics.includes(CHARACTERISTIC)) { 
       //if required service ID and Char ID is not supported by hardware, close the connection.
       await BleManager.disconnect(connectedDeviceId);
       throw new Error('Connected device does not have required service and characteristic.');
     }
-    
 
-    await BleManager.startNotification(deviceId, serviceReadinIdentifier, charNotificationIdentifier);
-    console.log('Started notification successfully on ', charNotificationIdentifier);
+    BleManager.getConnectedPeripherals([]).then((peripheralsArray) => {
+      // Success code
+      console.log(peripheralsArray);
+    });
+
+    BleManager.createBond(deviceId)
+      .then(() => {
+        console.log("createBond success or there is already an existing one");
+      })
+      .catch(() => {
+        console.log("fail to bond");
+      });
+
+    BleManager.getBondedPeripherals([]).then((bondedPeripheralsArray) => {
+      // Each peripheral in returned array will have id and name properties
+      console.log(bondedPeripheralsArray);
+    });
+    
+    BleManager.read(deviceId, SERVICE, CHARACTERISTIC)
+      .then((readData) => {
+        // Success code
+        console.log("Read: " + readData);
+        const buffer = Buffer.from(readData);
+        const sensorData = buffer.readUInt8(1, true);
+        console.log("Buffer: " + sensorData);
+      })
+      .catch((error) => {
+        // Failure code
+        console.log(error);
+      });
+    
+    BleManager.startNotification(deviceId, SERVICE, CHARACTERISTIC)
+      .then(() => {
+        // Success code
+        console.log("Notification started");
+      })
+      .catch((error) => {
+        // Failure code
+        console.log(error);
+      });
 
     bleManagerEmitter.addListener('BleManagerDisconnectPeripheral', async () => {
       //add the code to execute after hardware disconnects.
@@ -240,7 +246,7 @@ class Entry extends Component {
   }
 
   componentDidMount() {
-    requestLocationPermission();
+    requestPermissions();
     UUIDGenerator.getRandomUUID((newUid) => {
       this.setState({
         uuid: newUid.slice(0, -2) + '00',
@@ -257,29 +263,70 @@ class Entry extends Component {
     }
   }
 
+  keepAdvertisng() {
+    this.advertiseInterval = setInterval(() => {
+      BLEPeripheral.startAdvertising(0);
+    }, ADVERTISE_TIME);
+  }
+
+  startNotifying() {
+    this.notifyInterval = setInterval(() => {
+      BLEPeripheral.sendNotificationToDevice(
+        serviceReadinIdentifier,
+        charNotificationIdentifier,
+        'hi'
+      )
+        .then((e) => console.log("Notified"))
+        .catch((e) => console.log(e));
+    }, NOTIFY_TIME);
+    
+  }
+
   startAdvertising() {
     console.log(this.state.uuid, 'Starting Advertising');
-    BLEAdvertiser.broadcast(this.state.uuid, MANUF_DATA, {
-      advertiseMode: BLEAdvertiser.ADVERTISE_MODE_BALANCED,
-      txPowerLevel: BLEAdvertiser.ADVERTISE_TX_POWER_MEDIUM,
-      connectable: true,
-      includeDeviceName: false,
-      includeTxPowerLevel: true,
-    })
+    BLEPeripheral.setName(PERIPHERAL_NAME);
+
+    BLEPeripheral.addService(serviceReadinIdentifier, true);
+    BLEPeripheral.addCharacteristicToService(
+      serviceReadinIdentifier,
+      charNotificationIdentifier,
+      1 | 16,
+      1 | 2 | 8 | 16 | 32,
+      'Value'
+    );
+
+    BLEPeripheral.startAdvertising(0)
       .then((sucess) => console.log(this.state.uuid, 'Adv Successful', sucess))
       .catch((error) => console.log(this.state.uuid, 'Adv Error', error));
+
+    this.keepAdvertisng();
+    this.startNotifying();
 
     this.setState({
       isAdvertising: true,
     });
   }
 
+  stopAdvertising() {
+    console.log(this.state.uuid, 'Stopping advertising');
+    BLEPeripheral.stopAdvertising()
+      .then((sucess) => console.log(this.state.uuid, 'Stop advertising Successful', sucess))
+      .catch((error) => console.log(this.state.uuid, 'Stop advertising Error', error));
+
+    clearInterval(this.advertiseInterval);
+    clearInterval(this.notifyInterval);
+    BLEPeripheral.removeAllServices()
+      .then((e) => console.log("All services removed"))
+      .catch((e) => console.log(e));
+
+    this.setState({
+      isAdvertising: false,
+    });
+  }
+
   startScanning() {
     console.log(this.state.uuid, 'Registering Listener');
     const eventEmitter = new NativeEventEmitter(NativeModules.BLEAdvertiser);
-    console.log('BLEAdvertiser Native Module:', NativeModules.BLEAdvertiser);
-
-
     this.onDeviceFound = eventEmitter.addListener('onDeviceFound', (event) => {
       //console.log('onDeviceFound', event);
       this.addDevice(
@@ -294,7 +341,7 @@ class Entry extends Component {
     });
 
     console.log(this.state.uuid, 'Starting Scanner');
-    BLEAdvertiser.scan(SCAN_MANUF_DATA, {
+    BLEAdvertiser.scan(null, {
       scanMode: BLEAdvertiser.SCAN_MODE_LOW_POWER,
     })
       .then((sucess) => console.log(this.state.uuid, 'Scan Successful', sucess))
@@ -302,17 +349,6 @@ class Entry extends Component {
 
     this.setState({
       isScanning: true,
-    });
-  }
-
-  stopAdvertising() {
-    console.log(this.state.uuid, 'Stopping Broadcast');
-    BLEAdvertiser.stopBroadcast()
-      .then((sucess) => console.log(this.state.uuid, 'Stop Broadcast Successful', sucess))
-      .catch((error) => console.log(this.state.uuid, 'Stop Broadcast Error', error));
-
-    this.setState({
-      isAdvertising: false,
     });
   }
 
