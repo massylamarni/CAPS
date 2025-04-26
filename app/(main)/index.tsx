@@ -10,9 +10,8 @@ import SensorScreen from './sensorScreen';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-react-native';
 import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
+import DebugBluetooth from './debugBluetooth';
 
-
-//import { Asset } from 'expo-asset';
 
 const input_3 = [
   [
@@ -50,34 +49,36 @@ type BluetoothReadEvent = /*unresolved*/ any
 
 class BlueComponent extends React.Component {
   state: {
-    allGranted: boolean,
-    enabled: boolean,
-    connectionStatus: boolean,
+    role: "CENTRAL" | "PERIPHERAL" | null,
+    arePermissionsGranted: boolean,
+    isBluetoothEnabled: boolean,
+    isAcceptingConnections: boolean,
     discovering: boolean,
     scanning: boolean,
     pairing: boolean,
     connecting: boolean,
-    accepting: boolean,
-    bonded: BluetoothDevice[],
+    unpairedDevices: BluetoothDevice[],
+    bondedDevices: BluetoothDevice[],
     connectedDevices: BluetoothDevice[],
-    device: BluetoothDevice | null,
-    data: {},
-    unpaired: BluetoothDevice[],
+    theDevice: BluetoothDevice | null,
+    receivedData: {},
+
     model: any,
   } = {
-    allGranted: false,
-    enabled: false,
-    connectionStatus: false,
+    role: null,
+    arePermissionsGranted: false,
+    isBluetoothEnabled: false,
     discovering: false,
     scanning: false,
     pairing: false,
     connecting: false,
-    accepting: false,
-    bonded: [] as BluetoothDevice[],
+    isAcceptingConnections: false,
+    unpairedDevices: [] as BluetoothDevice[],
+    bondedDevices: [] as BluetoothDevice[],
     connectedDevices: [] as BluetoothDevice[],
-    device: null,
-    data: {},
-    unpaired: [] as BluetoothDevice[],
+    theDevice: null,
+    receivedData: {},
+
     model: null,
   };
 
@@ -87,14 +88,13 @@ class BlueComponent extends React.Component {
   onDeviceDisconnectedSub: BluetoothEventSubscription;
   onBluetoothErrorSub: BluetoothEventSubscription;
   onReceivedDataSub: BluetoothEventSubscription;
-  scanInterval!: NodeJS.Timeout;
   checkConnectionsInterval!: NodeJS.Timeout;
 
   async componentDidMount () {
     await this.initBluetooth();
     await this.initListeres();
-    await this.checkConnections();
-    await this.loadModelAsync();
+
+    await this.loadModel();
   }
 
   componetWillUnmount() {    
@@ -104,82 +104,26 @@ class BlueComponent extends React.Component {
     this.onDeviceDisconnectedSub.remove();
     this.onBluetoothErrorSub.remove();
     this.onReceivedDataSub.remove();
-    clearInterval(this.scanInterval);
     clearInterval(this.checkConnectionsInterval);
   }
-
-  async loadModelAsync() {
-    //.ts: const loadModel = async ():Promise<void|tf.LayersModel>=>{
-    try {
-      await tf.ready();
-      console.log("tf ready");
-
-      const tensor1 = tf.tensor([1, 2, 3]);
-      const tensor2 = tf.tensor([4, 5, 6]);
-      const sum = tensor1.add(tensor2);
-      console.log("Reading sum");
-      console.log(sum);
-
-      const modelJson = require('@/assets/models/model.json');
-      const modelWeights = [require('@/assets/models/group1-shard1of1.bin')];
-      const model = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
-      console.log('Model loaded');
-
-      const input = tf.randomNormal([1, 10, 6]);
-      const input_3t = tf.tensor(input_3, [1, 10, 6]);
-      const input_2t = tf.tensor(input_2, [1, 10, 6]);
-
-      const output = await model.executeAsync(input_2t);
-      const predictions = await output.arraySync();
-      console.log(predictions);
-
-    } catch (e) {
-      console.log("[READY ERROR] info:", e);
-    }
-  
-    /*
-    const modelAsset = Asset.fromModule(require('@/assets/models/model.tflite'));
-    await modelAsset.downloadAsync();
-    
-    const modelPath = modelAsset.localUri ?? modelAsset.uri;
-    console.log("Model path: " + modelPath);
-    
-    try {
-      console.log('Starting model load...');
-      // Directly load the model using require
-      const tfliteModel = await loadTensorflowModel({ url: modelPath });
-      console.log('Model loaded successfully:', tfliteModel);
-    } catch (error) {
-      console.error('Error loading model:', error);
-    }
-    /*
-    this.setState({ model: model }, async () => {
-      await this.runPrediction(null);
-    });
-    */
-  };
-
-  async runPrediction(inputData: any) {
-    const output = await this.state.model.run(input_2);  // Run inference on the model
-    console.log('Prediction output:', output);
-  };
 
   async initListeres() {
     const onBluetoothEnabled = (event: StateChangeEvent) => {
       ToastAndroid.show(`Bluetooth enabled`, ToastAndroid.SHORT);
-      this.setState({ enabled: event.enabled });
+      this.setState({ isBluetoothEnabled: event.enabled });
     }
     const onBluetoothDisabled = (event: StateChangeEvent) => {
       ToastAndroid.show(`Bluetooth disabled`, ToastAndroid.SHORT);
-      this.setState({ enabled: !event.enabled });
+      this.setState({ isBluetoothEnabled: !event.enabled });
     }
     const onDeviceConnected = (event: BluetoothDeviceEvent) => {
       ToastAndroid.show(`Device connected`, ToastAndroid.SHORT);
-      this.setState({ device: event.device });
+      console.log("DEVICE CONNNECTED");
+      this.setState({ theDevice: event.device });
     }
     const onDeviceDisconnected = (event: BluetoothDeviceEvent) => {
       ToastAndroid.show(`Device disconnected`, ToastAndroid.SHORT);
-      this.setState({ device: event.device });
+      this.setState({ theDevice: event.device });
     }
     const onBluetoothError = (event: BluetoothDeviceEvent) => {
       if (event.device) {
@@ -191,104 +135,98 @@ class BlueComponent extends React.Component {
 
     this.onBluetoothEnabledSub = RNBluetoothClassic.onBluetoothEnabled(onBluetoothEnabled);
     this.onBluetoothDisabledSub = RNBluetoothClassic.onBluetoothDisabled(onBluetoothDisabled);
-    this.onDeviceConnectedSub = RNBluetoothClassic.onDeviceConnected(onDeviceConnected);
-    this.onDeviceDisconnectedSub = RNBluetoothClassic.onDeviceDisconnected(onDeviceDisconnected);
+    this.onDeviceConnectedSub = RNBluetoothClassic.onDeviceConnected(onDeviceConnected);  // Not working
+    this.onDeviceDisconnectedSub = RNBluetoothClassic.onDeviceDisconnected(onDeviceDisconnected); // Not working
     this.onBluetoothErrorSub = RNBluetoothClassic.onError(onBluetoothError);
   }
 
   receptionListener() {
-    console.log("Reception Listener added on device: ");
-    console.log(this.state.device);
+    console.log("Reception Listener added on theDevice: ");
+    console.log(this.state.theDevice);
     const onReceivedData = (event: BluetoothReadEvent) => {
       console.log("Message received");
-      this.setState({data: {
+      this.setState({receivedData: {
         ...event,
         timestamp: new Date(),  // Add the current date
         type: 'receive'         // Add a type for UI
       }}, () => {
-        console.log(this.state.data);
+        console.log(this.state.receivedData.data);
       });
     }
 
-    this.onReceivedDataSub = this.state.device?.onDataReceived((data) => onReceivedData(data));
+    this.onReceivedDataSub = this.state.theDevice?.onDataReceived((receivedData) => onReceivedData(receivedData));
   }
 
   async initBluetooth() {
+    // Ask permissions
     try {
       const granted = await PermissionsAndroid.requestMultiple([
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
         PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
       ]);
-      const allGranted = Object.values(granted).every(val => val === PermissionsAndroid.RESULTS.GRANTED);
-      this.setState({ allGranted: allGranted });
-    } catch (err) {
-      ToastAndroid.show(`Failed to set permissions: ${err}`, ToastAndroid.SHORT);
+      const arePermissionsGranted = Object.values(granted).every(val => val === PermissionsAndroid.RESULTS.GRANTED);
+      this.setState({ arePermissionsGranted: arePermissionsGranted });
+    } catch (error) {
+      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
     };
 
+    // Get Initial Bluetooth status
     try {
-      const enabled = await RNBluetoothClassic.isBluetoothEnabled();
-      this.setState({ enabled: enabled });
-    } catch (err) {
-      ToastAndroid.show(`Failed to get Bluetooth status: ${err}`, ToastAndroid.SHORT);
+      const isBluetoothEnabled = await RNBluetoothClassic.isBluetoothEnabled();
+      this.setState({ isBluetoothEnabled: isBluetoothEnabled });
+    } catch (error) {
+      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
     }
-  }
-
-  async getConnectedDevices() {
-    try {
-      const connectedDevices = await RNBluetoothClassic.getConnectedDevices();
-      if (connectedDevices.length !== 0) {
-        this.setState({ connectedDevices: connectedDevices, device: connectedDevices[0], connectionStatus: true }, () => {
-          this.receptionListener();
-        });
-      }
-    } catch (err) {
-      ToastAndroid.show(`Failed to get connected devices: ${err}`, ToastAndroid.SHORT);
-    }
-  }
-
-  async checkConnections() {
+    
+    // Broken connection event listener work around
     this.checkConnectionsInterval = setInterval(async () => {
-      if (!this.state.connectionStatus) {
-        this.getConnectedDevices();
+      if (this.state.connectedDevices.length === 0) {
+        try {
+          console.log("Checking for connections...");
+          const connectedDevices = await RNBluetoothClassic.getConnectedDevices();
+          console.log(connectedDevices);
+          if (connectedDevices.length !== 0) {
+            this.setState({ connectedDevices: connectedDevices, theDevice: connectedDevices[0] }, () => {
+              this.startCommunication();
+            });
+          }
+        } catch (error) {
+          ToastAndroid.show(`Failed to get connected devices: ${error}`, ToastAndroid.SHORT);
+        }
       }
-    }, 1000);
+    }, 3000);
+    
   }
 
-  async startScan() {
-    if (this.state.scanning == false) {
-      this.scanInterval = setInterval(async () => {
-        // Get bonded devices
-        try {
-          this.setState({ scanning: true });
-          const bonded = await RNBluetoothClassic.getBondedDevices();
-          this.setState({ scanning: true, bonded: bonded });
-        } catch (err) {
-          this.setState({ scanning: false });
-          ToastAndroid.show(`Failed to get bonded devices: ${err}`, ToastAndroid.SHORT);
-        }
-      }, 1000);
+  async startCommunication() {
+    if (this.state.connectedDevices.length !== 0) {
+      if (!this.checkConnectionsInterval) this.receptionListener();
+      if (this.state.role === "PERIPHERAL") {
+        this.write("Catch this message\n");
+      }
     }
   }
 
-  async stopScan() {
-    clearInterval(this.scanInterval);
-    this.setState({ scanning: false });
+  async getBondedDevices() {
+    try {
+      const bondedDevices = await RNBluetoothClassic.getBondedDevices();
+      this.setState({ bondedDevices: bondedDevices });
+    } catch (error) {
+      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+    }
   }
 
   async startDiscovery() {
     try {  
       this.setState({ discovering: true });
-  
-      try {
-        const unpaired = await RNBluetoothClassic.startDiscovery();   
-        this.setState({ unpaired });
-        ToastAndroid.show(`Found ${unpaired.length} unpaired devices.`, ToastAndroid.SHORT);
-      } finally {
-        this.setState({ discovering: false });
-      }
-    } catch (err: any) {
-      ToastAndroid.show(err.message, ToastAndroid.SHORT);
+      const unpairedDevices = await RNBluetoothClassic.startDiscovery();
+      ToastAndroid.show(`Found ${unpairedDevices.length} unpaired devices.`, ToastAndroid.SHORT);
+      this.setState({ unpairedDevices: unpairedDevices });
+    } catch (error) {
+      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+    } finally {
+      this.setState({ discovering: false });
     }
   }
 
@@ -296,342 +234,240 @@ class BlueComponent extends React.Component {
     try {
       const cancelled = await RNBluetoothClassic.cancelDiscovery();
       if (cancelled) this.setState({ discovering: false });
-    } catch(error) {
-      ToastAndroid.show(`Error occurred while attempting to cancel discover devices`, ToastAndroid.SHORT);
+    } catch (error) {
+      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
     }
   }
 
   async pairDevice(deviceAddr: string) {
     try {
       this.setState({ pairing: true });
-      try {
-        const device = await RNBluetoothClassic.pairDevice(deviceAddr);
-        this.setState({ device: device });
-      } finally {
-        this.setState({ pairing: false });
-      }
-    } catch(error) {
-      ToastAndroid.show(`Error occurred while attempting to pair to device`, ToastAndroid.SHORT);
+      const theDevice = await RNBluetoothClassic.pairDevice(deviceAddr);
+      this.setState({ theDevice: theDevice });
+    } catch (error) {
+      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+    } finally {
+      this.setState({ pairing: false });
     }
   }
 
   async unpairDevice(deviceAddr: string) {
     try {
-      const device = await RNBluetoothClassic.unpairDevice(deviceAddr);
-      this.setState({ device });
-    } catch(error) {
-      ToastAndroid.show(`Error occurred while attempting to unpair the device`, ToastAndroid.SHORT);
+      const theDevice = await RNBluetoothClassic.unpairDevice(deviceAddr);
+      this.setState({ theDevice: theDevice });
+    } catch (error) {
+      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
     }
   }
 
   async acceptConnections() {
-    this.setState({ accepting: true });
+    this.setState({ isAcceptingConnections: true });
       
     try {      
-      const device = await RNBluetoothClassic.accept({});
-      this.setState({ device });
+      const theDevice = await RNBluetoothClassic.accept({});
+      this.setState({ theDevice: theDevice });
     } catch (error) {
-      ToastAndroid.show(`Error occurred while attempting to enter accept mode`, ToastAndroid.SHORT);
+      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
     } finally {
-      this.setState({ accepting: false });
+      this.setState({ isAcceptingConnections: false });
     }
   }
 
   async cancelAcceptConnections() {
-    if (!this.state.accepting) {
+    if (!this.state.isAcceptingConnections) {
       return;
     }
 
     try {
       await RNBluetoothClassic.cancelAccept();
-      this.setState({ isAccepting: false });
-    } catch(error) {
-      ToastAndroid.show(`Error occurred while attempting to exit accept mode`, ToastAndroid.SHORT);
+      this.setState({ isAcceptingConnections: false });
+    } catch (error) {
+      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
     }
   }
 
-  async connect(_device: BluetoothDevice | null) {
+  async connect(_theDevice: BluetoothDevice | null) {
     try {
       this.setState({ connecting: true });
-      try {
-        const device = this.state.device ? this.state.device : _device;
-        let connectionStatus = await device?.isConnected();
-        if (!connectionStatus) {
-          connectionStatus = await device?.connect();
-        }
-        
-        this.setState({ connectedDevices: [device], device: device, connectionStatus: true }, () => {
-          this.receptionListener();
-        });
-        // this.initializeRead();
-      } finally {
-        this.setState({ connecting: false });
+      const theDevice = this.state.theDevice ? this.state.theDevice : _theDevice;
+      let connectionStatus = await theDevice?.isConnected();
+      if (!connectionStatus) {
+        connectionStatus = await theDevice?.connect();
       }
+      this.setState({ connectedDevices: [theDevice], theDevice: theDevice }, () => {
+        this.receptionListener();
+      });
     } catch (error) {
-      // Handle error accordingly
+      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+    } finally {
+      this.setState({ connecting: false });
     }
   }
 
   async disconnect() {
     try {
-      const disconnected = await this.state.device?.disconnect();
-      this.setState({connectionStatus: !disconnected});
-    } catch(error) {
-      // Handle error accordingly
-    }
-  }
-
-  async available() {
-    try {
-      const messages = await this.state.device?.available();
-      console.log(messages);
+      const disconnected = await this.state.theDevice?.disconnect();
+      this.setState({ connectedDevices: [], theDevice: null });
     } catch (error) {
-      // Handle accordingly
-    }
-  }
-
-  async read() {
-    try {
-      const message = await this.state.device?.read();
-      this.setState({ data: message });
-      console.log("read");
-      console.log(this.state.device);
-      console.log(message);
-    } catch (error) {
-      // Handle error accordingly
+      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
     }
   }
 
   async write(message: string) {
     try {
-      const writeStatus = await this.state.device?.write(message);
-      if (writeStatus) console.log("Write success");
+      const writeStatus = await this.state.theDevice?.write(message);
     } catch (error) {
-      // Handle error accordingly
+      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
     }
   }
+
+  async runCentralProcess() {
+    /*
+      Get paired devices
+      Search for device with specific name
+      +Connect to device
+      -Discover devices
+      -Search for device with specific name
+      -Connect to device
+    */
+   
+    const DEVICE_NAME = "Galaxy M14";
+    this.setState({ role: "CENTRAL" });
+    this.startCommunication();
+
+    const connectAfterPair = async (deviceAddr: string) => {
+      try {
+        this.setState({ pairing: true });
+        const theDevice = await RNBluetoothClassic.pairDevice(deviceAddr);
+        this.setState({ theDevice: theDevice }, () => {
+          this.connect(this.state.theDevice);
+        });
+      } catch (error) {
+        ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+      } finally {
+        this.setState({ pairing: false });
+      }
+    }
+
+    const pairAfterDiscovery = async () => {
+      try {
+        this.setState({ discovering: true });
+        const unpairedDevices = await RNBluetoothClassic.startDiscovery();
+        ToastAndroid.show(`Found ${unpairedDevices.length} unpaired devices.`, ToastAndroid.SHORT);
+        this.setState({ unpairedDevices: unpairedDevices }, () => {
+          if (this.state.unpairedDevices.length !== 0) {
+            this.state.unpairedDevices.forEach(async (unpairedDevice) => {
+              console.log(unpairedDevice.name);
+              if (unpairedDevice.name === DEVICE_NAME) await connectAfterPair(unpairedDevice.address);
+            });
+          }
+        });
+      } catch (error) {
+        ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+      } finally {
+        this.setState({ discovering: false });
+      }
+    }
+
+    const connectAfterBonding = async () => {
+      try {
+        const bondedDevices = await RNBluetoothClassic.getBondedDevices();
+        this.setState({ bondedDevices: bondedDevices }, () => {
+          let watcher = false;
+          if (this.state.bondedDevices.length !== 0) {
+            this.state.bondedDevices.forEach(async (bondedDevice) => {
+              console.log(bondedDevice.name);
+              if (bondedDevice.name === DEVICE_NAME) {
+                this.connect(bondedDevice);
+                watcher = true;
+                console.log("Device found in bonding, now connecting...");
+              }
+            });
+          }
+          if (!watcher) {
+            console.log("Device not found in bonding, now discovering...");
+            pairAfterDiscovery();
+          }
+        });
+      } catch (error) {
+        ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+      }
+    }
+
+    connectAfterBonding();
+  }
+
+  async runPeripheralProcess() {
+    /*
+      isAcceptingConnections is true
+      When connection is made, send data
+    */
+    const DEVICE_NAME = "Galaxy";
+    this.setState({ role: "PERIPHERAL" });
+    this.startCommunication();
+
+    if (this.state.connectedDevices.length !== 0) {
+      this.state.connectedDevices.forEach(async (connectedDevice) => {
+        ToastAndroid.show(`Device is connected, sending message...`, ToastAndroid.SHORT);
+        if (connectedDevice.name === DEVICE_NAME) await this.write("This is a message\n");
+      });
+    } else {
+      ToastAndroid.show(`Device is not connected, waiting for connection...`, ToastAndroid.SHORT);
+      await this.acceptConnections();
+    }
+  }
+
+  async loadModel() {
+    try {
+      console.log("Classify: ", "Initialising TensorflowJs...");
+      await tf.ready();
+
+      const modelJson = require('@/assets/models/model.json');
+      const modelWeights = [require('@/assets/models/group1-shard1of1.bin')];
+      console.log("Classify: ", "Loading model...");
+      const model = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
+      this.setState(model);
+      console.log("Classify: ", "Model loaded !");
+    } catch (error) {
+      ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
+    }
+  };
+
+  async makePrediction(dataSegment: number[][][]) {
+    try {
+      console.log("Classify: ", "Preprocessing...");
+      const input_2t = tf.tensor(dataSegment, [1, 10, 6]);
+
+      console.log("Classify: ", "Predicting...");
+      const output = await this.state.model.executeAsync(input_2t);
+      const predictions = await output.arraySync();
+      console.log(predictions);
+    } catch (error) {
+      ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
+    }
+  };
  
   render() {
     return(
       <>
+        {false && <SensorScreen />}
+        {true && <DebugBluetooth BlueComponentInst={this} />}
         <ThemedView>
-          <ThemedText style={styles.masterTitle}>Bluetooth data transfer</ThemedText>
-        </ThemedView>
-        <ThemedView style={styles.horizontalButtonContainer}>
-          {!this.state.discovering ? (
-          <TouchableOpacity style={[styles.defaultButton, styles.notLastButton]} onPress={async () => await this.startDiscovery()}>
-            <ThemedText style={styles.defaultButtonText}>Start Discovery</ThemedText>
+          <TouchableOpacity onPress={() => this.runCentralProcess()}>
+            <ThemedText>Pick CENTRAL role</ThemedText>
           </TouchableOpacity>
-          ) : (
-          <TouchableOpacity style={[styles.defaultButton, styles.notLastButton, styles.activeStateButton]} onPress={async () => await this.cancelDiscovery()}>
-            <ThemedText style={styles.defaultButtonText}>Stop Discovery</ThemedText>
+          <TouchableOpacity onPress={() => this.runPeripheralProcess()}>
+            <ThemedText>Pick PERIPHERAL role</ThemedText>
           </TouchableOpacity>
-          )}
-          
-          {!this.state.scanning ? (
-          <TouchableOpacity style={styles.defaultButton} onPress={async () => await this.startScan()}>
-            <ThemedText style={styles.defaultButtonText}>Start Scan</ThemedText>
-          </TouchableOpacity>
-          ) : (
-          <TouchableOpacity style={[styles.defaultButton, styles.activeStateButton]} onPress={async () => await this.stopScan()}>
-            <ThemedText style={styles.defaultButtonText}>Stop Scan</ThemedText>
-          </TouchableOpacity>
-          )}
-        </ThemedView>
-        
-        
-        <ThemedView>
-          <ThemedText style={styles.sectionTitle}>Unpaired devices</ThemedText>
-          {this.state.unpaired.length === 0 ? (
-            <ThemedText style={styles.deviceInfoContainer}>No devices to show</ThemedText>
-          ) : (
-            this.state.unpaired.map((device, index) => (
-              <ThemedView key={index} style={styles.deviceInfoContainer}>
-                <ThemedText>
-                  {device.name} {device.address}
-                </ThemedText>
-                <TouchableOpacity style={styles.defaultLinkContainer} onPress={() => this.state.pairing ? null : this.pairDevice(device.address)}>
-                  <ThemedText style={[this.state.pairing ? styles.listActionLinkGreyed : styles.listActionLink, styles.notLastButton]}>{this.state.pairing ? 'Pairing' : 'Pair'}</ThemedText>
-                </TouchableOpacity>
-              </ThemedView>
-              ))
-          )}
         </ThemedView>
         <ThemedView>
-          <ThemedText style={styles.sectionTitle}>Paired devices</ThemedText>
-          {!this.state.device ? (
-            <ThemedText style={styles.deviceInfoContainer}>No devices to show</ThemedText>
-          ) : (
-            <ThemedView style={styles.deviceInfoContainer}>
-              <ThemedText>
-                {this.state.device.name} {this.state.device.address}
-              </ThemedText>
-              <TouchableOpacity style={styles.defaultLinkContainer} onPress={() => this.state.device?.address && this.unpairDevice(this.state.device.address)}>
-                <ThemedText style={[styles.listActionLink, styles.notLastButton]}>Unpair</ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.defaultLinkContainer} onPress={() => this.state.connecting ? null : this.connect(this.state.device)}>
-                <ThemedText style={this.state.connecting ? styles.listActionLinkGreyed : styles.listActionLink}>{this.state.connecting ? 'Connecting' : 'Connect'}</ThemedText>
-              </TouchableOpacity>
-            </ThemedView>
-          )}
-        </ThemedView>
-        <ThemedView>
-          <ThemedText style={styles.sectionTitle}>Bonded devices</ThemedText>
-          {this.state.bonded.length === 0 ? (
-            <ThemedText style={styles.deviceInfoContainer}>No devices to show</ThemedText>
-          ) : (
-            this.state.bonded.map((device, index) => (
-            <ThemedView key={index} style={styles.deviceInfoContainer}>
-              <ThemedText>
-                {device.name} {device.address}
-              </ThemedText>
-              <TouchableOpacity style={styles.defaultLinkContainer} onPress={() => this.pairDevice(device.address)}>
-                <ThemedText style={[styles.listActionLink, styles.notLastButton]}>Pair</ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.defaultLinkContainer} onPress={() => this.state.connecting ? null : this.connect(device)}>
-                <ThemedText style={this.state.connecting ? styles.listActionLinkGreyed : styles.listActionLink}>{this.state.connecting ? 'Connecting' : 'Connect'}</ThemedText>
-              </TouchableOpacity>
-            </ThemedView>
-            ))
-        )}
-        </ThemedView>
-        <ThemedView>
-          <ThemedText style={styles.sectionTitle}>Connected devices</ThemedText>
-          {this.state.connectedDevices.length === 0 ? (
-            <ThemedText style={styles.deviceInfoContainer}>No devices to show</ThemedText>
-          ) : (
-            this.state.connectedDevices.map((device, index) => (
-            <ThemedView key={index} style={styles.deviceInfoContainer}>
-              <ThemedText>
-                {device.name} {device.address}
-              </ThemedText>
-            </ThemedView>
-            ))
-        )}
-        </ThemedView>
-
-        <ThemedView style={styles.horizontalButtonContainer}>
-          <TouchableOpacity style={[styles.defaultButton, styles.notLastButton]} onPress={async () => await this.write("SimpleMessage\n")}>
-            <ThemedText style={styles.defaultButtonText}>Send packet</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.defaultButton]} onPress={async () => await this.read()}>
-            <ThemedText style={styles.defaultButtonText}>Read packet</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
-        <ThemedView style={styles.horizontalButtonContainer}>
-          <TouchableOpacity style={[styles.defaultButton, styles.notLastButton]} onPress={async () => await this.acceptConnections()}>
-            <ThemedText style={styles.defaultButtonText}>Accept connection</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.defaultButton]} onPress={async () => await this.available()}>
-            <ThemedText style={styles.defaultButtonText}>Available</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
-
-        <ThemedView>
-          <ThemedText style={styles.sectionTitle}>General stats</ThemedText>
-          <ThemedText style={styles.sectionDescription}>Bluetooth enabled:
-            <ThemedText> {this.state.enabled ? 'true' : 'false'}</ThemedText>
-          </ThemedText>
-          <ThemedText style={styles.sectionDescription}>Bluetooth connection status:
-            <ThemedText> {this.state.connectionStatus ? 'true' : 'false'}</ThemedText>
-          </ThemedText>
-          <ThemedText style={styles.sectionDescription}>Bluetooth accepting mode:
-            <ThemedText> {this.state.accepting ? 'true' : 'false'}</ThemedText>
-          </ThemedText>
+          <ThemedText>Prediction</ThemedText>
         </ThemedView>
       </>
     )
   }
 }
 
-const styles = StyleSheet.create({
-  body: {
-  },
-  bleSection: {
-  },
-  sensorSection: {
-  },
-  sectionContainer: {
-    flex: 1,
-    marginTop: 12,
-    marginBottom: 12,
-    paddingHorizontal: 24,
-  },
-  masterTitle: {
-    fontSize: 22,
-    marginBottom: 5,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    marginBottom: 5,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginTop: 30,
-  },
-  sectionDescription: {
-    fontSize: 12,
-    fontWeight: '400',
-    textAlign: 'center',
-  },
-  horizontalButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-  },
-  defaultButton: {
-    borderRadius: 5,
-    backgroundColor: '#303030',
-    alignSelf: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-  },
-  defaultButtonText: {
-    fontSize: 10,
-    letterSpacing: 0,
-    textAlign: 'center',
-    color: '#ffffff',
-  },
-  defaultLinkContainer: {
-    alignSelf: 'center',
-    justifyContent: 'center',
-  },
-  defaultLink: {
-    fontSize: 12,
-    textDecorationLine: 'underline',
-    color: '#505050',
-  },
-  listActionLink: {
-    fontSize: 10,
-    textDecorationLine: 'underline',
-    color: '#50a050',
-  },
-  listActionLinkGreyed: {
-    fontSize: 10,
-    color: '#303030',
-  },
-  deviceInfoContainer: {
-    flexDirection: 'row',
-    alignSelf: 'center',
-    fontSize: 12,
-  },
-  deviceInfo: {
-    padding: 3,
-    fontSize: 10,
-    fontWeight: '400',
-  },
-  notLastButton: {
-    marginRight: 15,
-  },
-  activeStateButton: {
-    backgroundColor: '#808080',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+
 
 export default BlueComponent;

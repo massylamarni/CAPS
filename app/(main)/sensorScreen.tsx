@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Button } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { Accelerometer, Gyroscope } from 'expo-sensors';
 import { initDatabase, addSensorData, getAllData, resetDatabase } from '@/utils/sqlite_db';
@@ -98,35 +98,138 @@ export default function SensorScreen() {
     }, [isRecording, sensorData]);
   
     return (
-      <View style={styles.container}>
-        <ThemedText>Accelerometer:</ThemedText>
-        <ThemedText>X: {sensorData.at(-1)?.xa.toFixed(2) ?? "N/A"}</ThemedText>
-        <ThemedText>Y: {sensorData.at(-1)?.ya.toFixed(2) ?? "N/A"}</ThemedText>
-        <ThemedText>Z: {sensorData.at(-1)?.za.toFixed(2) ?? "N/A"}</ThemedText>
+      <>
+        <View style={styles.sectionContainer}>
+          <ThemedText style={styles.masterTitle}>Sensor Screen</ThemedText>
+          <ThemedText style={styles.sectionDescription}>Accelerometer:{' '}
+            <ThemedText style={styles.highlight}>{`X: ${sensorData[sensorData.length-1].xa.toFixed(2) ?? "N/A"}, `}</ThemedText>
+            <ThemedText style={styles.highlight}>{`Y: ${sensorData[sensorData.length-1].ya.toFixed(2) ?? "N/A"}, `}</ThemedText>
+            <ThemedText style={styles.highlight}>{`Z: ${sensorData[sensorData.length-1].za.toFixed(2) ?? "N/A"}`}</ThemedText>
+          </ThemedText>
   
-        <ThemedText>Gyroscope:</ThemedText>
-        <ThemedText>X: {sensorData.at(-1)?.xg.toFixed(2) ?? "N/A"}</ThemedText>
-        <ThemedText>Y: {sensorData.at(-1)?.yg.toFixed(2) ?? "N/A"}</ThemedText>
-        <ThemedText>Z: {sensorData.at(-1)?.zg.toFixed(2) ?? "N/A"}</ThemedText>
+          <ThemedText style={styles.sectionDescription}>Gyroscope:{' '}
+            <ThemedText style={styles.highlight}>{`X: ${sensorData[sensorData.length-1].xg.toFixed(2) ?? "N/A"}, `}</ThemedText>
+            <ThemedText style={styles.highlight}>{`Y: ${sensorData[sensorData.length-1].yg.toFixed(2) ?? "N/A"}, `}</ThemedText>
+            <ThemedText style={styles.highlight}>{`Z: ${sensorData[sensorData.length-1].zg.toFixed(2) ?? "N/A"}`}</ThemedText>
+          </ThemedText>
   
-        <ThemedText>Database:</ThemedText>
-        <ThemedText>ID: {dbData[0].id}</ThemedText>
-        <ThemedText>XA: {dbData[0].XA.toFixed(2)}</ThemedText>
-        <ThemedText>YA: {dbData[0].YA.toFixed(2)}</ThemedText>
-        <ThemedText>ZA: {dbData[0].ZA.toFixed(2)}</ThemedText>
-        <ThemedText>XG: {dbData[0].XG.toFixed(2)}</ThemedText>
-        <ThemedText>YG: {dbData[0].YG.toFixed(2)}</ThemedText>
-        <ThemedText>ZG: {dbData[0].ZG.toFixed(2)}</ThemedText>
-        <ThemedText>DateTime: {dbData[0].DateTime}</ThemedText>
+          <View style={styles.sectionContainer}>
+            <ThemedText style={styles.sectionTitle}>DataBase</ThemedText>
+          </View>
+          <ThemedText style={styles.sectionDescription}>id:{' '}
+            <ThemedText style={styles.highlight}>{dbData[0].id}</ThemedText>
+          </ThemedText>
+          <ThemedText style={styles.sectionDescription}>DateTime:{' '}
+            <ThemedText style={styles.highlight}>{dbData[0].DateTime}</ThemedText>
+          </ThemedText>
+          <ThemedText style={styles.sectionDescription}>Accelerometer:{' '}
+            <ThemedText style={styles.highlight}>{`X: ${dbData[0].XA.toFixed(2)}, `}</ThemedText>
+            <ThemedText style={styles.highlight}>{`Y: ${dbData[0].YA.toFixed(2)}, `}</ThemedText>
+            <ThemedText style={styles.highlight}>{`Z: ${dbData[0].ZA.toFixed(2)}, `}</ThemedText>
+          </ThemedText>
+          <ThemedText style={styles.sectionDescription}>Gyroscope:{' '}
+            <ThemedText style={styles.highlight}>{`X: ${dbData[0].XG.toFixed(2)}, `}</ThemedText>
+            <ThemedText style={styles.highlight}>{`Y: ${dbData[0].YG.toFixed(2)}, `}</ThemedText>
+            <ThemedText style={styles.highlight}>{`Z: ${dbData[0].ZG.toFixed(2)}, `}</ThemedText>
+          </ThemedText>
   
-        <Button 
-          title={isRecording ? "Stop Recording" : "Start Recording"} 
-          onPress={() => setIsRecording(!isRecording)} 
-        />
-      </View>
+          <View style={styles.horizontalButtonContainer}>
+            <TouchableOpacity style={[styles.defaultButton, styles.notLastButton, isRecording ? styles.activeStateButton : null]} onPress={() => setIsRecording(!isRecording)}>
+              <ThemedText style={styles.defaultButtonText}>{isRecording ? "Stop Recording" : "Start Recording"}</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.defaultButton]} onPress={() => resetDatabase()}>
+              <ThemedText style={styles.defaultButtonText}>Rest Database</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
+        </>
     );
   }
   
   const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20 },
+    body: {
+    },
+    bleSection: {
+    },
+    sensorSection: {
+    },
+    sectionContainer: {
+      flex: 1,
+      marginTop: 12,
+      marginBottom: 12,
+      paddingHorizontal: 24,
+    },
+    masterTitle: {
+      fontSize: 22,
+      marginBottom: 5,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    sectionTitle: {
+      fontSize: 16,
+      marginBottom: 5,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    sectionDescription: {
+      fontSize: 12,
+      fontWeight: '400',
+      textAlign: 'center',
+    },
+    horizontalButtonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 15,
+    },
+    defaultButton: {
+      borderRadius: 5,
+      backgroundColor: '#303030',
+      alignSelf: 'center',
+      justifyContent: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 15,
+      marginVertical: 15,
+    },
+    defaultButtonText: {
+      fontSize: 10,
+      letterSpacing: 0,
+      textAlign: 'center',
+      color: '#ffffff',
+    },
+    defaultLinkContainer: {
+      alignSelf: 'center',
+      justifyContent: 'center',
+    },
+    defaultLink: {
+      fontSize: 12,
+      textDecorationLine: 'underline',
+      color: '#505050',
+    },
+    listActionLink: {
+      fontSize: 10,
+      textDecorationLine: 'underline',
+      color: '#50a050',
+    },
+    listActionLinkGreyed: {
+      fontSize: 10,
+      color: '#303030',
+    },
+    deviceInfoContainer: {
+      flexDirection: 'row',
+    },
+    deviceInfo: {
+      padding: 3,
+      fontSize: 10,
+      fontWeight: '400',
+    },
+    notLastButton: {
+      marginRight: 15,
+    },
+    activeStateButton: {
+      backgroundColor: '#808080',
+    },
+    highlight: {
+      fontWeight: '700',
+    },
   });
