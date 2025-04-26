@@ -6,9 +6,13 @@ import { ThemedView } from '@/components/ThemedView';
 import RNBluetoothClassic, { BluetoothEventType, BluetoothDevice } from "react-native-bluetooth-classic";
 import SensorScreen from './sensorScreen';
 
-import { loadTensorflowModel } from 'react-native-fast-tflite';
+//import { loadTensorflowModel } from 'react-native-fast-tflite';
+import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-react-native';
+import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
 
-import { Asset } from 'expo-asset';
+
+//import { Asset } from 'expo-asset';
 
 const input_3 = [
   [
@@ -105,6 +109,35 @@ class BlueComponent extends React.Component {
   }
 
   async loadModelAsync() {
+    //.ts: const loadModel = async ():Promise<void|tf.LayersModel>=>{
+    try {
+      await tf.ready();
+      console.log("tf ready");
+
+      const tensor1 = tf.tensor([1, 2, 3]);
+      const tensor2 = tf.tensor([4, 5, 6]);
+      const sum = tensor1.add(tensor2);
+      console.log("Reading sum");
+      console.log(sum);
+
+      const modelJson = require('@/assets/models/model.json');
+      const modelWeights = [require('@/assets/models/group1-shard1of1.bin')];
+      const model = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
+      console.log('Model loaded');
+
+      const input = tf.randomNormal([1, 10, 6]);
+      const input_3t = tf.tensor(input_3, [1, 10, 6]);
+      const input_2t = tf.tensor(input_2, [1, 10, 6]);
+
+      const output = await model.executeAsync(input_2t);
+      const predictions = await output.arraySync();
+      console.log(predictions);
+
+    } catch (e) {
+      console.log("[READY ERROR] info:", e);
+    }
+  
+    /*
     const modelAsset = Asset.fromModule(require('@/assets/models/model.tflite'));
     await modelAsset.downloadAsync();
     
@@ -124,7 +157,6 @@ class BlueComponent extends React.Component {
       await this.runPrediction(null);
     });
     */
-    console.log("Model Loaded");
   };
 
   async runPrediction(inputData: any) {
