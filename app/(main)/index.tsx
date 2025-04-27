@@ -463,7 +463,9 @@ class BlueComponent extends React.Component {
       console.log("Classify: ", "Predicting...");
       const output = await this.state.model.executeAsync(inputTensor);
       const prediction = await output.arraySync();
-      this.setState(prev => ({ predictions: [...prev.predictions, prediction] }));
+      this.setState(prev => ({ predictions: [...prev.predictions, prediction] }), () => {
+        console.log(this.state.predictions[this.state.predictions.length-1]);
+      });
     } catch (error) {
       ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
     }
@@ -526,7 +528,17 @@ class BlueComponent extends React.Component {
           )}
         </ThemedView>
         <ThemedView>
-          <ThemedText style={styles.sectionDescription}>Prediction: {JSON.stringify(this.state.predictions[this.state.predictions.length-1]) ?? "None"}</ThemedText>
+          {this.state.predictions.length !== 0 && (
+          <ThemedView>
+            <ThemedText style={styles.sectionTitle}>Prediction</ThemedText>
+            {this.state.predictions[this.state.predictions.length-1][0].map((prediction: any, index: any) => {
+              const actionMapping = ["Grazing", "Standing", "Walking", "Resting", "Licking"];
+              return (
+                <ThemedText key={index} style={styles.sectionDescription}>{actionMapping[index]}: {prediction.toFixed(2) * 100}</ThemedText>
+              )
+            })}
+          </ThemedView>
+          )}
         </ThemedView>
       </>
     )
