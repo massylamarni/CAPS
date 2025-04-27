@@ -114,8 +114,9 @@ class BlueComponent extends React.Component {
 
   componentDidUpdate(prevProps: {}, prevState: MyComponentState) {
     if (prevState.sensorData !== this.state.sensorData) {
-      if (this.state.sensorData.length !== 0) {
-        const preprocess = (data: any): number[][][] => {
+      const sensorData = this.state.sensorData;
+      if (sensorData.length !== 0 && (sensorData.length % 30 === 0)) {
+        const preprocessSingleRow = (data: any): number[] => {
           const MIN_A = -5, MAX_A = 5;
           const MIN_G = -5, MAX_G = 5;
           const normalizedData = data.map(entry => ({
@@ -126,11 +127,15 @@ class BlueComponent extends React.Component {
             yg: (entry.yg - MIN_G) / (MAX_G - MIN_G),
             zg: (entry.zg - MIN_G) / (MAX_G - MIN_G),
           }));
-          return [[Object.values(normalizedData)]];
+
+          return Object.values(normalizedData[0]);
         }
 
-        const preprocessedData = preprocess(this.state.sensorData[this.state.sensorData.length-1]);
-        this.makePrediction(preprocessedData);
+        let preprocessedData = [];
+        for (let i = 0; i < 10; i++) {
+          preprocessedData[i] = preprocessSingleRow(sensorData[sensorData.length-1-i]);
+        }
+        this.makePrediction([preprocessedData]);
       }
     }
   }
@@ -212,9 +217,7 @@ class BlueComponent extends React.Component {
     this.checkConnectionsInterval = setInterval(async () => {
       if (this.state.connectedDevices.length === 0) {
         try {
-          console.log("Checking for connections...");
           const connectedDevices = await RNBluetoothClassic.getConnectedDevices();
-          console.log(connectedDevices);
           if (connectedDevices.length !== 0) {
             this.setState({ connectedDevices: connectedDevices, theDevice: connectedDevices[0] }, () => {
               this.startCommunication();
@@ -446,7 +449,7 @@ class BlueComponent extends React.Component {
       const modelWeights = [require('@/assets/models/group1-shard1of1.bin')];
       console.log("Classify: ", "Loading model...");
       const model = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
-      this.setState(model);
+      this.setState({ model: model });
       console.log("Classify: ", "Model loaded !");
     } catch (error) {
       ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
@@ -455,11 +458,10 @@ class BlueComponent extends React.Component {
 
   async makePrediction(dataSegment: number[][][]) {
     try {
-      console.log("Classify: ", "Preprocessing...");
-      const input_2t = tf.tensor(dataSegment, [1, 10, 6]);
+      const inputTensor = tf.tensor(dataSegment, [1, 10, 6]);
 
       console.log("Classify: ", "Predicting...");
-      const output = await this.state.model.executeAsync(input_2t);
+      const output = await this.state.model.executeAsync(inputTensor);
       const prediction = await output.arraySync();
       this.setState(prev => ({ predictions: [...prev.predictions, prediction] }));
     } catch (error) {
@@ -488,38 +490,43 @@ class BlueComponent extends React.Component {
   render() {
     return(
       <>
-        {this.state.role === "PERIPHERAL" && <SensorScreen sensorDataBridge={this.appendToSensorData} readMode={"REAL_TIME"} showComponent={false} />}
+        {this.state.role === "PERIPHERAL" && <SensorScreen sensorDataBridge={this} readMode={"REAL_TIME"} showComponent={false} />}
         {false && <DebugBluetooth BlueComponentInst={this} />}
+        <ThemedView style={styles.horizontalButtonContainer}>
+          <TouchableOpacity style={[styles.defaultButton, styles.notLastButton]} onPress={() => this.runCentralProcess()}>
+            <ThemedText style={styles.defaultButtonText}>Pick CENTRAL role</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.defaultButton} onPress={() => this.runPeripheralProcess()}>
+            <ThemedText style={styles.defaultButtonText}>Pick PERIPHERAL role</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+
         <ThemedView>
-          <TouchableOpacity onPress={() => this.runCentralProcess()}>
-            <ThemedText>Pick CENTRAL role</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => this.runPeripheralProcess()}>
-            <ThemedText>Pick PERIPHERAL role</ThemedText>
-          </TouchableOpacity>
-          <ThemedView>
-            <ThemedText>Role: {this.state.role ? this.state.role : "Not selected"}</ThemedText>
-            {this.state.role === "CENTRAL" && (
-              <ThemedText>Received: {this.state.receivedData.data ? this.state.receivedData.data : "Nothing"}</ThemedText>
-            )}
-          </ThemedView>
-          <ThemedView>
-            <ThemedText style={styles.sectionTitle}>Connected devices</ThemedText>
-              {this.state.connectedDevices.length === 0 ? (
-                <ThemedText style={styles.deviceInfoContainer}>No devices to show</ThemedText>
-              ) : (
-                this.state.connectedDevices.map((device: any, index: any) => (
-                <ThemedView key={index} style={styles.deviceInfoContainer}>
-                  <ThemedText>
-                    {device.name} {device.address}
-                  </ThemedText>
-                </ThemedView>
-                ))
-            )}
-          </ThemedView>
+          <ThemedText style={styles.sectionDescription}>Role:
+            <ThemedText style={styles.highlight}> {this.state.role ? this.state.role : "Not selected"}</ThemedText>
+          </ThemedText>
+          {this.state.role === "CENTRAL" && (
+            <ThemedText style={styles.sectionDescription}>Received:
+              <ThemedText style={styles.highlight}> {this.state.receivedData.data ? this.state.receivedData.data : "Nothing"}</ThemedText>
+            </ThemedText>
+          )}
         </ThemedView>
         <ThemedView>
-          <ThemedText>Prediction: {JSON.stringify(this.state.predictions[this.state.predictions.length-1])}</ThemedText>
+          <ThemedText style={styles.sectionTitle}>Connected devices</ThemedText>
+            {this.state.connectedDevices.length === 0 ? (
+              <ThemedText style={styles.deviceInfoContainer}>No devices to show</ThemedText>
+            ) : (
+              this.state.connectedDevices.map((device: any, index: any) => (
+              <ThemedView key={index} style={styles.deviceInfoContainer}>
+                <ThemedText>
+                  {device.name} {device.address}
+                </ThemedText>
+              </ThemedView>
+              ))
+          )}
+        </ThemedView>
+        <ThemedView>
+          <ThemedText style={styles.sectionDescription}>Prediction: {JSON.stringify(this.state.predictions[this.state.predictions.length-1]) ?? "None"}</ThemedText>
         </ThemedView>
       </>
     )

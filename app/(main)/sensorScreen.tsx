@@ -102,12 +102,12 @@ export default function SensorScreen({ sensorDataBridge, readMode, showComponent
     // Send data
     useEffect(() => {
       if (readMode === "REAL_TIME") {
-        sensorDataBridge([sensorData[sensorData.length-1]]);
+        sensorDataBridge.appendToSensorData([sensorData[sensorData.length-1]]);
       }
       else if (readMode === "FETCH_AND_KEEP") {
         setInterval(async () => {
           const tempDbData = await getAllData();
-          sensorDataBridge(tempDbData);
+          sensorDataBridge.appendToSensorData(tempDbData);
         }, 3000);
       }
     }, [sensorData]);
