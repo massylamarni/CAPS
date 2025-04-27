@@ -19,9 +19,9 @@ type sensor_db_entry_t = {
     zg: number;
 }
 
-const SEGMENT_SIZE = 10 // 1sec at 10Hz
+const SAVE_SEGMENT_SIZE = 10 // 1sec at 10Hz
 
-export default function SensorScreen() {
+export default function SensorScreen({ sensorDataBridge, readMode, showComponent }: any) {
     const [sensorData, setSensorData] = useState([{ xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 }]);
     const [dbData, setDbData] = useState([{"DateTime": 0, "XA": 0, "XG": 0, "YA": 0, "YG": 0, "ZA": 0, "ZG": 0, "id": 0}]);
     const [isRecording, setIsRecording] = useState(false);
@@ -29,6 +29,7 @@ export default function SensorScreen() {
     const sensorDataParts = useRef({'accel': false, 'gyro': false});
     const intermediateSensorData = useRef({ xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 });
   
+    // Get sensor data
     useEffect(() => {
       Accelerometer.setUpdateInterval(100); // 100ms = 10Hz
       Gyroscope.setUpdateInterval(100);
@@ -76,30 +77,44 @@ export default function SensorScreen() {
     // Initialize DB
     useEffect(() => {
       resetDatabase();
+      /*
       setInterval(async () => {
         const tempDbData = await getAllData();
-        tempDbData.length !== 0 ? setDbData(tempDbData) : console.log("isEmpty");;
+        tempDbData.length !== 0 ? setDbData(tempDbData) : console.log("isEmpty");
       }, 3000);
+      */
     }, []);
-  
-    const saveToDatabase = async (sensorData: sensor_db_entry_t[]) => {
-      sensorData.forEach(async (data) => {
-        await addSensorData(data);
-        // console.log('Saving data batch:', data);
-      });
-    };
   
     // Save data to database
     useEffect(() => {
-      if (!isRecording || sensorData.length < SEGMENT_SIZE) return;
+      if (!isRecording || sensorData.length < SAVE_SEGMENT_SIZE) return;
+      const saveToDatabase = async (sensorData: sensor_db_entry_t[]) => {
+        sensorData.forEach(async (data) => {
+          await addSensorData(data);
+        });
+      };
+
       saveToDatabase(sensorData);
       setSensorData([{ xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 }]);
       sensorDataCount.current = 0;
     }, [isRecording, sensorData]);
+
+    // Send data
+    useEffect(() => {
+      if (readMode === "REAL_TIME") {
+        sensorDataBridge([sensorData[sensorData.length-1]]);
+      }
+      else if (readMode === "FETCH_AND_KEEP") {
+        setInterval(async () => {
+          const tempDbData = await getAllData();
+          sensorDataBridge(tempDbData);
+        }, 3000);
+      }
+    }, [sensorData]);
   
     return (
       <>
-        <View style={styles.sectionContainer}>
+        {showComponent && <View style={styles.sectionContainer}>
           <ThemedText style={styles.masterTitle}>Sensor Screen</ThemedText>
           <ThemedText style={styles.sectionDescription}>Accelerometer:{' '}
             <ThemedText style={styles.highlight}>{`X: ${sensorData[sensorData.length-1].xa.toFixed(2) ?? "N/A"}, `}</ThemedText>
@@ -141,7 +156,7 @@ export default function SensorScreen() {
               <ThemedText style={styles.defaultButtonText}>Rest Database</ThemedText>
             </TouchableOpacity>
           </View>
-        </View>
+        </View>}
         </>
     );
   }

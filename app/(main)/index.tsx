@@ -46,6 +46,7 @@ type BluetoothEventSubscription = /*unresolved*/ any
 type StateChangeEvent = /*unresolved*/ any
 type BluetoothDeviceEvent = /*unresolved*/ any
 type BluetoothReadEvent = /*unresolved*/ any
+type MyComponentState = /*unresolved*/ any
 
 class BlueComponent extends React.Component {
   state: {
@@ -64,6 +65,8 @@ class BlueComponent extends React.Component {
     receivedData: {},
 
     model: any,
+    predictions: [],
+    sensorData: [],
   } = {
     role: null,
     arePermissionsGranted: false,
@@ -80,6 +83,8 @@ class BlueComponent extends React.Component {
     receivedData: {},
 
     model: null,
+    predictions: [],
+    sensorData: [],
   };
 
   onBluetoothEnabledSub: BluetoothEventSubscription;
@@ -105,6 +110,29 @@ class BlueComponent extends React.Component {
     this.onBluetoothErrorSub.remove();
     this.onReceivedDataSub.remove();
     clearInterval(this.checkConnectionsInterval);
+  }
+
+  componentDidUpdate(prevProps: {}, prevState: MyComponentState) {
+    if (prevState.sensorData !== this.state.sensorData) {
+      if (this.state.sensorData.length !== 0) {
+        const preprocess = (data: any): number[][][] => {
+          const MIN_A = -5, MAX_A = 5;
+          const MIN_G = -5, MAX_G = 5;
+          const normalizedData = data.map(entry => ({
+            xa: (entry.xa - MIN_A) / (MAX_A - MIN_A),
+            ya: (entry.ya - MIN_A) / (MAX_A - MIN_A),
+            za: (entry.za - MIN_A) / (MAX_A - MIN_A),
+            xg: (entry.xg - MIN_G) / (MAX_G - MIN_G),
+            yg: (entry.yg - MIN_G) / (MAX_G - MIN_G),
+            zg: (entry.zg - MIN_G) / (MAX_G - MIN_G),
+          }));
+          return [[Object.values(normalizedData)]];
+        }
+
+        const preprocessedData = preprocess(this.state.sensorData[this.state.sensorData.length-1]);
+        this.makePrediction(preprocessedData);
+      }
+    }
   }
 
   async initListeres() {
@@ -150,7 +178,8 @@ class BlueComponent extends React.Component {
         timestamp: new Date(),  // Add the current date
         type: 'receive'         // Add a type for UI
       }}, () => {
-        console.log(this.state.receivedData.data);
+        const processedMessage = JSON.parse(this.state.receivedData.data);
+        this.appendToSensorData(processedMessage);
       });
     }
 
@@ -197,15 +226,6 @@ class BlueComponent extends React.Component {
       }
     }, 3000);
     
-  }
-
-  async startCommunication() {
-    if (this.state.connectedDevices.length !== 0) {
-      if (!this.checkConnectionsInterval) this.receptionListener();
-      if (this.state.role === "PERIPHERAL") {
-        this.write("Catch this message\n");
-      }
-    }
   }
 
   async getBondedDevices() {
@@ -431,7 +451,7 @@ class BlueComponent extends React.Component {
     } catch (error) {
       ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
     }
-  };
+  }
 
   async makePrediction(dataSegment: number[][][]) {
     try {
@@ -440,18 +460,36 @@ class BlueComponent extends React.Component {
 
       console.log("Classify: ", "Predicting...");
       const output = await this.state.model.executeAsync(input_2t);
-      const predictions = await output.arraySync();
-      console.log(predictions);
+      const prediction = await output.arraySync();
+      this.setState(prev => ({ predictions: [...prev.predictions, prediction] }));
     } catch (error) {
       ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
     }
-  };
+  }
+
+  async startCommunication() {
+    if (this.state.connectedDevices.length !== 0 && this.state.sensorData.length !== 0) {
+      if (!this.checkConnectionsInterval) this.receptionListener();
+      if (this.state.role === "PERIPHERAL") {
+        const formattedMessage = JSON.stringify(this.state.sensorData[this.state.sensorData.length-1]);
+        this.write(`${formattedMessage}\n`);
+      }
+    }
+  }
+
+  appendToSensorData(sensorData: any) {
+    this.setState((prev) => ({ sensorData: [...prev.sensorData, sensorData] }));
+  }
+
+  setSensorData(sensorData: any) {
+    this.setState({ sensorData: sensorData });
+  }
  
   render() {
     return(
       <>
-        {false && <SensorScreen />}
-        {true && <DebugBluetooth BlueComponentInst={this} />}
+        {this.state.role === "PERIPHERAL" && <SensorScreen sensorDataBridge={this.appendToSensorData} readMode={"REAL_TIME"} showComponent={false} />}
+        {false && <DebugBluetooth BlueComponentInst={this} />}
         <ThemedView>
           <TouchableOpacity onPress={() => this.runCentralProcess()}>
             <ThemedText>Pick CENTRAL role</ThemedText>
@@ -459,15 +497,124 @@ class BlueComponent extends React.Component {
           <TouchableOpacity onPress={() => this.runPeripheralProcess()}>
             <ThemedText>Pick PERIPHERAL role</ThemedText>
           </TouchableOpacity>
+          <ThemedView>
+            <ThemedText>Role: {this.state.role ? this.state.role : "Not selected"}</ThemedText>
+            {this.state.role === "CENTRAL" && (
+              <ThemedText>Received: {this.state.receivedData.data ? this.state.receivedData.data : "Nothing"}</ThemedText>
+            )}
+          </ThemedView>
+          <ThemedView>
+            <ThemedText style={styles.sectionTitle}>Connected devices</ThemedText>
+              {this.state.connectedDevices.length === 0 ? (
+                <ThemedText style={styles.deviceInfoContainer}>No devices to show</ThemedText>
+              ) : (
+                this.state.connectedDevices.map((device: any, index: any) => (
+                <ThemedView key={index} style={styles.deviceInfoContainer}>
+                  <ThemedText>
+                    {device.name} {device.address}
+                  </ThemedText>
+                </ThemedView>
+                ))
+            )}
+          </ThemedView>
         </ThemedView>
         <ThemedView>
-          <ThemedText>Prediction</ThemedText>
+          <ThemedText>Prediction: {JSON.stringify(this.state.predictions[this.state.predictions.length-1])}</ThemedText>
         </ThemedView>
       </>
     )
   }
 }
 
+const styles = StyleSheet.create({
+  body: {
+  },
+  bleSection: {
+  },
+  sensorSection: {
+  },
+  sectionContainer: {
+    flex: 1,
+    marginTop: 12,
+    marginBottom: 12,
+    paddingHorizontal: 24,
+  },
+  masterTitle: {
+    fontSize: 22,
+    marginBottom: 5,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    marginBottom: 5,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 30,
+  },
+  sectionDescription: {
+    fontSize: 12,
+    fontWeight: '400',
+    textAlign: 'center',
+  },
+  horizontalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  defaultButton: {
+    borderRadius: 5,
+    backgroundColor: '#303030',
+    alignSelf: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  defaultButtonText: {
+    fontSize: 10,
+    letterSpacing: 0,
+    textAlign: 'center',
+    color: '#ffffff',
+  },
+  defaultLinkContainer: {
+    alignSelf: 'center',
+    justifyContent: 'center',
+  },
+  defaultLink: {
+    fontSize: 12,
+    textDecorationLine: 'underline',
+    color: '#505050',
+  },
+  listActionLink: {
+    fontSize: 10,
+    textDecorationLine: 'underline',
+    color: '#50a050',
+  },
+  listActionLinkGreyed: {
+    fontSize: 10,
+    color: '#303030',
+  },
+  deviceInfoContainer: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    fontSize: 12,
+  },
+  deviceInfo: {
+    padding: 3,
+    fontSize: 10,
+    fontWeight: '400',
+  },
+  notLastButton: {
+    marginRight: 15,
+  },
+  activeStateButton: {
+    backgroundColor: '#808080',
+  },
+  highlight: {
+    fontWeight: '700',
+  },
+});
 
 
 export default BlueComponent;
