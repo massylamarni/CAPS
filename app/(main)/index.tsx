@@ -1,16 +1,16 @@
 import React from 'react';
-import { PermissionsAndroid, ToastAndroid, TouchableOpacity, StyleSheet } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { View, PermissionsAndroid, ToastAndroid, TouchableOpacity, StyleSheet, PanResponder } from 'react-native';
+import Tex from './base-components/tex';
+import themeI from '@/assets/styles';
 
 import RNBluetoothClassic, { BluetoothEventType, BluetoothDevice } from "react-native-bluetooth-classic";
 import SensorScreen from './sensorScreen';
 
-//import { loadTensorflowModel } from 'react-native-fast-tflite';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-react-native';
 import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
 import DebugBluetooth from './debugBluetooth';
+
 
 
 const input_3 = [
@@ -41,6 +41,7 @@ const input_2 = [
     [0.4748256370303961, 0.5280119996404757, 0.403953453069681, 0.2938916203690769, 0.6350915434916222, 0.67519818433455],
   ],
 ];
+const ROLE = "PERIPHERAL";
 
 type BluetoothEventSubscription = /*unresolved*/ any
 type StateChangeEvent = /*unresolved*/ any
@@ -66,7 +67,8 @@ class BlueComponent extends React.Component {
 
     model: any,
     predictions: [],
-    sensorData: [],
+    sensorData: [][],
+    pageIndex: number,
   } = {
     role: null,
     arePermissionsGranted: false,
@@ -84,7 +86,8 @@ class BlueComponent extends React.Component {
 
     model: null,
     predictions: [],
-    sensorData: [],
+    sensorData: [[]],
+    pageIndex: 0,
   };
 
   onBluetoothEnabledSub: BluetoothEventSubscription;
@@ -96,6 +99,7 @@ class BlueComponent extends React.Component {
   checkConnectionsInterval!: NodeJS.Timeout;
 
   async componentDidMount () {
+    this.setState({ role: ROLE });
     await this.initBluetooth();
     await this.initListeres();
 
@@ -117,8 +121,8 @@ class BlueComponent extends React.Component {
       const sensorData = this.state.sensorData;
       if (sensorData.length !== 0 && (sensorData.length % 30 === 0)) {
         const preprocessSingleRow = (data: any): number[] => {
-          const MIN_A = -5, MAX_A = 5;
-          const MIN_G = -5, MAX_G = 5;
+          const MIN_A = -74.08409134, MAX_A = 43.37365402;
+          const MIN_G = -16.51096916, MAX_G = 28.44993591;
           const normalizedData = data.map(entry => ({
             xa: (entry.xa - MIN_A) / (MAX_A - MIN_A),
             ya: (entry.ya - MIN_A) / (MAX_A - MIN_A),
@@ -190,6 +194,8 @@ class BlueComponent extends React.Component {
 
     this.onReceivedDataSub = this.state.theDevice?.onDataReceived((receivedData) => onReceivedData(receivedData));
   }
+
+  
 
   async initBluetooth() {
     // Ask permissions
@@ -489,150 +495,467 @@ class BlueComponent extends React.Component {
     this.setState({ sensorData: sensorData });
   }
  
+  panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onPanResponderRelease: (_, gestureState) => {
+      if (gestureState.dx > 50) {
+        // Swipe right - go to previous page
+        this.setState(prev => ({
+          pageIndex: prev.pageIndex > 0 ? prev.pageIndex - 1 : 2
+        }));
+      } else if (gestureState.dx < -50) {
+        // Swipe left - go to next page
+        this.setState(prev => ({
+          pageIndex: prev.pageIndex < 2 ? prev.pageIndex + 1 : 0
+        }));
+      }
+    },
+  });
+
   render() {
     return(
       <>
-        {this.state.role === "PERIPHERAL" && <SensorScreen sensorDataBridge={this} readMode={"REAL_TIME"} showComponent={false} />}
-        {false && <DebugBluetooth BlueComponentInst={this} />}
-        <ThemedView style={styles.horizontalButtonContainer}>
-          <TouchableOpacity style={[styles.defaultButton, styles.notLastButton]} onPress={() => this.runCentralProcess()}>
-            <ThemedText style={styles.defaultButtonText}>Pick CENTRAL role</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.defaultButton} onPress={() => this.runPeripheralProcess()}>
-            <ThemedText style={styles.defaultButtonText}>Pick PERIPHERAL role</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
+        <SensorScreen sensorDataBridge={this} readMode={"REAL_TIME"} showComponent={false} />
+        <View {...this.panResponder.panHandlers}>
+          {this.state.pageIndex == 0 && <View style={styles.MAIN}>
+          <View style={[styles.COMPONENT_CARD, styles.ble_info]}>
+            <Tex style={styles.COMPONENT_TITLE} >
+              Bluetooth Info
+            </Tex>
+            <View style={styles.COMPONENT_WRAPPER}>
+              <View style={styles.COMPONENT_WRAPPER}>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Status</Tex>
+                  <Tex>{this.state.isBluetoothEnabled ? 'Enabled' : 'Disabled'}</Tex>
+                </View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Advertising as</Tex>
+                  <Tex>GALAXY</Tex>
+                </View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Connected to</Tex>
+                  <Tex>{this.state.theDevice?.name}</Tex>
+                </View>
+              </View>
+              <View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Num of packets sent</Tex>
+                  <Tex>0</Tex>
+                </View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Num of packets pending</Tex>
+                  <Tex>0</Tex>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View style={[styles.COMPONENT_CARD, styles.sensor_info]}>
+            <Tex style={styles.COMPONENT_TITLE} >
+              Sensor Info
+            </Tex>
+            <View style={styles.COMPONENT_WRAPPER}>
+              <View style={[styles.MINI_SENSOR_CHART, styles.COMPONENT_WRAPPER]}>
+                <View style={styles.MINI_SENSOR_CHART_HEADER}>
+                  <Tex style={styles.SUBCOMPONENT_TITLE}>Accelerometer</Tex>
+                  <Tex>
+                    x: {this.state.sensorData[this.state.sensorData.length-1][0]?.xa.toFixed(3)},
+                    y: {this.state.sensorData[this.state.sensorData.length-1][0]?.ya.toFixed(3)},
+                    z: {this.state.sensorData[this.state.sensorData.length-1][0]?.za.toFixed(3)}
+                  </Tex>
+                </View>
+                <View style={styles.MINI_SENSOR_CHART_BODY}>
+                </View>
+              </View>
+              <View style={styles.MINI_SENSOR_CHART}>
+                <View style={styles.MINI_SENSOR_CHART_HEADER}>
+                  <Tex style={styles.SUBCOMPONENT_TITLE}>Gyroscope</Tex>
+                  <Tex>
+                    x: {this.state.sensorData[this.state.sensorData.length-1][0]?.xg.toFixed(3)},
+                    y: {this.state.sensorData[this.state.sensorData.length-1][0]?.yg.toFixed(3)},
+                    z: {this.state.sensorData[this.state.sensorData.length-1][0]?.zg.toFixed(3)}
+                  </Tex>
+                </View>
+                <View style={styles.MINI_SENSOR_CHART_BODY}>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View style={[styles.COMPONENT_CARD, styles.db_info]}>
+            <Tex style={styles.COMPONENT_TITLE} >
+              Database Info
+            </Tex>
+            <View style={styles.COMPONENT_WRAPPER}>
+              <View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Status</Tex>
+                  <Tex>Connected</Tex>
+                </View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Last read</Tex>
+                  <Tex>30sec ago</Tex>
+                </View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Last write</Tex>
+                  <Tex>30sec ago</Tex>
+                </View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Row count</Tex>
+                  <Tex>100 rows</Tex>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>}
+        {this.state.pageIndex == 1 && <View style={styles.MAIN}>
+          <View style={[styles.COMPONENT_CARD, styles.ble_info]}>
+            <Tex style={styles.COMPONENT_TITLE} >
+              Bluetooth Info
+            </Tex>
+            <View style={styles.COMPONENT_WRAPPER}>
+              <View style={styles.MD_ROW_GAP}>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Status</Tex>
+                  <Tex>Enabled</Tex>
+                </View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Connected to</Tex>
+                  <Tex>SOURCE</Tex>
+                </View>
+              </View>
+              <View style={[styles.SUBCOMPONENT_CARD, styles.MD_ROW_GAP]}>
+                <Tex style={styles.SUBCOMPONENT_TITLE}>Devices found</Tex>
+                <View>
+                  <View style={styles.SUBCOMPONENT_LIST_ITEM}>
+                    <Tex>SOURCE</Tex>
+                    <Tex>Connected</Tex>
+                  </View>
+                  <View style={styles.SUBCOMPONENT_LIST_ITEM}>
+                    <Tex>Device 1</Tex>
+                    <Tex>Connect</Tex>
+                  </View>
+                  <View style={styles.SUBCOMPONENT_LIST_ITEM}>
+                    <Tex>Device 2</Tex>
+                    <Tex>Connect</Tex>
+                  </View>
+                </View>
+              </View>
+              <View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Num of packets received</Tex>
+                  <Tex>0</Tex>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View style={[styles.COMPONENT_CARD, styles.model_info]}>
+            <Tex style={styles.COMPONENT_TITLE} >
+              Model info
+            </Tex>
+            <View style={styles.COMPONENT_WRAPPER}>
+              <View style={[styles.CLASS_PROBABILITY, styles.MD_ROW_GAP]}>
+                <View style={styles.CLASS_PROBABILITY_HEADER}>
+                  <Tex>Class A</Tex>
+                  <Tex>0 %</Tex>
+                </View>
+                <View style={styles.CLASS_PROBABILITY_BODY}>
 
-        <ThemedView>
-          <ThemedText style={styles.sectionDescription}>Role:
-            <ThemedText style={styles.highlight}> {this.state.role ? this.state.role : "Not selected"}</ThemedText>
-          </ThemedText>
-          {this.state.role === "CENTRAL" && (
-            <ThemedText style={styles.sectionDescription}>Received:
-              <ThemedText style={styles.highlight}> {this.state.receivedData.data ? this.state.receivedData.data : "Nothing"}</ThemedText>
-            </ThemedText>
-          )}
-        </ThemedView>
-        <ThemedView>
-          <ThemedText style={styles.sectionTitle}>Connected devices</ThemedText>
-            {this.state.connectedDevices.length === 0 ? (
-              <ThemedText style={styles.deviceInfoContainer}>No devices to show</ThemedText>
-            ) : (
-              this.state.connectedDevices.map((device: any, index: any) => (
-              <ThemedView key={index} style={styles.deviceInfoContainer}>
-                <ThemedText>
-                  {device.name} {device.address}
-                </ThemedText>
-              </ThemedView>
-              ))
-          )}
-        </ThemedView>
-        <ThemedView>
-          {this.state.predictions.length !== 0 && (
-          <ThemedView>
-            <ThemedText style={styles.sectionTitle}>Prediction</ThemedText>
-            {this.state.predictions[this.state.predictions.length-1][0].map((prediction: any, index: any) => {
-              const actionMapping = ["Grazing", "Standing", "Walking", "Resting", "Licking"];
-              return (
-                <ThemedText key={index} style={styles.sectionDescription}>{actionMapping[index]}: {prediction.toFixed(2) * 100}</ThemedText>
-              )
-            })}
-          </ThemedView>
-          )}
-        </ThemedView>
+                </View>
+              </View>
+              <View style={[styles.CLASS_PROBABILITY, styles.MD_ROW_GAP]}>
+                <View style={styles.CLASS_PROBABILITY_HEADER}>
+                  <Tex>Class B</Tex>
+                  <Tex>0 %</Tex>
+                </View>
+                <View style={styles.CLASS_PROBABILITY_BODY}>
+
+                </View>
+              </View>
+              <View style={[styles.CLASS_PROBABILITY, styles.MD_ROW_GAP]}>
+                <View style={styles.CLASS_PROBABILITY_HEADER}>
+                  <Tex>Class C</Tex>
+                  <Tex>0 %</Tex>
+                </View>
+                <View style={styles.CLASS_PROBABILITY_BODY}>
+
+                </View>
+              </View>
+              <View style={[styles.CLASS_PROBABILITY, styles.MD_ROW_GAP]}>
+                <View style={styles.CLASS_PROBABILITY_HEADER}>
+                  <Tex>Class D</Tex>
+                  <Tex>0 %</Tex>
+                </View>
+                <View style={styles.CLASS_PROBABILITY_BODY}>
+
+                </View>
+              </View>
+              <View style={[styles.CLASS_PROBABILITY]}>
+                <View style={styles.CLASS_PROBABILITY_HEADER}>
+                  <Tex>Class E</Tex>
+                  <Tex>0 %</Tex>
+                </View>
+                <View style={styles.CLASS_PROBABILITY_BODY}>
+
+                </View>
+              </View>
+            </View>
+          </View>
+          <View style={[styles.COMPONENT_CARD, styles.db_info]}>
+            <Tex style={styles.COMPONENT_TITLE} >
+              Database Info
+            </Tex>
+            <View style={styles.COMPONENT_WRAPPER}>
+              <View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Status</Tex>
+                  <Tex>Connected</Tex>
+                </View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Last read</Tex>
+                  <Tex>30sec ago</Tex>
+                </View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Last write</Tex>
+                  <Tex>30sec ago</Tex>
+                </View>
+                <View style={styles.COMPONENT_LIST_ITEM}>
+                  <Tex>Row count</Tex>
+                  <Tex>100 rows</Tex>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>}
+        {this.state.pageIndex == 2 && <View style={styles.MAIN}>
+          <View style={[styles.COMPONENT_CARD, styles.history]}>
+            <Tex style={styles.COMPONENT_TITLE} >
+              History
+            </Tex>
+            <View style={styles.COMPONENT_WRAPPER}>
+              <View style={[styles.HISTORY_ITEM, styles.MD_ROW_GAP]}>
+                <View style={styles.HISTORY_ITEM_HEADER}>
+                  <Tex style={styles.SUBCOMPONENT_TITLE}>Cattle I</Tex>
+                </View>
+                <View style={styles.HISTORY_ITEM_BODY}>
+                  <View>
+                    <View style={styles.SUBCOMPONENT_LIST_ITEM}>
+                        <Tex>Last accessed:</Tex>
+                        <Tex>01/01/2026 00:00</Tex>
+                    </View>
+                    <View style={styles.SUBCOMPONENT_LIST_ITEM}>
+                        <Tex>Recorded:</Tex>
+                        <Tex>18 hours 15 minutes</Tex>
+                    </View>
+                  </View>
+                </View>
+              </View>
+              <View style={[styles.HISTORY_ITEM, styles.MD_ROW_GAP]}>
+                <View style={styles.HISTORY_ITEM_HEADER}>
+                  <Tex style={styles.SUBCOMPONENT_TITLE}>Cattle II</Tex>
+                </View>
+                <View style={styles.HISTORY_ITEM_BODY}>
+                  <View>
+                    <View style={styles.SUBCOMPONENT_LIST_ITEM}>
+                        <Tex>Last accessed:</Tex>
+                        <Tex>01/01/2026 00:00</Tex>
+                    </View>
+                    <View style={styles.SUBCOMPONENT_LIST_ITEM}>
+                        <Tex>Recorded:</Tex>
+                        <Tex>18 hours 15 minutes</Tex>
+                    </View>
+                  </View>
+                </View>
+              </View>
+              <View style={styles.HISTORY_ITEM}>
+                <View style={styles.HISTORY_ITEM_HEADER}>
+                  <Tex style={styles.SUBCOMPONENT_TITLE}>Cattle III</Tex>
+                </View>
+                <View style={styles.HISTORY_ITEM_BODY}>
+                  <View>
+                    <View style={styles.SUBCOMPONENT_LIST_ITEM}>
+                        <Tex>Last accessed:</Tex>
+                        <Tex>01/01/2026 00:00</Tex>
+                    </View>
+                    <View style={styles.SUBCOMPONENT_LIST_ITEM}>
+                        <Tex>Recorded:</Tex>
+                        <Tex>18 hours 15 minutes</Tex>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <View style={[styles.COMPONENT_CARD, styles.history]}>
+            <Tex style={styles.COMPONENT_TITLE}>
+              History
+            </Tex>
+            <View style={styles.HISTORY_CHARTS}>
+              <View style={styles.HISTORY_CHARTS_HEADER}>
+                <Tex style={styles.SUBCOMPONENT_TITLE}>Select TimeRange</Tex>
+                <Tex>Last 1h</Tex>
+              </View>
+              <View style={styles.HISTORY_CHARTS_BODY}>
+                <View style={[styles.MINI_SENSOR_CHART, styles.MD_ROW_GAP]}>
+                  <View style={styles.MINI_SENSOR_CHART_HEADER}>
+                    <Tex style={styles.SUBCOMPONENT_TITLE}>Accelerometer</Tex>
+                    <Tex>
+                      x: {this.state.sensorData[this.state.sensorData.length-1].xa}, 
+                      y: {this.state.sensorData[this.state.sensorData.length-1].ya},
+                      z: {this.state.sensorData[this.state.sensorData.length-1].za}
+                    </Tex>
+                  </View>
+                  <View style={styles.MINI_SENSOR_CHART_BODY}>
+                  </View>
+                </View>
+                <View style={[styles.MINI_SENSOR_CHART, styles.MD_ROW_GAP]}>
+                  <View style={styles.MINI_SENSOR_CHART_HEADER}>
+                    <Tex style={styles.SUBCOMPONENT_TITLE}>Gyroscope</Tex>
+                    <Tex>
+                      x: {this.state.sensorData[this.state.sensorData.length-1].xg}, 
+                      y: {this.state.sensorData[this.state.sensorData.length-1].yg},
+                      z: {this.state.sensorData[this.state.sensorData.length-1].zg}
+                    </Tex>
+                  </View>
+                  <View style={styles.MINI_SENSOR_CHART_BODY}>
+                  </View>
+                </View>
+                <View style={styles.STATS_BAR_CHART}>
+                  <View style={styles.STATS_BAR_CHART_HEADER}>
+                    <Tex style={styles.SUBCOMPONENT_TITLE}>Behvaior stats</Tex>
+                  </View>
+                  <View style={styles.STATS_BAR_CHART_BODY}>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>}
+        </View>
       </>
     )
   }
 }
 
 const styles = StyleSheet.create({
-  body: {
+  MAIN: {
+    padding: themeI.padding.md,
   },
-  bleSection: {
+  COMPONENT_CARD: {
+    flexDirection: 'column',
+    width: '100%',
+    backgroundColor: themeI.backgroundColors.light,
+    borderRadius: themeI.borderRadius.md,
+    padding: themeI.padding.md,
+    marginBottom: themeI.spacing.lg,
   },
-  sensorSection: {
+  COMPONENT_WRAPPER: {
+    flexDirection: 'column',
   },
-  sectionContainer: {
-    flex: 1,
-    marginTop: 12,
-    marginBottom: 12,
-    paddingHorizontal: 24,
+  COMPONENT_TITLE: {
+    alignSelf: 'center',
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginBottom: themeI.spacing.lg,
   },
-  masterTitle: {
-    fontSize: 22,
-    marginBottom: 5,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    marginBottom: 5,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginTop: 30,
-  },
-  sectionDescription: {
-    fontSize: 12,
-    fontWeight: '400',
-    textAlign: 'center',
-  },
-  horizontalButtonContainer: {
+  COMPONENT_LIST_ITEM: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    justifyContent: 'space-between',
   },
-  defaultButton: {
-    borderRadius: 5,
-    backgroundColor: '#303030',
-    alignSelf: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+
+  SUBCOMPONENT_CARD: {
+    paddingLeft: themeI.padding.sm,
   },
-  defaultButtonText: {
-    fontSize: 10,
-    letterSpacing: 0,
-    textAlign: 'center',
-    color: '#ffffff',
+  SUBCOMPONENT_TITLE: {
+    marginBottom: themeI.spacing.md,
+    fontWeight: 'bold',
   },
-  defaultLinkContainer: {
-    alignSelf: 'center',
-    justifyContent: 'center',
-  },
-  defaultLink: {
-    fontSize: 12,
-    textDecorationLine: 'underline',
-    color: '#505050',
-  },
-  listActionLink: {
-    fontSize: 10,
-    textDecorationLine: 'underline',
-    color: '#50a050',
-  },
-  listActionLinkGreyed: {
-    fontSize: 10,
-    color: '#303030',
-  },
-  deviceInfoContainer: {
+  SUBCOMPONENT_LIST_ITEM: {
     flexDirection: 'row',
-    alignSelf: 'center',
-    fontSize: 12,
+    justifyContent: 'space-between',
   },
-  deviceInfo: {
-    padding: 3,
-    fontSize: 10,
-    fontWeight: '400',
+
+  MINI_SENSOR_CHART: {
   },
-  notLastButton: {
-    marginRight: 15,
+  MINI_SENSOR_CHART_HEADER: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  activeStateButton: {
-    backgroundColor: '#808080',
+  MINI_SENSOR_CHART_BODY: {
+    width: '100%',
+    minHeight: 50,
+    backgroundColor: themeI.backgroundColors.preview,
+    borderRadius: themeI.borderRadius.md,
   },
-  highlight: {
-    fontWeight: '700',
+
+  CLASS_PROBABILITY: {
+
   },
+  CLASS_PROBABILITY_HEADER: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  CLASS_PROBABILITY_BODY: {
+    width: '100%',
+    minHeight: 5,
+    backgroundColor: themeI.backgroundColors.preview,
+    borderRadius: themeI.borderRadius.md,
+  },
+
+  HISTORY_ITEM: {
+    borderWidth: 1,
+    borderColor: themeI.borderColors.default,
+    borderRadius: themeI.borderRadius.md,
+    padding: themeI.padding.sm,
+  },
+  HISTORY_ITEM_HEADER: {
+
+  },
+  HISTORY_ITEM_BODY: {
+
+  },
+
+  HISTORY_CHARTS: {
+
+  },
+  HISTORY_CHARTS_HEADER: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  HISTORY_CHARTS_BODY: {
+
+  },
+  STATS_BAR_CHART: {
+
+  },
+  STATS_BAR_CHART_HEADER: {
+
+  },
+  STATS_BAR_CHART_BODY: {
+    width: '100%',
+    minHeight: 50,
+    backgroundColor: themeI.backgroundColors.preview,
+    borderRadius: themeI.borderRadius.md,
+  },
+
+  ble_info: {
+
+  },
+  sensor_info: {
+
+  },
+  db_info: {
+
+  },
+  model_info: {
+
+  },
+  history: {
+
+  },
+
+  MD_ROW_GAP: {
+    marginBottom: themeI.spacing.md,
+  }
 });
 
 
