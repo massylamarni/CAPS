@@ -10,13 +10,24 @@ type sensor_data_t = {
   z: number;
 }
 
-type sensor_db_entry_t = {
-    xa: number;
-    ya: number;
-    za: number;
-    xg: number;
-    yg: number;
-    zg: number;
+type dual_sensor_data_t = {
+  xa: number;
+  ya: number;
+  za: number;
+  xg: number;
+  yg: number;
+  zg: number;
+}
+
+type db_data_t = {
+  id: string,
+  DateTime: number,
+  xa: number;
+  ya: number;
+  za: number;
+  xg: number;
+  yg: number;
+  zg: number;
 }
 
 const SAVE_SEGMENT_SIZE = 10 // 1sec at 10Hz
@@ -88,7 +99,7 @@ export default function SensorScreen({ sensorDataBridge, readMode, showComponent
     // Save data to database
     useEffect(() => {
       if (!isRecording || sensorData.length < SAVE_SEGMENT_SIZE) return;
-      const saveToDatabase = async (sensorData: sensor_db_entry_t[]) => {
+      const saveToDatabase = async (sensorData: dual_sensor_data_t[]) => {
         sensorData.forEach(async (data) => {
           await addSensorData(data);
         });
