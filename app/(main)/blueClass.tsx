@@ -18,14 +18,12 @@ export interface BlueState {
   bondedDevices: BluetoothDevice[] | null,
   connectedDevices: BluetoothDevice[] | null,
   theDevice: BluetoothDevice | null,
+  receivedData: string[],
 }
 
 export interface BlueProps {
   blueBridge: {
     setBlueState: (BlueState: any) => void,
-    blueListeners: {
-      onReceivedData: BluetoothEventSubscription,
-    }
   }
 }
 
@@ -44,6 +42,7 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     bondedDevices: [] as BluetoothDevice[],
     connectedDevices: [] as BluetoothDevice[],
     theDevice: null,
+    receivedData: [],
   };
 
   onBluetoothEnabledSub: BluetoothEventSubscription;
@@ -68,17 +67,22 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     this.onBluetoothErrorSub?.remove();
     this.onReceivedDataSub?.remove();
     clearInterval(this.checkConnectionsInterval);
+    this.cancelAcceptConnections();
+    this.cancelDiscovery();
+    this.disconnect();
   }
 
   componentDidUpdate(prevProps: Readonly<BlueProps>, prevState: Readonly<BlueState>, snapshot?: any): void {
       this.blueGetter();
+      if (prevState.theDevice !== this.state.theDevice) {
+        this.receptionListener();
+      }
   }
 
-  async initListeres() {
+  initListeres = async () => {
     const onBluetoothEnabled = (event: StateChangeEvent) => {
       ToastAndroid.show(`Bluetooth enabled`, ToastAndroid.SHORT);
       this.setState({ isBluetoothEnabled: true });
-      this.startDiscovery();
     }
     const onBluetoothDisabled = (event: StateChangeEvent) => {
       ToastAndroid.show(`Bluetooth disabled`, ToastAndroid.SHORT);
@@ -103,19 +107,19 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     this.onBluetoothEnabledSub = RNBluetoothClassic.onBluetoothEnabled(onBluetoothEnabled);
     this.onBluetoothDisabledSub = RNBluetoothClassic.onBluetoothDisabled(onBluetoothDisabled);
     this.onDeviceConnectedSub = RNBluetoothClassic.onDeviceConnected(onDeviceConnected);  // Not working
-    this.onDeviceDisconnectedSub = RNBluetoothClassic.onDeviceDisconnected(onDeviceDisconnected); // Not working
+    this.onDeviceDisconnectedSub = RNBluetoothClassic.onDeviceDisconnected(onDeviceDisconnected);
     this.onBluetoothErrorSub = RNBluetoothClassic.onError(onBluetoothError);
   }
 
-  receptionListener() {
-    this.onReceivedDataSub = this.state.theDevice?.onDataReceived((receivedData) => 
-      this.props.blueBridge.blueListeners.onReceivedData(receivedData)
-    );
+  private handleReception = (receivedData: any) => {
+    this.setState(prev => ({receivedData: [...prev.receivedData, receivedData.data]}));
+  }
+  receptionListener = () => {
+    this.onReceivedDataSub = this.state.theDevice?.onDataReceived((receivedData) => this.handleReception(receivedData));
   }
 
-  
 
-  async initBluetooth() {
+  initBluetooth = async () => {
     // Ask permissions
     try {
       const granted = await PermissionsAndroid.requestMultiple([
@@ -133,20 +137,17 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     try {
       const isBluetoothEnabled = await RNBluetoothClassic.isBluetoothEnabled();
       this.setState({ isBluetoothEnabled: isBluetoothEnabled });
-      if (isBluetoothEnabled) this.startDiscovery();
     } catch (error) {
       ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
     }
     
     // Broken connection event listener work around
     this.checkConnectionsInterval = setInterval(async () => {
-      if (this.state.connectedDevices?.length === 0) {
+      if (this.state.connectedDevices && this.state.connectedDevices.length === 0) {
         try {
           const connectedDevices = await RNBluetoothClassic.getConnectedDevices();
           if (connectedDevices.length !== 0) {
-            this.setState({ connectedDevices: connectedDevices, theDevice: connectedDevices[0] }, () => {
-              this.startCommunication();
-            });
+            this.setState({ connectedDevices: connectedDevices, theDevice: connectedDevices[0] });
           }
         } catch (error) {
           ToastAndroid.show(`Failed to get connected devices: ${error}`, ToastAndroid.SHORT);
@@ -156,7 +157,7 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     
   }
 
-  async getBondedDevices() {
+  getBondedDevices = async () => {
     try {
       const bondedDevices = await RNBluetoothClassic.getBondedDevices();
       this.setState({ bondedDevices: bondedDevices });
@@ -165,7 +166,7 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     }
   }
 
-  async startDiscovery() {
+  startDiscovery = async () => {
     try {  
       this.setState({ discovering: true });
       const unpairedDevices = await RNBluetoothClassic.startDiscovery();
@@ -178,7 +179,7 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     }
   }
 
-  async cancelDiscovery() {
+  cancelDiscovery = async () => {
     try {
       const cancelled = await RNBluetoothClassic.cancelDiscovery();
       if (cancelled) this.setState({ discovering: false });
@@ -187,7 +188,7 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     }
   }
 
-  async pairDevice(deviceAddr: string) {
+  pairDevice = async (deviceAddr: string) => {
     try {
       this.setState({ pairing: true });
       const theDevice = await RNBluetoothClassic.pairDevice(deviceAddr);
@@ -199,7 +200,7 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     }
   }
 
-  async unpairDevice(deviceAddr: string) {
+  unpairDevice = async (deviceAddr: string) => {
     try {
       const theDevice = await RNBluetoothClassic.unpairDevice(deviceAddr);
       this.setState({ theDevice: null });
@@ -208,7 +209,7 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     }
   }
 
-  async acceptConnections() {
+  acceptConnections = async () => {
     this.setState({ isAcceptingConnections: true });
       
     try {      
@@ -221,7 +222,7 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     }
   }
 
-  async cancelAcceptConnections() {
+  cancelAcceptConnections = async () => {
     if (!this.state.isAcceptingConnections) {
       return;
     }
@@ -234,7 +235,7 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     }
   }
 
-  async connect(_theDevice: BluetoothDevice | null) {
+  connect = async (_theDevice: BluetoothDevice | null) => {
     try {
       this.setState({ connecting: true });
       const theDevice = this.state.theDevice ? this.state.theDevice : _theDevice;
@@ -252,7 +253,7 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     }
   }
 
-  async disconnect() {
+  disconnect = async () => {
     try {
       const disconnected = await this.state.theDevice?.disconnect();
       this.setState({ connectedDevices: [], theDevice: null });
@@ -261,7 +262,7 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     }
   }
 
-  async write(message: string) {
+  write = async (message: string) => {
     try {
       const writeStatus = await this.state.theDevice?.write(message);
     } catch (error) {
@@ -269,29 +270,38 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     }
   }
 
-  async runPeripheralProcess() {
-    this.startCommunication();
+  private sendBuffer = [] as string[];
+  private isWriting = false;
+  managedWrite = async (largeMessage: string) => {
+    this.sendBuffer.push(largeMessage);
+    if (this.isWriting) return;
 
-    if (this.state.theDevice) {
-        ToastAndroid.show(`Device is connected, sending message...`, ToastAndroid.SHORT);
-        await this.write("This is a message\n");
+    this.isWriting = true;
+    while (this.sendBuffer.length > 0) {
+      const message = this.sendBuffer.shift();
+      if (!message) continue;
+      await this.write(`${message}\n`);
+    }
+    this.isWriting = false;
+  };
+
+  fullConnect = async (_device: BluetoothDevice) => {
+    this.setState({ connecting: true });
+    const bondedDevices = await RNBluetoothClassic.getBondedDevices();
+    let isPaired = false;
+    bondedDevices?.forEach((device: BluetoothDevice) => {
+      if (device.address === _device.address) isPaired = true;
+    });
+    if (isPaired) {
+      await this.connect(_device);
     } else {
-      ToastAndroid.show(`Device is not connected, waiting for connection...`, ToastAndroid.SHORT);
-      await this.acceptConnections();
+      await this.pairDevice(_device.address);
+      await this.connect(_device);        
     }
+    this.setState({ connecting: false });
   }
 
-  async startCommunication() {
-    if (this.state.connectedDevices?.length !== 0) {
-      if (!this.checkConnectionsInterval) this.receptionListener();
-      if (true) {
-        const formattedMessage = JSON.stringify("Hello");
-        this.write(`${formattedMessage}\n`);
-      }
-    }
-  }
-
-  blueGetter() {
+  blueGetter = () => {
     this.props.blueBridge.setBlueState(this.state);
   }
 

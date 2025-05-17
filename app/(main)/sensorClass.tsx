@@ -54,7 +54,7 @@ class SensorComponent extends React.Component<SensorProps, SensorState> {
       this.sensorGetter();
   }
 
-  initSensors() {
+  initSensors = () => {
     Accelerometer.setUpdateInterval(100); // 100ms = 10Hz
     Gyroscope.setUpdateInterval(100);
     let accelData = {x: 0, y: 0, z: 0};
@@ -81,7 +81,7 @@ class SensorComponent extends React.Component<SensorProps, SensorState> {
     }, 100);
   }
 
-  sensorGetter() {
+  sensorGetter = () => {
     this.props.sensorBridge.setSensorState(this.state);
   }
 

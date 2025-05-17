@@ -157,9 +157,35 @@ export const getRowCount = async () => {
   }
 };
 
+export const getAllSensorData = async (dbAnchor: number): Promise<DbEntry[]> => {
+  try {
+    const result = await db.getAllAsync<DbEntry>(
+      `SELECT * FROM sensor_data WHERE id >= ? ORDER BY DateTime ASC`, [dbAnchor]
+    );
+    return result;
+  } catch (error) {
+    console.error('Error fetching all sensor data:', error);
+    return [];
+  }
+};
+
+export const getAllDevices = async (): Promise<{ id: number, mac: string, name?: string, created_at: number }[]> => {
+  try {
+    const result = await db.getAllAsync<{ id: number, mac: string, name?: string, created_at: number }>(
+      `SELECT * FROM devices ORDER BY id ASC`
+    );
+    return result;
+  } catch (error) {
+    console.error('Error fetching all devices:', error);
+    return [];
+  }
+};
+
+
 export const resetDatabase = async () => {
     try {
         await db.execAsync('DROP TABLE IF EXISTS sensor_data');
+        await db.execAsync('DROP TABLE IF EXISTS devices');
         initDatabase();
         if (DEBUG) console.log('Database fully reset');
         return true;
@@ -168,3 +194,4 @@ export const resetDatabase = async () => {
         return false;
     }
 };
+

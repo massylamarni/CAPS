@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, ToastAndroid, TouchableOpacity, PanResponder } from 'react-native';
 import Tex from './base-components/tex';
 import styles from '@/assets/styles';
@@ -11,6 +11,7 @@ import { useState } from 'react';
 import BlueComponent, { BlueState } from './blueClass';
 import SensorComponent, { SensorState } from './sensorClass';
 import ModelComponent, {ModelState} from './modelClass';
+import DbComponent, {DbState} from './dbClass';
 
 const ROLE = "P";
 
@@ -19,17 +20,13 @@ export default function indexComponent() {
   const [blueState, setBlueState] = useState({} as BlueState);
   const [sensorState, setSensorState] = useState({} as SensorState);
   const [modelState, setModelState] = useState({} as ModelState);
-  
-  const onReceivedData = (data: any) => {
-    console.log("Data received");
-  }
+  const [dbState, setDbState] = useState({} as DbState);
 
   const blueBridge = {
     setBlueState: setBlueState,
-    blueListeners: {
-      onReceivedData: onReceivedData,
-    }
   }
+  const blueRef = useRef<BlueComponent>(null);
+
 
   const sensorBridge = {
     setSensorState: setSensorState,
@@ -37,7 +34,13 @@ export default function indexComponent() {
 
   const modelBridge = {
     setModelState: setModelState,
+    blueState: blueState,
+  }
+
+  const dbBridge = {
+    setDbState: setDbState,
     sensorState: sensorState,
+    blueState: blueState,
   }
 
   const panResponder = PanResponder.create({
@@ -55,20 +58,21 @@ export default function indexComponent() {
 
   return(
     <>
-      <BlueComponent blueBridge={blueBridge} />
-      <SensorComponent sensorBridge={sensorBridge} />
+      <BlueComponent ref={blueRef} blueBridge={blueBridge} />
       <ModelComponent modelBridge={modelBridge} />
+      <DbComponent dbBridge={dbBridge} />
       <View {...panResponder.panHandlers}>
         <View style={styles.MAIN}>
           {pageIndex == 0 && <>
-            <BlueView blueState={blueState} role={'P'} />
+            <SensorComponent sensorBridge={sensorBridge} />
+            <BlueView blueState={blueState} blueRef={blueRef} sensorState={sensorState} role={'P'} />
             <SensorView sensorState={sensorState} settings={{show_title: true, show_coord: true}} />
-            <DbView sensorState={sensorState} mac={blueState.theDevice?.address} />
+            <DbView dbState={dbState} />
           </>}
           {pageIndex == 1 && <>
-            <BlueView blueState={blueState} role={'C'} />
+            <BlueView blueState={blueState} blueRef={blueRef} sensorState={sensorState} role={'C'} />
             <ModelView modelState={modelState} />
-            <DbView sensorState={sensorState} mac={blueState.theDevice?.address} />
+            <DbView dbState={dbState} />
           </>}
           {pageIndex == 2 && <>
             <HistoryView />

@@ -4,6 +4,7 @@ import { ToastAndroid } from 'react-native';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-react-native';
 import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
+import { BlueState } from './blueClass';
 
 type dual_sensor_data_t = {
     xa: number;
@@ -43,7 +44,7 @@ const input_2 = [
   ],
 ];
 
-
+const SEGMENT_SIZE = 10;
 
 export interface ModelState {
     model: any,
@@ -53,7 +54,7 @@ export interface ModelState {
 interface ModelProps {
   modelBridge: {
     setModelState: (ModelState: any) => void,
-    sensorState: any,
+    blueState: BlueState,
   }
 }
 
@@ -73,14 +74,42 @@ class ModelComponent extends React.Component<ModelProps, ModelState> {
     
   }
 
-  componentDidUpdate(prevProps: Readonly<ModelProps>, prevState: Readonly<ModelState>, snapshot?: any): void {
-    this.blueGetter();
-    if (prevProps.modelBridge.sensorState != this.props.modelBridge.sensorState) {
-      this.processAndMakePrediction(this.props.modelBridge.sensorState.sensorData);
+  private modelBuffer = [] as any;
+  private dbFormatBuffer = [] as any;
+  private chunkAndProcess = () => {
+    console.log("chunkAndProcess");
+    if (this.state.model) {
+      const receivedData = this.props.modelBridge.blueState.receivedData;
+      const data = JSON.parse(receivedData[receivedData.length-1]);
+      if (data.XA) {
+        if (this.modelBuffer.length < SEGMENT_SIZE) {
+          this.modelBuffer.push(data);
+        } else {
+          this.processAndMakePrediction(this.modelBuffer);
+          this.modelBuffer = [data];
+        }
+      } else {
+        const dbData = data.sensorData;
+        dbData?.forEach((entry: any) => {
+          if (this.dbFormatBuffer.length < SEGMENT_SIZE) {
+            this.dbFormatBuffer.push(entry);
+          } else {
+            this.processAndMakePrediction(this.dbFormatBuffer);
+            this.dbFormatBuffer = [entry];
+          }
+        });
+      }
     }
   }
 
-  async loadModel() {
+  componentDidUpdate(prevProps: Readonly<ModelProps>, prevState: Readonly<ModelState>, snapshot?: any): void {
+    this.modelGetter();
+    if (prevProps.modelBridge.blueState.receivedData != this.props.modelBridge.blueState.receivedData) {  // sensorState
+      this.chunkAndProcess();
+    }
+  }
+
+  loadModel = async () => {
     try {
       await tf.ready();
 
@@ -93,7 +122,7 @@ class ModelComponent extends React.Component<ModelProps, ModelState> {
     }
   }
 
-  async makePrediction(dataSegment: number[][][]) {
+  makePrediction = async (dataSegment: number[][][]) => {
     try {
       const inputTensor = tf.tensor(dataSegment, [1, 10, 6]);
 
@@ -107,35 +136,31 @@ class ModelComponent extends React.Component<ModelProps, ModelState> {
     }
   }
 
-  processAndMakePrediction(rawData: dual_sensor_data_t[]) {
-    const BATCH_SIZE = 30;
-    const SEGMENT_SIZE = 10;
-    if (rawData.length !== 0 && (rawData.length % BATCH_SIZE === 0)) {
-      const MIN_A = -74.08409134, MAX_A = 43.37365402;
-      const MIN_G = -16.51096916, MAX_G = 28.44993591;
+  processAndMakePrediction = async (buffer: dual_sensor_data_t[]) => {
+    const MIN_A = -74.08409134, MAX_A = 43.37365402;
+    const MIN_G = -16.51096916, MAX_G = 28.44993591;
 
-      const preprocessSingleRow = (data: any): number[] => {  // Needs debug
-        const normalizedData = {
-          xa: (data.xa - MIN_A) / (MAX_A - MIN_A),
-          ya: (data.ya - MIN_A) / (MAX_A - MIN_A),
-          za: (data.za - MIN_A) / (MAX_A - MIN_A),
-          xg: (data.xg - MIN_G) / (MAX_G - MIN_G),
-          yg: (data.yg - MIN_G) / (MAX_G - MIN_G),
-          zg: (data.zg - MIN_G) / (MAX_G - MIN_G),
-        };
+    const preprocessSingleRow = (data: any): number[] => {  // Needs debug
+      const normalizedData = {
+        xa: (data.xa - MIN_A) / (MAX_A - MIN_A),
+        ya: (data.ya - MIN_A) / (MAX_A - MIN_A),
+        za: (data.za - MIN_A) / (MAX_A - MIN_A),
+        xg: (data.xg - MIN_G) / (MAX_G - MIN_G),
+        yg: (data.yg - MIN_G) / (MAX_G - MIN_G),
+        zg: (data.zg - MIN_G) / (MAX_G - MIN_G),
+      };
 
-        return Object.values(normalizedData);
-      }
-
-      let preprocessedData = [];
-      for (let i = 0; i < SEGMENT_SIZE; i++) {
-        preprocessedData[i] = preprocessSingleRow(rawData[rawData.length-1-i]);
-      }
-      this.makePrediction([preprocessedData]);
+      return Object.values(normalizedData);
     }
+
+    let preprocessedData = [] as number[][];
+    buffer.forEach((entry, index) => {
+      preprocessedData[index] = preprocessSingleRow(entry);
+    });
+    this.makePrediction([preprocessedData]);
   }
 
-  blueGetter() {
+  modelGetter = () => {
     this.props.modelBridge.setModelState(this.state);
   }
 
