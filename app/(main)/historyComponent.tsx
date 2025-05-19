@@ -1,12 +1,9 @@
+import { getLastRow, getPredictionStats, DbEntry } from '@/utils/sqlite_db';
 import { View, TouchableOpacity, Dimensions } from 'react-native';
-import Tex from './base-components/tex';
-import styles from '@/assets/styles';
-import { getLastRow, getPredictionStats } from '@/utils/sqlite_db';
 import { useEffect, useState } from 'react';
-import SensorView from './sensorView';
-import { DbEntry } from '@/utils/sqlite_db';
-import { DbState } from './dbClass';
-
+import Tex from './base-components/tex';
+import themeI from '@/assets/themes';
+import styles from '@/assets/styles';
 import {
   LineChart,
   BarChart,
@@ -15,12 +12,18 @@ import {
   ContributionGraph,
   StackedBarChart
 } from "react-native-chart-kit";
-import themeI from '@/assets/themes';
+import { DbState, HistoryState } from '.';
 
-export default function HistoryView({ dbState: dbState }: { dbState: DbState}) {
-  const [lastRow, setLastRow] = useState(null as DbEntry[] | null);
-  const [predictionStats, setPredictionStats] = useState(null as { predictedClass: number; count: number; }[] | null);
+const TAG = "C/historyComponent";
 
+export default function HistoryComponent({ historyState, dbStats }: { historyState: HistoryState, dbStats: DbState["dbStats"]}) {
+  const {
+    lastRow,
+    setLastRow,
+    predictionStats,
+    setPredictionStats,
+  } = historyState;
+  
   const init = async () => {
     setLastRow(await getLastRow());
     setPredictionStats(await getPredictionStats());
@@ -51,7 +54,7 @@ export default function HistoryView({ dbState: dbState }: { dbState: DbState}) {
                   </View>
                   <View style={styles.SUBCOMPONENT_LIST_ITEM}>
                       <Tex>Recorded:</Tex>
-                      <Tex>{dbState.dbStats.row_count}</Tex>
+                      <Tex>{dbStats.row_count}</Tex>
                   </View>
                 </View>
               </View>

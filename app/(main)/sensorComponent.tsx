@@ -1,9 +1,8 @@
+import { Accelerometer, Gyroscope } from 'expo-sensors';
+import { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Dimensions } from 'react-native';
 import Tex from './base-components/tex';
 import styles from '@/assets/styles';
-import { SensorState } from './sensorClass';
-import { useEffect, useState } from 'react';
-
 import {
   LineChart,
   BarChart,
@@ -13,6 +12,25 @@ import {
   StackedBarChart
 } from "react-native-chart-kit";
 import themeI from '@/assets/themes';
+import { SensorState } from '.';
+
+type sensor_data_t = {
+  x: number;
+  y: number;
+  z: number;
+}
+
+type dual_sensor_data_t = {
+    xa: number;
+    ya: number;
+    za: number;
+    xg: number;
+    yg: number;
+    zg: number;
+}
+const dual_sensor_data_d = { xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 };
+
+const FREQUENCY = 100; // 100ms = 10Hz
 
 type sensor_view_settings_t = {
   show_title: boolean;
@@ -21,13 +39,55 @@ type sensor_view_settings_t = {
 
 const SEQUENCE_LENGTH = 10;
 
-export default function SensorView({ sensorState: sensorState, settings: settings }: {sensorState: SensorState, settings:sensor_view_settings_t}) {
-  const [xaData, setXaData] = useState([0] as number[]);
-  const [yaData, setYaData] = useState([0] as number[]);
-  const [zaData, setZaData] = useState([0] as number[]);
-  const [xgData, setXgData] = useState([0] as number[]);
-  const [ygData, setYgData] = useState([0] as number[]);
-  const [zgData, setZgData] = useState([0] as number[]);
+export default function SensorComponent({ sensorState: sensorState, settings: settings }: {sensorState: SensorState, settings:sensor_view_settings_t}) {
+  const {
+    sensorData,
+    setSensorData,
+    xaData,
+    setXaData,
+    yaData,
+    setYaData,
+    zaData,
+    setZaData,
+    xgData,
+    setXgData,
+    ygData,
+    setYgData,
+    zgData,
+    setZgData,
+  } = sensorState;
+
+  /* Init sensorData */
+  useEffect(() => {
+    Accelerometer.setUpdateInterval(FREQUENCY);
+    Gyroscope.setUpdateInterval(FREQUENCY);
+    let accelData = {x: 0, y: 0, z: 0};
+    let gyroData = {x: 0, y: 0, z: 0};
+    const accelSubscription = Accelerometer.addListener((data: sensor_data_t) => {
+        accelData = data;
+    });
+    const gyroSubscription = Gyroscope.addListener((data: sensor_data_t) => {
+        gyroData = data;
+    });
+    const sensorDataInterval = setInterval(() => {
+      const groupedData = {
+          xa: accelData.x,
+          ya: accelData.y,
+          za: accelData.z,
+          xg: gyroData.x,
+          yg: gyroData.y,
+          zg: gyroData.z
+      };
+
+      setSensorData([groupedData]);
+    }, FREQUENCY);
+
+    return () => {
+      accelSubscription?.remove();
+      gyroSubscription?.remove();
+      clearInterval(sensorDataInterval);
+    }
+  }, []);
 
   useEffect(() => {
 

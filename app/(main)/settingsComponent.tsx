@@ -1,11 +1,11 @@
 import { View, TouchableOpacity } from 'react-native';
 import Tex from './base-components/tex';
-import { resetDatabase } from '@/utils/sqlite_db';
-import styles from '@/assets/styles';
 import Icon from 'react-native-vector-icons/Feather';
 import themeI from '@/assets/themes';
+import styles from '@/assets/styles';
+import { resetDatabase } from '@/utils/sqlite_db';
 
-export default function SettingsView({ setSettings: setSettings }: {setSettings: any}) {
+export default function SettingsComponent({ setSettings: setSettings }: {setSettings: any}) {
 
   return (
     <>

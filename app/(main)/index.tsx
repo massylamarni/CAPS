@@ -2,48 +2,239 @@ import React, { useEffect, useRef } from 'react';
 import { View, ToastAndroid, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import Tex from './base-components/tex';
 import styles from '@/assets/styles';
-import BlueView from './blueView';
-import SensorView from './sensorView';
-import DbView from './dbView';
-import ModelView from './modelView';
-import HistoryView from './historyView';
 import { useState } from 'react';
-import BlueComponent, { BlueState } from './blueClass';
-import SensorComponent, { SensorState } from './sensorClass';
-import ModelComponent, {ModelState} from './modelClass';
-import DbComponent, {DbState} from './dbClass';
-import SettingsView from './settingsView';
+import SettingsComponent from './settingsComponent';
+
+import { BluetoothDevice, BluetoothDeviceEvent } from "react-native-bluetooth-classic";
+import BlueComponent from './blueComponent';
+import ModelComponent from './modelComponent';
+import SensorComponent from './sensorComponent';
+import DbComponent from './dbComponent';
+import HistoryComponent from './historyComponent';
+import { DbEntry } from '@/utils/sqlite_db';
+
+export type BlueState = {
+  arePermissionsGranted: boolean;
+  setArePermissionsGranted: React.Dispatch<React.SetStateAction<boolean>>;
+  isBluetoothEnabled: boolean;
+  setIsBluetoothEnabled: React.Dispatch<React.SetStateAction<boolean>>;
+  isDiscovering: boolean;
+  setIsDiscovering: React.Dispatch<React.SetStateAction<boolean>>;
+  isConnecting: boolean;
+  setIsConnecting: React.Dispatch<React.SetStateAction<boolean>>;
+  isDisconnecting: boolean;
+  setIsDisconnecting: React.Dispatch<React.SetStateAction<boolean>>;
+  isUnpairing: boolean;
+  setIsUnpairing: React.Dispatch<React.SetStateAction<boolean>>;
+  isAccepting: boolean;
+  setIsAccepting: React.Dispatch<React.SetStateAction<boolean>>;
+  isWriting: boolean;
+  setIsWriting: React.Dispatch<React.SetStateAction<boolean>>;
+  unpairedDevices: BluetoothDevice[];
+  setUnpairedDevices: React.Dispatch<React.SetStateAction<BluetoothDevice[]>>;
+  bondedDevices: BluetoothDevice[];
+  setBondedDevices: React.Dispatch<React.SetStateAction<BluetoothDevice[]>>;
+  connectedDevice: BluetoothDevice | null;
+  setConnectedDevice: React.Dispatch<React.SetStateAction<BluetoothDevice | null>>;
+  receivedData: any[] | null;
+  setReceivedData: React.Dispatch<React.SetStateAction<any[] | null>>;
+  sendCount: number;
+  setSendCount: React.Dispatch<React.SetStateAction<number>>;
+  receiveCount: number;
+  setReceiveCount: React.Dispatch<React.SetStateAction<number>>;
+};
+
+export type DbState = {
+  isDbConnected: boolean;
+  setIsDbConnected: React.Dispatch<React.SetStateAction<boolean>>;
+  dbStats: {
+    last_read: number;
+    last_row: DbEntry | null;
+    row_count: number;
+  };
+  setDbStats: React.Dispatch<
+    React.SetStateAction<{
+      last_read: number;
+      last_row: DbEntry | null;
+      row_count: number;
+    }>
+  >;
+};
+
+export type HistoryState = {
+  lastRow: DbEntry[] | null;
+  setLastRow: React.Dispatch<React.SetStateAction<DbEntry[] | null>>;
+  predictionStats: { predictedClass: number; count: number }[] | null;
+  setPredictionStats: React.Dispatch<
+    React.SetStateAction<{ predictedClass: number; count: number }[] | null>
+  >;
+};
+
+export type ModelState = {
+  isModelLoaded: boolean;
+  setIsModelLoaded: React.Dispatch<React.SetStateAction<boolean>>;
+  isDbBuffered: boolean;
+  setIsDbBuffered: React.Dispatch<React.SetStateAction<boolean>>;
+  isPredicting: boolean;
+  setIsPredicting: React.Dispatch<React.SetStateAction<boolean>>;
+  predictions: any[]; // You can replace `any` with a proper prediction type later
+  setPredictions: React.Dispatch<React.SetStateAction<any[]>>;
+  bufferEntriesCount: number;
+  setBufferEntriesCount: React.Dispatch<React.SetStateAction<number>>;
+};
+
+export type SensorSample = {
+  xa: number;
+  ya: number;
+  za: number;
+  xg: number;
+  yg: number;
+  zg: number;
+};
+
+export type SensorState = {
+  sensorData: SensorSample[];
+  setSensorData: React.Dispatch<React.SetStateAction<SensorSample[]>>;
+  xaData: number[];
+  setXaData: React.Dispatch<React.SetStateAction<number[]>>;
+  yaData: number[];
+  setYaData: React.Dispatch<React.SetStateAction<number[]>>;
+  zaData: number[];
+  setZaData: React.Dispatch<React.SetStateAction<number[]>>;
+  xgData: number[];
+  setXgData: React.Dispatch<React.SetStateAction<number[]>>;
+  ygData: number[];
+  setYgData: React.Dispatch<React.SetStateAction<number[]>>;
+  zgData: number[];
+  setZgData: React.Dispatch<React.SetStateAction<number[]>>;
+};
+
 
 export default function indexComponent() {
-  const [pageIndex, setPageIndex] = useState(0);
-  const [blueState, setBlueState] = useState({} as BlueState);
-  const [modelState, setModelState] = useState({} as ModelState);
-  const [dbState, setDbState] = useState({} as DbState);
-  const [sensorState, setSensorState] = useState({} as SensorState);
+  /* BlueState */
+  const [arePermissionsGranted, setArePermissionsGranted] = useState(false);
+  const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(false);
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [isUnpairing, setIsUnpairing] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [isWriting, setIsWriting] = useState(false);
+  const [unpairedDevices, setUnpairedDevices] = useState([] as BluetoothDevice[]);
+  const [bondedDevices, setBondedDevices] = useState([] as BluetoothDevice[]);
+  const [connectedDevice, setConnectedDevice] = useState(null as BluetoothDevice | null);
+  const [receivedData, setReceivedData] = useState(null as any[] | null);
+  const [sendCount, setSendCount] = useState(0);
+  const [receiveCount, setReceiveCount] = useState(0);
+
+  /* DbState */
+  const [isDbConnected, setIsDbConnected] = useState(false);
+  const [dbStats, setDbStats] = useState({
+    last_read: 0,
+    last_row: null as DbEntry | null,
+    row_count: 0,
+  });
+
+  /* HistoryState */
+  const [lastRow, setLastRow] = useState(null as DbEntry[] | null);
+  const [predictionStats, setPredictionStats] = useState(null as { predictedClass: number; count: number; }[] | null);
+
+  /* ModelState */
+  const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [isDbBuffered, setIsDbBuffered] = useState(false);
-  
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [predictions, setPredictions] = useState([] as any[]);
+  const [bufferEntriesCount, setBufferEntriesCount] = useState(0);
+
+  /* sensorState */
+  const [sensorData, setSensorData] = useState([{ xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 }]);
+  const [xaData, setXaData] = useState([0] as number[]);
+  const [yaData, setYaData] = useState([0] as number[]);
+  const [zaData, setZaData] = useState([0] as number[]);
+  const [xgData, setXgData] = useState([0] as number[]);
+  const [ygData, setYgData] = useState([0] as number[]);
+  const [zgData, setZgData] = useState([0] as number[]);
+
+  /* IndexState */
+  const [pageIndex, setPageIndex] = useState(0);
   const [settings, setSettings] = useState({
     isSimulating: false,
   });
 
-  const blueBridge = {
-    setBlueState: setBlueState,
-  }
-  const blueRef = useRef<BlueComponent>(null);
+  const blueState = {
+    arePermissionsGranted,
+    setArePermissionsGranted,
+    isBluetoothEnabled,
+    setIsBluetoothEnabled,
+    isDiscovering,
+    setIsDiscovering,
+    isConnecting,
+    setIsConnecting,
+    isDisconnecting,
+    setIsDisconnecting,
+    isUnpairing,
+    setIsUnpairing,
+    isAccepting,
+    setIsAccepting,
+    isWriting,
+    setIsWriting,
+    unpairedDevices,
+    setUnpairedDevices,
+    bondedDevices,
+    setBondedDevices,
+    connectedDevice,
+    setConnectedDevice,
+    receivedData,
+    setReceivedData,
+    sendCount,
+    setSendCount,
+    receiveCount,
+    setReceiveCount,
+  };
 
-  const modelBridge = {
-    setModelState: setModelState,
-    blueState: blueState,
-  }
+  const dbState = {
+    isDbConnected,
+    setIsDbConnected,
+    dbStats,
+    setDbStats,
+  };
 
-  const dbBridge = {
-    setDbState: setDbState,
-    blueState: blueState,
-  }
+  const historyState = {
+    lastRow,
+    setLastRow,
+    predictionStats,
+    setPredictionStats,
+  };
 
-  const sensorBridge = {
-    setSensorState: setSensorState,
-  }
+  const modelState = {
+    isModelLoaded,
+    setIsModelLoaded,
+    isDbBuffered,
+    setIsDbBuffered,
+    isPredicting,
+    setIsPredicting,
+    predictions,
+    setPredictions,
+    bufferEntriesCount,
+    setBufferEntriesCount,
+  };
+
+  const sensorState = {
+    sensorData,
+    setSensorData,
+    xaData,
+    setXaData,
+    yaData,
+    setYaData,
+    zaData,
+    setZaData,
+    xgData,
+    setXgData,
+    ygData,
+    setYgData,
+    zgData,
+    setZgData,
+  };
 
   useEffect(() => {
     if (settings.isSimulating) {
@@ -92,38 +283,34 @@ export default function indexComponent() {
         mac: 'MAC',
       };
       if (isDbBuffered) {
-        blueRef.current?.setState(prev => ({ receivedData: [...prev.receivedData, JSON.stringify(syntheticData)]}));
+        setReceivedData(prev => (prev ? [...prev, JSON.stringify(syntheticData)] : [JSON.stringify(syntheticData)]));
       } else {
-        blueRef.current?.setState(prev => ({ receivedData: [...prev.receivedData, JSON.stringify(syntheticDb)]}));
+        setReceivedData(prev => (prev ? [...prev, JSON.stringify(syntheticData)] : [JSON.stringify(syntheticDb)]));
         setIsDbBuffered(true);
       }
     } else {
       setIsDbBuffered(false);
-      blueRef.current?.setState({ receivedData: []});
+      setReceivedData([]);
     }
   }, [sensorState]);
   
 
   return(
     <>
-      <BlueComponent ref={blueRef} blueBridge={blueBridge} />
-      <ModelComponent modelBridge={modelBridge} />
-      <DbComponent dbBridge={dbBridge} />
-      {settings.isSimulating && <SensorComponent sensorBridge={sensorBridge} />}
       <SafeAreaView style={styles.MAIN}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.VIEW}>
             {pageIndex == 0 && <>
-              <BlueView blueState={blueState} blueRef={blueRef} />
-              <ModelView modelState={modelState} />
-              {settings.isSimulating && <SensorView sensorState={sensorState} settings={{show_title: true, show_coord: true}} />}
-              <DbView dbState={dbState} />
+              <BlueComponent blueState={blueState} />
+              <ModelComponent modelState={modelState} receivedData={blueState.receivedData} />
+              {settings.isSimulating && <SensorComponent sensorState={sensorState} settings={{show_title: true, show_coord: true}} />}
+              <DbComponent dbState={dbState} />
             </>}
             {pageIndex == 1 && <>
-              <HistoryView dbState={dbState} />
+              <HistoryComponent historyState={historyState} dbStats={dbState.dbStats} />
             </>}
             {pageIndex == 2 && <>
-              <SettingsView setSettings={setSettings} />
+              <SettingsComponent setSettings={setSettings} />
             </>}
           </View>
         </ScrollView>

@@ -1,25 +1,14 @@
-import React from 'react';
-import { ToastAndroid } from 'react-native';
-
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-react-native';
 import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
-import { BlueState } from './blueClass';
+import Tex from './base-components/tex';
+import ProgressBar from './mini-components/progressbar';
+import themeI from '@/assets/themes';
+import styles from '@/assets/styles';
+import { useEffect, useState } from 'react';
+import { View, TouchableOpacity, ToastAndroid } from 'react-native';
 import { addPredictionData, importDevices } from '@/utils/sqlite_db';
-
-const TAG = "C/modelClass";
-
-type ReceivedSensorData = {
-  xa: number,
-  ya: number,
-  za: number,
-  xg: number,
-  yg: number,
-  zg: number,
-  DateTime: number,
-  prediction: number,
-  mac: string,
-}
+import { BlueState, ModelState } from '.';
 
 const input_3 = [
   [
@@ -49,106 +38,104 @@ const input_2 = [
     [0.4748256370303961, 0.5280119996404757, 0.403953453069681, 0.2938916203690769, 0.6350915434916222, 0.67519818433455],
   ],
 ];
-
+export const actionMapping = ["Grazing", "Standing", "Walking", "Resting", "Mating", "Scratching", "Licking"];
 const SEGMENT_SIZE = 10;
+const MIN_A = -74.08409134, MAX_A = 43.37365402;
+const MIN_G = -16.51096916, MAX_G = 28.44993591;
 
-export interface ModelState {
-    isModelLoaded: boolean,
-    isDbBuffered: boolean,
-    predicting: boolean,
-    predictions: any[],
-    bufferEntriesCount: number,
+const TAG = "C/modelComponent";
+
+type ReceivedSensorData = {
+  xa: number,
+  ya: number,
+  za: number,
+  xg: number,
+  yg: number,
+  zg: number,
+  DateTime: number,
+  prediction: number,
+  mac: string,
 }
 
-interface ModelProps {
-  modelBridge: {
-    setModelState: (ModelState: any) => void,
-    blueState: BlueState,
+export default function ModelComponent({ modelState, receivedData }: { modelState: ModelState, receivedData: BlueState["receivedData"]}) {
+  const {
+    isModelLoaded,
+    setIsModelLoaded,
+    isDbBuffered,
+    setIsDbBuffered,
+    isPredicting,
+    setIsPredicting,
+    predictions,
+    setPredictions,
+    bufferEntriesCount,
+    setBufferEntriesCount,
+  } = modelState;
+
+  let model = null as tf.GraphModel | null;
+
+  useEffect(() => {
+    initModel();
+  }, []);
+
+  useEffect(() => {
+    chunkAndProcess();
+  }, [receivedData]);
+
+  const initModel = () => {
+    loadModel();
   }
-}
-
-class ModelComponent extends React.Component<ModelProps, ModelState> {
-  // static defaultProps: Partial<ModelProps> = { }
-
-  state: ModelState = {
-    isModelLoaded: false,
-    isDbBuffered: false,
-    predicting: false,
-    predictions: [],
-    bufferEntriesCount: 0,
-  };
-
-  async componentDidMount () {
-    await this.loadModel();
-  }
-
-  componentWillUnmount() {
-    
-  }
-
-  componentDidUpdate(prevProps: Readonly<ModelProps>, prevState: Readonly<ModelState>, snapshot?: any): void {
-    this.modelGetter();
-    if (prevProps.modelBridge.blueState.receivedData != this.props.modelBridge.blueState.receivedData) {  // sensorState
-      this.chunkAndProcess();
-    }
-  }
-
-  private model = null as any;
-  loadModel = async () => {
+  const loadModel = async () => {
     try {
       await tf.ready();
 
       const modelJson = require('@/assets/models/model.json');
       const modelWeights = [require('@/assets/models/group1-shard1of1.bin')];
-      const model = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
-      this.model = model;
+      const model_ = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
+      model = model_;
     } catch (error) {
       ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
     } finally {
-      this.setState({ isModelLoaded: true });
+      setIsModelLoaded(true);
     }
   }
 
-  private stramBuffer = [] as any;
-  private dbBuffer = [] as any;
-  private chunkAndProcess = () => {
-    if (this.model) {
-      const receivedData = this.props.modelBridge.blueState.receivedData;
-      if (receivedData[receivedData.length-1] !== "") {
-        const data = JSON.parse(receivedData[receivedData.length-1]);
+  let streamBuffer = [] as any;
+  let dbBuffer = [] as any;
+  const chunkAndProcess = () => {
+    if (model) {
+      const receivedData_ = receivedData;
+      if (receivedData_ && receivedData_[receivedData_.length-1] !== "") {
+        const data = JSON.parse(receivedData_[receivedData_.length-1]);
         if (data.sensorData) {
           const dbData = data.sensorData;
           dbData?.forEach((entry: any) => {
-            if (this.dbBuffer.length < SEGMENT_SIZE) {
-              this.dbBuffer.push(entry);
-              this.setState(prev => ({ bufferEntriesCount: prev.bufferEntriesCount+1}));
+            if (dbBuffer.length < SEGMENT_SIZE) {
+              dbBuffer.push(entry);
+              setBufferEntriesCount(prev => (prev+1));
             } else {
-              this.processAndMakePrediction(this.dbBuffer);
-              this.dbBuffer = [entry];
-              this.setState({ bufferEntriesCount: 1});
+              processAndMakePrediction(dbBuffer);
+              dbBuffer = [entry];
+              setBufferEntriesCount(1)
             }
           });
           importDevices(data.devices);
-          this.setState({ isDbBuffered: true });
+          setIsDbBuffered(true);
         }
-        else if (this.state.isDbBuffered) {
-          if (this.stramBuffer.length < SEGMENT_SIZE) {
-            this.stramBuffer.push(data);
-            this.setState(prev => ({ bufferEntriesCount: prev.bufferEntriesCount+1}));
+        else if (isDbBuffered) {
+          if (streamBuffer.length < SEGMENT_SIZE) {
+            streamBuffer.push(data);
+            setBufferEntriesCount(prev => (prev+1));
           } else {
-            this.processAndMakePrediction(this.stramBuffer);
-            this.stramBuffer = [data];
-            this.setState({ bufferEntriesCount: 1});
+            processAndMakePrediction(streamBuffer);
+            streamBuffer = [data];
+            setBufferEntriesCount(1);
           }
         }
       }   
     }
   }
 
-  processAndMakePrediction = async (buffer: ReceivedSensorData[]) => {
-    const MIN_A = -74.08409134, MAX_A = 43.37365402;
-    const MIN_G = -16.51096916, MAX_G = 28.44993591;
-
+  const processAndMakePrediction = async (buffer: ReceivedSensorData[]) => {
     const preprocessSingleRow = (data: any): number[] => {  // Needs debug
       const normalizedData = {
         xa: (data.xa - MIN_A) / (MAX_A - MIN_A),
@@ -166,22 +153,22 @@ class ModelComponent extends React.Component<ModelProps, ModelState> {
     buffer.forEach((entry, index) => {
       preprocessedData[index] = preprocessSingleRow(entry);
     });
-    this.makePredictionAndSave(buffer[0], [preprocessedData]);
+    makePredictionAndSave(buffer[0], [preprocessedData]);
   }
 
-  makePredictionAndSave = async (rawEntry: ReceivedSensorData, dataSegment: number[][][]) => {
-    if (this.state.predicting) return;
-    this.setState({ predicting: true });
+  const makePredictionAndSave = async (rawEntry: ReceivedSensorData, dataSegment: number[][][]) => {
+    if (isPredicting) return;
+    setIsPredicting(true);
 
     try {
       const inputTensor = tf.tensor(dataSegment, [1, 10, 6]);
 
-      const output = await this.model.executeAsync(inputTensor);
-      const prediction = output.arraySync();
+      const output = await model!.executeAsync(inputTensor) as any;
+      const prediction_ = output.arraySync();
 
-      this.setState({ predictions: prediction });
-      const confidence = Math.max(...prediction[0]);
-      const predictedClass = prediction[0].indexOf(confidence);
+      setPredictions(prediction_);
+      const confidence = Math.max(...prediction_[0]);
+      const predictedClass = prediction_[0].indexOf(confidence);
       addPredictionData({...rawEntry, confidence: confidence, predictedClass: predictedClass});
 
       output.dispose();
@@ -189,21 +176,39 @@ class ModelComponent extends React.Component<ModelProps, ModelState> {
     } catch (error) {
       ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
     } finally {
-      this.setState({ predicting: false });
+      setIsPredicting(false);
     }
   };
 
-  modelGetter = () => {
-    this.props.modelBridge.setModelState(this.state);
-  }
-
-  render() {
-    return(
-      <>
-        
-      </>
-    )
-  }
+  return (
+    <>
+      <View style={[styles.COMPONENT_CARD, styles.model_info]}>
+        <Tex style={styles.COMPONENT_TITLE} >
+          Model info
+        </Tex>
+        <View style={styles.COMPONENT_WRAPPER}>
+          {predictions && <>
+            {predictions.length != 0 && (predictions[0].map((prediction: any, index: any) => (
+              <View key={index} style={[styles.CLASS_PROBABILITY, styles.MD_ROW_GAP]}>
+                <View style={styles.CLASS_PROBABILITY_HEADER}>
+                  <Tex>{actionMapping[index]}</Tex>
+                  <Tex>{`${prediction.toFixed(2) * 100} %`}</Tex>
+                </View>
+                <View style={styles.CLASS_PROBABILITY_BODY}>
+                  <ProgressBar progress={prediction.toFixed(2) * 100} backgroundColor={themeI.progressBar.background} progressBarColor={themeI.progressBar.foreground} />
+                </View>
+              </View>
+            )))}
+          </>}
+          <>
+            <Tex>{isModelLoaded ? 'Model loaded !' : 'Loading model...'}</Tex>
+            <Tex>{`Processing chunk ${bufferEntriesCount}/10...`}</Tex>
+            {isDbBuffered && <Tex>Database buffered !</Tex>}
+            {isPredicting && <Tex>Predicting...</Tex>}
+          </>
+        </View>
+      </View>
+    </>
+  );
 }
-
-export default ModelComponent;
+  
