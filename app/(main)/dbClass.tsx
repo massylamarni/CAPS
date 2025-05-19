@@ -1,19 +1,7 @@
 import React from 'react';
-import { initDatabase, addSensorData, resetDatabase, getLastRow, getRowCount } from '@/utils/sqlite_db';
-import { SensorState } from './sensorClass';
+import { initDatabase, resetDatabase, getLastRow, getRowCount } from '@/utils/sqlite_db';
 import { BlueState } from './blueClass';
-
-type DbEntry = {
-  id: number;
-  DateTime: number;
-  XA: number;
-  YA: number;
-  ZA: number;
-  XG: number;
-  YG: number;
-  ZG: number;
-  device_id: number;
-}
+import { DbEntry } from '@/utils/sqlite_db';
 
 export interface DbState {
   isDbConnected: boolean,
@@ -28,7 +16,6 @@ export interface DbState {
 export interface DbProps {
   dbBridge: {
     setDbState: (DbState: any) => void,
-    sensorState: SensorState | null,
     blueState: BlueState | null,
   },
 }
@@ -57,9 +44,6 @@ class DbComponent extends React.Component<DbProps, DbState> {
 
   componentDidUpdate(prevProps: Readonly<DbProps>, prevState: Readonly<DbState>, snapshot?: any): void {
     this.dbGetter();
-    if (prevProps.dbBridge.sensorState != this.props.dbBridge.sensorState) { //sensorState
-      this.updateDb();
-    }
     if (prevState.dbData != this.state.dbData) {
       this.getDbStats();
     }
@@ -87,13 +71,6 @@ class DbComponent extends React.Component<DbProps, DbState> {
       }});
     };
   };
-
-  updateDb = () => {
-    if (this.props.dbBridge.sensorState?.sensorData) {
-      const simulate_mac = "MAC";
-      if (simulate_mac) addSensorData({...this.props.dbBridge.sensorState.sensorData[0], mac: simulate_mac});
-    }
-  }
 
   dbGetter = () => {
     this.props.dbBridge.setDbState(this.state);

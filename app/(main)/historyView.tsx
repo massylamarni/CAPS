@@ -1,59 +1,36 @@
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, Dimensions } from 'react-native';
 import Tex from './base-components/tex';
 import styles from '@/assets/styles';
-import { initDatabase, addSensorData, resetDatabase, getLastRow, getRowCount } from '@/utils/sqlite_db';
+import { getLastRow, getPredictionStats } from '@/utils/sqlite_db';
 import { useEffect, useState } from 'react';
 import SensorView from './sensorView';
+import { DbEntry } from '@/utils/sqlite_db';
+import { DbState } from './dbClass';
 
-type DbEntry = {
-  id: number;
-  DateTime: number;
-  XA: number;
-  YA: number;
-  ZA: number;
-  XG: number;
-  YG: number;
-  ZG: number;
-  device_id: number;
-}
+import {
+  LineChart,
+  BarChart,
+  PieChart,
+  ProgressChart,
+  ContributionGraph,
+  StackedBarChart
+} from "react-native-chart-kit";
+import themeI from '@/assets/themes';
 
-type DbStats = {
-  last_read: number,
-  last_row: DbEntry[],
-  row_count: {device_id: number, count: number}[],
-}
+export default function HistoryView({ dbState: dbState }: { dbState: DbState}) {
+  const [lastRow, setLastRow] = useState(null as DbEntry[] | null);
+  const [predictionStats, setPredictionStats] = useState(null as { predictedClass: number; count: number; }[] | null);
 
-export default function HistoryView({ }) {
-  const [isDbConnected, setIsDbConnected] = useState(false);
-  const [dbData, setDbData] = useState([] as DbEntry[]);
-  const [dbStats, setDbStats] = useState(null as DbStats | null);
-
-  const initDb = async () => {
-    setIsDbConnected(await initDatabase());
-  };
-  
-  
-  const getDbStats = async () => {
-    const lastRow = await getLastRow();
-    if (lastRow.length !== 0) {
-      const rowCount = await getRowCount();
-      setDbStats({
-        last_read: Date.now(),
-        last_row: lastRow,
-        row_count: rowCount,
-      });
-    };
+  const init = async () => {
+    setLastRow(await getLastRow());
+    setPredictionStats(await getPredictionStats());
   };
 
-
   useEffect(() => {
-    initDb();
-  }, []);
+    init();
+  }), [];
 
-  useEffect(() => {
-    getDbStats();
-  }, [dbData]);
-
+  console.log(predictionStats);
   return (
     <>
       <View style={[styles.COMPONENT_CARD, styles.history]}>
@@ -61,7 +38,7 @@ export default function HistoryView({ }) {
           History
         </Tex>
         <View style={styles.COMPONENT_WRAPPER}>
-          {dbStats?.last_row.map((entry, index) => (
+          {lastRow?.map((entry, index) => (
             <View key={index} style={[styles.HISTORY_ITEM, styles.MD_ROW_GAP]}>
               <View style={styles.HISTORY_ITEM_HEADER}>
                 <Tex style={styles.SUBCOMPONENT_TITLE}>{`Cattle ${entry.device_id}`}</Tex>
@@ -74,7 +51,7 @@ export default function HistoryView({ }) {
                   </View>
                   <View style={styles.SUBCOMPONENT_LIST_ITEM}>
                       <Tex>Recorded:</Tex>
-                      <Tex>{dbStats.row_count[entry.device_id-1].count}</Tex>
+                      <Tex>{dbState.dbStats.row_count}</Tex>
                   </View>
                 </View>
               </View>
@@ -87,18 +64,54 @@ export default function HistoryView({ }) {
         <Tex style={styles.COMPONENT_TITLE}>
           History
         </Tex>
-        <View style={styles.HISTORY_CHARTS}>
-          <View style={styles.HISTORY_CHARTS_HEADER}>
-            <Tex style={styles.SUBCOMPONENT_TITLE}>Select TimeRange</Tex>
-            <Tex>Last 1h</Tex>
-          </View>
-          <View style={styles.HISTORY_CHARTS_BODY}>
-            {/* <SensorView /> */}
-            <View style={styles.STATS_BAR_CHART}>
-              <View style={styles.STATS_BAR_CHART_HEADER}>
-                <Tex style={styles.SUBCOMPONENT_TITLE}>Behvaior stats</Tex>
-              </View>
-              <View style={styles.STATS_BAR_CHART_BODY}>
+        <View style={styles.COMPONENT_WRAPPER}>
+          <View style={styles.HISTORY_CHARTS}>
+            <View style={styles.HISTORY_CHARTS_HEADER}>
+              <Tex style={styles.SUBCOMPONENT_TITLE}>Select TimeRange</Tex>
+              <Tex>Last 1h</Tex>
+            </View>
+            <View style={styles.HISTORY_CHARTS_BODY}>
+              {/* <SensorView /> */}
+              <View style={styles.STATS_BAR_CHART}>
+                <View style={styles.STATS_BAR_CHART_HEADER}>
+                  <Tex style={styles.SUBCOMPONENT_TITLE}>Behvaior stats</Tex>
+                </View>
+                <BarChart
+                  data={
+                    {labels: ['0', '1', '2', '3', '7', '8'],
+                    datasets: [
+                      {
+                        data: [20, 45, 28, 80, 99, 43]
+                      }
+                    ]}
+                  }
+                  yAxisLabel=""
+                  yAxisSuffix=""
+                  width={Dimensions.get("window").width-40}
+                  height={200}
+                  showValuesOnTopOfBars={true}
+                  withHorizontalLabels={true}
+                  withVerticalLabels={true}
+                  chartConfig={{
+                    backgroundColor: themeI.backgroundColors.component,
+                    backgroundGradientFrom: themeI.backgroundColors.component,
+                    backgroundGradientTo: themeI.backgroundColors.component,
+                    fillShadowGradient: themeI.fontColors.default,
+                    fillShadowGradientFrom: themeI.fontColors.default,
+                    fillShadowGradientTo: themeI.fontColors.default,
+                    fillShadowGradientOpacity: 1,
+                    fillShadowGradientFromOpacity: 1,
+                    fillShadowGradientToOpacity: 1,
+                    color: (opacity = 1) => themeI.fontColors.default,
+                    style: {
+                      borderRadius: 5,
+                    },
+                    propsForBackgroundLines: {
+                      stroke: "transparent"
+                    },
+                  }}
+                  verticalLabelRotation={30}
+                />
               </View>
             </View>
           </View>

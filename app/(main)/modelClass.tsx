@@ -5,14 +5,20 @@ import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-react-native';
 import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
 import { BlueState } from './blueClass';
+import { addPredictionData, importDevices } from '@/utils/sqlite_db';
 
-type dual_sensor_data_t = {
-    xa: number;
-    ya: number;
-    za: number;
-    xg: number;
-    yg: number;
-    zg: number;
+const TAG = "C/modelClass";
+
+type ReceivedSensorData = {
+  xa: number,
+  ya: number,
+  za: number,
+  xg: number,
+  yg: number,
+  zg: number,
+  DateTime: number,
+  prediction: number,
+  mac: string,
 }
 
 const input_3 = [
@@ -47,8 +53,11 @@ const input_2 = [
 const SEGMENT_SIZE = 10;
 
 export interface ModelState {
-    model: any,
+    isModelLoaded: boolean,
+    isDbBuffered: boolean,
+    predicting: boolean,
     predictions: any[],
+    bufferEntriesCount: number,
 }
 
 interface ModelProps {
@@ -62,8 +71,11 @@ class ModelComponent extends React.Component<ModelProps, ModelState> {
   // static defaultProps: Partial<ModelProps> = { }
 
   state: ModelState = {
-    model: null,
+    isModelLoaded: false,
+    isDbBuffered: false,
+    predicting: false,
     predictions: [],
+    bufferEntriesCount: 0,
   };
 
   async componentDidMount () {
@@ -74,34 +86,6 @@ class ModelComponent extends React.Component<ModelProps, ModelState> {
     
   }
 
-  private modelBuffer = [] as any;
-  private dbFormatBuffer = [] as any;
-  private chunkAndProcess = () => {
-    console.log("chunkAndProcess");
-    if (this.state.model) {
-      const receivedData = this.props.modelBridge.blueState.receivedData;
-      const data = JSON.parse(receivedData[receivedData.length-1]);
-      if (data.XA) {
-        if (this.modelBuffer.length < SEGMENT_SIZE) {
-          this.modelBuffer.push(data);
-        } else {
-          this.processAndMakePrediction(this.modelBuffer);
-          this.modelBuffer = [data];
-        }
-      } else {
-        const dbData = data.sensorData;
-        dbData?.forEach((entry: any) => {
-          if (this.dbFormatBuffer.length < SEGMENT_SIZE) {
-            this.dbFormatBuffer.push(entry);
-          } else {
-            this.processAndMakePrediction(this.dbFormatBuffer);
-            this.dbFormatBuffer = [entry];
-          }
-        });
-      }
-    }
-  }
-
   componentDidUpdate(prevProps: Readonly<ModelProps>, prevState: Readonly<ModelState>, snapshot?: any): void {
     this.modelGetter();
     if (prevProps.modelBridge.blueState.receivedData != this.props.modelBridge.blueState.receivedData) {  // sensorState
@@ -109,6 +93,7 @@ class ModelComponent extends React.Component<ModelProps, ModelState> {
     }
   }
 
+  private model = null as any;
   loadModel = async () => {
     try {
       await tf.ready();
@@ -116,27 +101,51 @@ class ModelComponent extends React.Component<ModelProps, ModelState> {
       const modelJson = require('@/assets/models/model.json');
       const modelWeights = [require('@/assets/models/group1-shard1of1.bin')];
       const model = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
-      this.setState({ model: model });
+      this.model = model;
     } catch (error) {
       ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
+    } finally {
+      this.setState({ isModelLoaded: true });
     }
   }
 
-  makePrediction = async (dataSegment: number[][][]) => {
-    try {
-      const inputTensor = tf.tensor(dataSegment, [1, 10, 6]);
-
-      const output = await this.state.model.executeAsync(inputTensor);
-      const prediction = output.arraySync();
-      this.setState(prev => ({ predictions: prediction }));
-      output.dispose();
-      inputTensor.dispose();
-    } catch (error) {
-      ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
+  private stramBuffer = [] as any;
+  private dbBuffer = [] as any;
+  private chunkAndProcess = () => {
+    if (this.model) {
+      const receivedData = this.props.modelBridge.blueState.receivedData;
+      if (receivedData[receivedData.length-1] !== "") {
+        const data = JSON.parse(receivedData[receivedData.length-1]);
+        if (data.sensorData) {
+          const dbData = data.sensorData;
+          dbData?.forEach((entry: any) => {
+            if (this.dbBuffer.length < SEGMENT_SIZE) {
+              this.dbBuffer.push(entry);
+              this.setState(prev => ({ bufferEntriesCount: prev.bufferEntriesCount+1}));
+            } else {
+              this.processAndMakePrediction(this.dbBuffer);
+              this.dbBuffer = [entry];
+              this.setState({ bufferEntriesCount: 1});
+            }
+          });
+          importDevices(data.devices);
+          this.setState({ isDbBuffered: true });
+        }
+        else if (this.state.isDbBuffered) {
+          if (this.stramBuffer.length < SEGMENT_SIZE) {
+            this.stramBuffer.push(data);
+            this.setState(prev => ({ bufferEntriesCount: prev.bufferEntriesCount+1}));
+          } else {
+            this.processAndMakePrediction(this.stramBuffer);
+            this.stramBuffer = [data];
+            this.setState({ bufferEntriesCount: 1});
+          }
+        }
+      }   
     }
   }
 
-  processAndMakePrediction = async (buffer: dual_sensor_data_t[]) => {
+  processAndMakePrediction = async (buffer: ReceivedSensorData[]) => {
     const MIN_A = -74.08409134, MAX_A = 43.37365402;
     const MIN_G = -16.51096916, MAX_G = 28.44993591;
 
@@ -157,8 +166,32 @@ class ModelComponent extends React.Component<ModelProps, ModelState> {
     buffer.forEach((entry, index) => {
       preprocessedData[index] = preprocessSingleRow(entry);
     });
-    this.makePrediction([preprocessedData]);
+    this.makePredictionAndSave(buffer[0], [preprocessedData]);
   }
+
+  makePredictionAndSave = async (rawEntry: ReceivedSensorData, dataSegment: number[][][]) => {
+    if (this.state.predicting) return;
+    this.setState({ predicting: true });
+
+    try {
+      const inputTensor = tf.tensor(dataSegment, [1, 10, 6]);
+
+      const output = await this.model.executeAsync(inputTensor);
+      const prediction = output.arraySync();
+
+      this.setState({ predictions: prediction });
+      const confidence = Math.max(...prediction[0]);
+      const predictedClass = prediction[0].indexOf(confidence);
+      addPredictionData({...rawEntry, confidence: confidence, predictedClass: predictedClass});
+
+      output.dispose();
+      inputTensor.dispose();
+    } catch (error) {
+      ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
+    } finally {
+      this.setState({ predicting: false });
+    }
+  };
 
   modelGetter = () => {
     this.props.modelBridge.setModelState(this.state);

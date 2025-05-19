@@ -18,6 +18,8 @@ type dual_sensor_data_t = {
 
 const dual_sensor_data_d = { xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 };
 
+const FREQUENCY = 100; // 100ms = 10Hz
+
 export interface SensorState {
     sensorData: dual_sensor_data_t[],
 }
@@ -55,8 +57,8 @@ class SensorComponent extends React.Component<SensorProps, SensorState> {
   }
 
   initSensors = () => {
-    Accelerometer.setUpdateInterval(100); // 100ms = 10Hz
-    Gyroscope.setUpdateInterval(100);
+    Accelerometer.setUpdateInterval(FREQUENCY);
+    Gyroscope.setUpdateInterval(FREQUENCY);
     let accelData = {x: 0, y: 0, z: 0};
     let gyroData = {x: 0, y: 0, z: 0};
     this.accelSubscription = Accelerometer.addListener((data: sensor_data_t) => {
@@ -78,7 +80,7 @@ class SensorComponent extends React.Component<SensorProps, SensorState> {
       this.setState((prev) => ({
         sensorData: [groupedData],
       }));
-    }, 100);
+    }, FREQUENCY);
   }
 
   sensorGetter = () => {

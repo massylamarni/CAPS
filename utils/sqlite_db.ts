@@ -3,15 +3,15 @@ import * as SQLite from 'expo-sqlite';
 
 const DEBUG = false;
 
-type DbEntry = {
+export type DbEntry = {
   id: number;
   DateTime: number;
-  XA: number;
-  YA: number;
-  ZA: number;
-  XG: number;
-  YG: number;
-  ZG: number;
+  xa: number;
+  ya: number;
+  za: number;
+  xg: number;
+  yg: number;
+  zg: number;
   device_id: number;
 }
 
@@ -21,25 +21,28 @@ const db = SQLite.openDatabaseSync('sensor.db');
 export const initDatabase = async () => {
   try {
     db.execAsync(
-    `CREATE TABLE IF NOT EXISTS sensor_data (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      DateTime INTEGER,
-      XA REAL,
-      YA REAL,
-      ZA REAL,
-      XG REAL,
-      YG REAL,
-      ZG REAL,
-      device_id INTEGER NOT NULL,
-      FOREIGN KEY (device_id) REFERENCES devices(id)
-    )`);
-    db.execAsync(
       `CREATE TABLE IF NOT EXISTS devices (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         mac TEXT UNIQUE NOT NULL,
         name TEXT,
         created_at INTEGER
-      )`);
+    )`);
+    db.execAsync(
+      `CREATE TABLE IF NOT EXISTS prediction_data (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      DateTime INTEGER,
+      predictionDateTime INTEGER,
+      predictedClass INTEGER,
+      confidence REAL,
+      xa REAL,
+      ya REAL,
+      za REAL,
+      xg REAL,
+      yg REAL,
+      zg REAL,
+      device_id INTEGER NOT NULL,
+      FOREIGN KEY (device_id) REFERENCES devices(id)
+    )`);
   } catch(e) {
     console.error('DB init error:', e);
     return false;
@@ -69,37 +72,15 @@ const manageDeviceId = async (mac: string) => {
   return inserted?.id ?? -1;
 };
 
-export const addSensorData = async (data: {
-  xa: number,
-  ya: number,
-  za: number,
-  xg: number,
-  yg: number,
-  zg: number,
-  mac: string,
-}) => {
-  try {
-    const deviceId = await manageDeviceId(data.mac);
-    if (deviceId === -1) throw new Error('Device ID not found');
-    await db.runAsync(
-      'INSERT INTO sensor_data (DateTime, XA, YA, ZA, XG, YG, ZG, device_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [Date.now(), data.xa, data.ya, data.za, data.xg, data.yg, data.zg, deviceId]
-    );
-    if (DEBUG) console.log('Data saved successfully');
-  } catch (error) {
-    console.error('Error saving data:', error);
-  }
-};
-
 export const getLastRow = async () => {
   try {
     const result = await db.getAllAsync<DbEntry>(
       `
       SELECT sd.*
-      FROM sensor_data sd
+      FROM prediction_data sd
       JOIN (
         SELECT device_id, MAX(DateTime) AS max_time
-        FROM sensor_data
+        FROM prediction_data
         GROUP BY device_id
       ) grouped
       ON sd.device_id = grouped.device_id AND sd.DateTime = grouped.max_time
@@ -120,13 +101,13 @@ export const getDownsampledData = async (startTime: number, endTime: number, int
       SELECT 
         device_id,
         MIN(DateTime) AS DateTime,
-        AVG(XA) AS XA,
-        AVG(YA) AS YA,
-        AVG(ZA) AS ZA,
-        AVG(XG) AS XG,
-        AVG(YG) AS YG,
-        AVG(ZG) AS ZG
-      FROM sensor_data
+        AVG(xa) AS xa,
+        AVG(ya) AS ya,
+        AVG(za) AS za,
+        AVG(xg) AS xg,
+        AVG(yg) AS yg,
+        AVG(zg) AS zg
+      FROM prediction_data
       WHERE DateTime BETWEEN ? AND ?
       GROUP BY device_id, ((DateTime / ?) * ?)
       ORDER BY device_id ASC, DateTime ASC
@@ -146,7 +127,7 @@ export const getRowCount = async () => {
     const result = await db.getAllAsync<{ device_id: number; count: number }>(
       `
       SELECT device_id, COUNT(*) as count
-      FROM sensor_data
+      FROM prediction_data
       GROUP BY device_id
       `
     );
@@ -157,34 +138,9 @@ export const getRowCount = async () => {
   }
 };
 
-export const getAllSensorData = async (dbAnchor: number): Promise<DbEntry[]> => {
-  try {
-    const result = await db.getAllAsync<DbEntry>(
-      `SELECT * FROM sensor_data WHERE id >= ? ORDER BY DateTime ASC`, [dbAnchor]
-    );
-    return result;
-  } catch (error) {
-    console.error('Error fetching all sensor data:', error);
-    return [];
-  }
-};
-
-export const getAllDevices = async (): Promise<{ id: number, mac: string, name?: string, created_at: number }[]> => {
-  try {
-    const result = await db.getAllAsync<{ id: number, mac: string, name?: string, created_at: number }>(
-      `SELECT * FROM devices ORDER BY id ASC`
-    );
-    return result;
-  } catch (error) {
-    console.error('Error fetching all devices:', error);
-    return [];
-  }
-};
-
-
 export const resetDatabase = async () => {
     try {
-        await db.execAsync('DROP TABLE IF EXISTS sensor_data');
+        await db.execAsync('DROP TABLE IF EXISTS prediction_data');
         await db.execAsync('DROP TABLE IF EXISTS devices');
         initDatabase();
         if (DEBUG) console.log('Database fully reset');
@@ -195,3 +151,66 @@ export const resetDatabase = async () => {
     }
 };
 
+export const addPredictionData = async (data: {
+  xa: number,
+  ya: number,
+  za: number,
+  xg: number,
+  yg: number,
+  zg: number,
+  DateTime: number,
+  predictedClass: number,
+  confidence: number,
+  mac: string,
+}) => {
+  try {
+    const deviceId = await manageDeviceId(data.mac);
+    if (deviceId === -1) throw new Error('Device ID not found');
+    await db.runAsync(
+      'INSERT INTO prediction_data (predictionDateTime, xa, ya, za, xg, yg, zg, DateTime, predictedClass, confidence, device_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [Date.now(), data.xa, data.ya, data.za, data.xg, data.yg, data.zg, data.DateTime, data.predictedClass, data.confidence, deviceId]
+    );
+    if (DEBUG) console.log('Data saved successfully');
+  } catch (error) {
+    console.error('Error saving data:', error);
+  }
+};
+
+export const importDevices = async (devices: {
+  id: number;
+  mac: string;
+  name?: string;
+  created_at: number;
+}[]) => {
+  try {
+    for (const device of devices) {
+      await db.runAsync(
+        `INSERT OR IGNORE INTO devices (id, mac, name, created_at) VALUES (?, ?, ?, ?)`,
+        [device.id, device.mac, device.name ?? null, device.created_at]
+      );
+    }
+    if (DEBUG) console.log('Devices imported successfully');
+    return true;
+  } catch (error) {
+    console.error('Error importing devices:', error);
+    return false;
+  }
+};
+
+export const getPredictionStats = async () => {
+  try {
+    const result = await db.getAllAsync<{ predictedClass: number; count: number }>(
+      `
+      SELECT predictedClass, COUNT(*) as count
+      FROM prediction_data
+      GROUP BY predictedClass
+      ORDER BY predictedClass ASC
+      `,
+    );
+
+    return result;
+  } catch (error) {
+    console.error('Error getting prediction counts:', error);
+    return [];
+  }
+};

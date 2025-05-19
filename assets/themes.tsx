@@ -3,6 +3,9 @@ const themeI = {
     sm: 5,
     md: 10,
   },
+  margin: {
+    md: 10
+  },
   borderRadius: {
     md: 5,
   },
@@ -11,12 +14,13 @@ const themeI = {
     md: 5,
   },
   fontColors: {
-    dark: 'white',
-    light: 'black',
+    default: 'white',
   },
   backgroundColors: {
-    dark: 'black',
-    light: 'white',
+    back: '#101010',
+    component: '#151515',
+    componentTitle: '#202020',
+    navbar: '#171717',
     preview: '#EEEEEE'
   },
   borderColors: {
@@ -25,6 +29,16 @@ const themeI = {
   font: {
     bold: 'inter-bold',
   },
+  legendColors: {
+    default: '#fff',
+  },
+  legendSize: {
+    default: 16,
+  },
+  progressBar: {
+    background: '#202020',
+    foreground: '#505050',
+  }
 };
 
 export default themeI;

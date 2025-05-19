@@ -2,6 +2,8 @@ import React from 'react';
 import { PermissionsAndroid, ToastAndroid } from 'react-native';
 import RNBluetoothClassic, { BluetoothEventType, BluetoothDevice } from "react-native-bluetooth-classic";
 
+const TAG = "C/blueClass";
+
 type BluetoothEventSubscription = /*unresolved*/ any
 type StateChangeEvent = /*unresolved*/ any
 type BluetoothDeviceEvent = /*unresolved*/ any
@@ -19,6 +21,10 @@ export interface BlueState {
   connectedDevices: BluetoothDevice[] | null,
   theDevice: BluetoothDevice | null,
   receivedData: string[],
+  commStats: {
+    packets_sent: number,
+    packets_received: number,
+  }
 }
 
 export interface BlueProps {
@@ -43,6 +49,10 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
     connectedDevices: [] as BluetoothDevice[],
     theDevice: null,
     receivedData: [],
+    commStats: {
+      packets_sent: 0,
+      packets_received: 0,
+    },
   };
 
   onBluetoothEnabledSub: BluetoothEventSubscription;
@@ -112,12 +122,14 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
   }
 
   private handleReception = (receivedData: any) => {
-    this.setState(prev => ({receivedData: [...prev.receivedData, receivedData.data]}));
+    console.log(TAG, `Received data with length: ${receivedData.data.length}`);
+    this.setState(prev => ({ receivedData: [...prev.receivedData, receivedData.data] }));
+    this.setState(prev => ({ commStats: {...prev.commStats, packets_received: prev.commStats.packets_received+1} }));
   }
   receptionListener = () => {
+    console.log(TAG, "Reception listener set !");
     this.onReceivedDataSub = this.state.theDevice?.onDataReceived((receivedData) => this.handleReception(receivedData));
   }
-
 
   initBluetooth = async () => {
     // Ask permissions
@@ -243,9 +255,7 @@ class BlueComponent extends React.Component<BlueProps, BlueState> {
       if (!connectionStatus) {
         connectionStatus = await theDevice?.connect();
       }
-      this.setState({ connectedDevices: theDevice ? [theDevice] : null, theDevice: theDevice }, () => {
-        this.receptionListener();
-      });
+      this.setState({ connectedDevices: theDevice ? [theDevice] : null, theDevice: theDevice });
     } catch (error) {
       ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
     } finally {

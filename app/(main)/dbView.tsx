@@ -19,11 +19,11 @@ export default function DbView({ dbState: dbState }: {dbState: DbState}) {
             </View>
             <View style={styles.COMPONENT_LIST_ITEM}>
               <Tex>Last read</Tex>
-              <Tex>{dbState.dbStats?.last_read}</Tex>
+              <Tex>{new Date(dbState.dbStats?.last_read).toLocaleString()}</Tex>
             </View>
             <View style={styles.COMPONENT_LIST_ITEM}>
               <Tex>Last write</Tex>
-              <Tex>{dbState.dbStats?.last_row?.DateTime}</Tex>
+              <Tex>{new Date(dbState.dbStats?.last_row?.DateTime ?? 0).toLocaleString()}</Tex>
             </View>
             <View style={styles.COMPONENT_LIST_ITEM}>
               <Tex>Row count</Tex>

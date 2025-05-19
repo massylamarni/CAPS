@@ -1,15 +1,47 @@
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, Dimensions } from 'react-native';
 import Tex from './base-components/tex';
 import styles from '@/assets/styles';
 import { SensorState } from './sensorClass';
+import { useEffect, useState } from 'react';
+
+import {
+  LineChart,
+  BarChart,
+  PieChart,
+  ProgressChart,
+  ContributionGraph,
+  StackedBarChart
+} from "react-native-chart-kit";
+import themeI from '@/assets/themes';
 
 type sensor_view_settings_t = {
   show_title: boolean;
   show_coord: boolean;
 }
 
+const SEQUENCE_LENGTH = 10;
+
 export default function SensorView({ sensorState: sensorState, settings: settings }: {sensorState: SensorState, settings:sensor_view_settings_t}) {
-  
+  const [xaData, setXaData] = useState([0] as number[]);
+  const [yaData, setYaData] = useState([0] as number[]);
+  const [zaData, setZaData] = useState([0] as number[]);
+  const [xgData, setXgData] = useState([0] as number[]);
+  const [ygData, setYgData] = useState([0] as number[]);
+  const [zgData, setZgData] = useState([0] as number[]);
+
+  useEffect(() => {
+
+    if (sensorState.sensorData) {
+      const { xa, ya, za, xg, yg, zg } = sensorState.sensorData[sensorState.sensorData.length - 1];
+      setXaData(prev => [...prev.slice(-(SEQUENCE_LENGTH-1)), xa]);
+      setYaData(prev => [...prev.slice(-(SEQUENCE_LENGTH-1)), ya]);
+      setZaData(prev => [...prev.slice(-(SEQUENCE_LENGTH-1)), za]);
+      setXgData(prev => [...prev.slice(-(SEQUENCE_LENGTH-1)), xg]);
+      setYgData(prev => [...prev.slice(-(SEQUENCE_LENGTH-1)), yg]);
+      setZgData(prev => [...prev.slice(-(SEQUENCE_LENGTH-1)), zg]);
+    }
+  }, [sensorState.sensorData]);
+
   return (
     <>
       <View style={[styles.COMPONENT_CARD, styles.sensor_info]}>
@@ -17,7 +49,7 @@ export default function SensorView({ sensorState: sensorState, settings: setting
           Sensor Info
         </Tex>}
         <View style={styles.COMPONENT_WRAPPER}>
-          <View style={[styles.MINI_SENSOR_CHART, styles.COMPONENT_WRAPPER]}>
+          <View style={[styles.MINI_SENSOR_CHART]}>
             <View style={styles.MINI_SENSOR_CHART_HEADER}>
               <Tex style={styles.SUBCOMPONENT_TITLE}>Accelerometer</Tex>
               {(settings.show_coord && sensorState.sensorData) && <Tex>
@@ -26,8 +58,45 @@ export default function SensorView({ sensorState: sensorState, settings: setting
                 z: {sensorState.sensorData[sensorState.sensorData.length-1]?.za.toFixed(3)}
               </Tex>}
             </View>
-            <View style={styles.MINI_SENSOR_CHART_BODY}>
-            </View>
+            <LineChart
+              data={{
+                labels: [],
+                datasets: [
+                  { data: xaData, color: () => '#ff0000', strokeWidth: 1 },
+                  { data: yaData, color: () => '#00ff00', strokeWidth: 1 },
+                  { data: zaData, color: () => '#0000ff', strokeWidth: 1 },
+                ],
+              }}
+              width={Dimensions.get("window").width-40}
+              height={100}
+              yAxisLabel=""
+              yAxisSuffix=""
+              chartConfig={{
+                backgroundColor: themeI.backgroundColors.component,
+                backgroundGradientFrom: themeI.backgroundColors.component,
+                backgroundGradientTo: themeI.backgroundColors.component,
+                fillShadowGradient: themeI.backgroundColors.component,
+                fillShadowGradientFrom: themeI.backgroundColors.component,
+                fillShadowGradientTo: themeI.backgroundColors.component,
+                color: (opacity = 1) => themeI.fontColors.default,
+                style: {
+                  borderRadius: 16
+                },
+                propsForDots: {
+                  r: "1",
+                  strokeWidth: "1",
+                  stroke: "#000"
+                },
+                propsForBackgroundLines: {
+                  stroke: "transparent"
+                },
+                
+              }}
+              bezier
+              style={{
+                borderRadius: 5
+              }}
+            />
           </View>
           <View style={styles.MINI_SENSOR_CHART}>
             <View style={styles.MINI_SENSOR_CHART_HEADER}>
@@ -38,8 +107,45 @@ export default function SensorView({ sensorState: sensorState, settings: setting
                 z: {sensorState.sensorData[sensorState.sensorData.length-1]?.zg.toFixed(3)}
               </Tex>}
             </View>
-            <View style={styles.MINI_SENSOR_CHART_BODY}>
-            </View>
+              <LineChart
+                data={{
+                  labels: [],
+                  datasets: [
+                    { data: xgData, color: () => '#ff0000', strokeWidth: 1 },
+                    { data: ygData, color: () => '#00ff00', strokeWidth: 1 },
+                    { data: zgData, color: () => '#0000ff', strokeWidth: 1 },
+                  ],
+                }}
+                width={Dimensions.get("window").width-40}
+                height={100}
+                yAxisLabel=""
+                yAxisSuffix=""
+                chartConfig={{
+                  backgroundColor: themeI.backgroundColors.component,
+                  backgroundGradientFrom: themeI.backgroundColors.component,
+                  backgroundGradientTo: themeI.backgroundColors.component,
+                  fillShadowGradient: themeI.backgroundColors.component,
+                  fillShadowGradientFrom: themeI.backgroundColors.component,
+                  fillShadowGradientTo: themeI.backgroundColors.component,
+                  color: (opacity = 1) => themeI.fontColors.default,
+                  style: {
+                    borderRadius: 16
+                  },
+                  propsForDots: {
+                    r: "1",
+                    strokeWidth: "1",
+                    stroke: "#000"
+                  },
+                  propsForBackgroundLines: {
+                    stroke: "transparent"
+                  },
+                }}
+                bezier
+                style={{
+                  marginVertical: 0,
+                  borderRadius: 5
+                }}
+              />
           </View>
         </View>
       </View>
