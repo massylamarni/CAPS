@@ -18,8 +18,8 @@ const themeI = {
   },
   backgroundColors: {
     back: '#101010',
-    component: '#151515',
-    componentTitle: '#202020',
+    component: '#202020',
+    componentTitle: '#303030',
     navbar: '#171717',
     preview: '#EEEEEE'
   },

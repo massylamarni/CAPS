@@ -2,13 +2,14 @@ import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-react-native';
 import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
 import Tex from '@/app/(main)/base-components/tex';
-import themeI from '@/assets/themes';
-import styles from '@/assets/styles';
 import { useEffect, useState } from 'react';
-import { View, TouchableOpacity, ToastAndroid } from 'react-native';
+import { ToastAndroid } from 'react-native';
 import { addPredictionData } from '@/utils/sqlite_db_c';
 import SimpleCard from '../mini-components/simpleCard';
 import ProbabilityItem from '../mini-components/probabilityItem';
+import { useLogs } from '@/app/(main)/logContext';
+
+const TAG = "C/modelComponent";
 
 const input_3 = [
   [
@@ -43,10 +44,14 @@ const SEGMENT_SIZE = 10;
 const MIN_A = -74.08409134, MAX_A = 43.37365402;
 const MIN_G = -16.51096916, MAX_G = 28.44993591;
 
-const TAG = "C/modelComponent";
-
 export default function ModelComponentC({ modelState, receivedData }: { modelState: ModelStateC, receivedData: BlueStateC["receivedData"]}) {
+  const [streamBuffer, setStreamBuffer] = useState([] as any);
+  const [dbBuffer, setDbBuffer] = useState([] as any);
+  const { addLog } = useLogs();
+
   const {
+    model,
+    setModel,
     isModelLoaded,
     setIsModelLoaded,
     isDbBufferedR,
@@ -58,8 +63,6 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
     bufferEntriesCount,
     setBufferEntriesCount,
   } = modelState;
-
-  let model = null as tf.GraphModel | null;
 
   useEffect(() => {
     initModel();
@@ -74,47 +77,50 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
   }
   const loadModel = async () => {
     try {
+      addLog(TAG, `Loading model...`);
       await tf.ready();
 
       const modelJson = require('@/assets/models/model.json');
       const modelWeights = [require('@/assets/models/group1-shard1of1.bin')];
       const model_ = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
-      model = model_;
+      setModel(model_);
     } catch (error) {
       ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
     } finally {
       setIsModelLoaded(true);
+      addLog(TAG, `Model loaded !`);
     }
   }
 
-  let streamBuffer = [] as any;
-  let dbBuffer = [] as any;
   const chunkAndProcess = () => {
     if (model) {
       const receivedData_ = receivedData;
-      if (receivedData_ && receivedData_[receivedData_.length-1] !== "") {
+      if (receivedData_ && receivedData_[receivedData_.length-1] && receivedData_[receivedData_.length-1] !== "") {
         const data = JSON.parse(receivedData_[receivedData_.length-1]);
         if (data.sensorData) {
+          addLog(TAG, `Chunking received database...`);
           const dbData = data.sensorData;
+          console.log(dbData);
           dbData?.forEach((entry: any) => {
             if (dbBuffer.length < SEGMENT_SIZE) {
-              dbBuffer.push(entry);
+              setDbBuffer((prev: any) => [...prev, entry]);
               setBufferEntriesCount(prev => (prev+1));
             } else {
               processAndMakePrediction(dbBuffer);
-              dbBuffer = [entry];
+              setDbBuffer([entry]);
               setBufferEntriesCount(1)
             }
           });
           setIsDbBufferedR(true);
         }
         else if (isDbBufferedR) {
+          addLog(TAG, `Chunking received stream...`);
           if (streamBuffer.length < SEGMENT_SIZE) {
-            streamBuffer.push(data);
+            setStreamBuffer((prev: any) => [...prev, data]);
             setBufferEntriesCount(prev => (prev+1));
           } else {
             processAndMakePrediction(streamBuffer);
-            streamBuffer = [data];
+            setStreamBuffer([data]);
             setBufferEntriesCount(1);
           }
         }
@@ -149,13 +155,14 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
 
     try {
       const inputTensor = tf.tensor(dataSegment, [1, 10, 6]);
-
+      addLog(TAG, `Making a prediction...`);
       const output = await model!.executeAsync(inputTensor) as any;
       const prediction_ = output.arraySync();
 
       setPredictions(prediction_);
       const confidence = Math.max(...prediction_[0]);
       const predictedClass = prediction_[0].indexOf(confidence);
+      addLog(TAG, `Saving prediction...`);
       addPredictionData({...rawEntry, confidence: confidence, predictedClass: predictedClass});
 
       output.dispose();
@@ -164,6 +171,7 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
       ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
     } finally {
       setIsPredicting(false);
+      addLog(TAG, `Prediction saved !`);
     }
   };
 
@@ -172,7 +180,7 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
       <SimpleCard title='Model info' >
         {predictions && <>
           {predictions.length != 0 && (predictions[0].map((prediction: any, index: any) => (
-            <ProbabilityItem itemKey={actionMapping[index]} itemValue={prediction.toFixed(2) * 100} />
+            <ProbabilityItem key={index} itemKey={actionMapping[index]} itemValue={prediction.toFixed(2) * 100} />
           )))}
         </>}
         <>

@@ -1,23 +1,20 @@
 import { Accelerometer, Gyroscope } from 'expo-sensors';
-import { useEffect, useState } from 'react';
-import { View, TouchableOpacity, Dimensions } from 'react-native';
+import { useEffect } from 'react';
+import { View } from 'react-native';
 import Tex from '@/app/(main)/base-components/tex';
 import styles from '@/assets/styles';
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-  ProgressChart,
-  ContributionGraph,
-  StackedBarChart
-} from "react-native-chart-kit";
-import themeI from '@/assets/themes';
 import SimpleCard from '../mini-components/simpleCard';
+import SensorLineChart from '../mini-components/sensorLineChart';
+import { useLogs } from '@/app/(main)/logContext';
+
+const TAG = "C/sensorComponent";
 
 const FREQUENCY = 100; // 100ms = 10Hz
 const SEQUENCE_LENGTH = 10;
 
 export default function SensorComponentC({ sensorState, settings }: {sensorState: SensorStateC, settings:SensorViewSettingsC}) {
+  const { addLog } = useLogs();
+
   const {
     sensorData,
     setSensorData,
@@ -92,45 +89,7 @@ export default function SensorComponentC({ sensorState, settings }: {sensorState
               z: {sensorState.sensorData[sensorState.sensorData.length-1]?.za.toFixed(3)}
             </Tex>}
           </View>
-          <LineChart
-            data={{
-              labels: [],
-              datasets: [
-                { data: xaData, color: () => '#ff0000', strokeWidth: 1 },
-                { data: yaData, color: () => '#00ff00', strokeWidth: 1 },
-                { data: zaData, color: () => '#0000ff', strokeWidth: 1 },
-              ],
-            }}
-            width={Dimensions.get("window").width-40}
-            height={100}
-            yAxisLabel=""
-            yAxisSuffix=""
-            chartConfig={{
-              backgroundColor: themeI.backgroundColors.component,
-              backgroundGradientFrom: themeI.backgroundColors.component,
-              backgroundGradientTo: themeI.backgroundColors.component,
-              fillShadowGradient: themeI.backgroundColors.component,
-              fillShadowGradientFrom: themeI.backgroundColors.component,
-              fillShadowGradientTo: themeI.backgroundColors.component,
-              color: (opacity = 1) => themeI.fontColors.default,
-              style: {
-                borderRadius: 16
-              },
-              propsForDots: {
-                r: "1",
-                strokeWidth: "1",
-                stroke: "#000"
-              },
-              propsForBackgroundLines: {
-                stroke: "transparent"
-              },
-              
-            }}
-            bezier
-            style={{
-              borderRadius: 5
-            }}
-          />
+          <SensorLineChart xyzData={{xData: xaData, yData: yaData, zData: zaData}} />
         </View>
         <View style={styles.MINI_SENSOR_CHART}>
           <View style={styles.MINI_SENSOR_CHART_HEADER}>
@@ -141,45 +100,7 @@ export default function SensorComponentC({ sensorState, settings }: {sensorState
               z: {sensorState.sensorData[sensorState.sensorData.length-1]?.zg.toFixed(3)}
             </Tex>}
           </View>
-            <LineChart
-              data={{
-                labels: [],
-                datasets: [
-                  { data: xgData, color: () => '#ff0000', strokeWidth: 1 },
-                  { data: ygData, color: () => '#00ff00', strokeWidth: 1 },
-                  { data: zgData, color: () => '#0000ff', strokeWidth: 1 },
-                ],
-              }}
-              width={Dimensions.get("window").width-40}
-              height={100}
-              yAxisLabel=""
-              yAxisSuffix=""
-              chartConfig={{
-                backgroundColor: themeI.backgroundColors.component,
-                backgroundGradientFrom: themeI.backgroundColors.component,
-                backgroundGradientTo: themeI.backgroundColors.component,
-                fillShadowGradient: themeI.backgroundColors.component,
-                fillShadowGradientFrom: themeI.backgroundColors.component,
-                fillShadowGradientTo: themeI.backgroundColors.component,
-                color: (opacity = 1) => themeI.fontColors.default,
-                style: {
-                  borderRadius: 16
-                },
-                propsForDots: {
-                  r: "1",
-                  strokeWidth: "1",
-                  stroke: "#000"
-                },
-                propsForBackgroundLines: {
-                  stroke: "transparent"
-                },
-              }}
-              bezier
-              style={{
-                marginVertical: 0,
-                borderRadius: 5
-              }}
-            />
+          <SensorLineChart xyzData={{xData: xgData, yData: ygData, zData: zgData}} />
         </View>
       </SimpleCard>
     </>

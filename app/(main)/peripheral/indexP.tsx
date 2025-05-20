@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, ToastAndroid, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import Tex from '@/app/(main)/base-components/tex';
 import styles from '@/assets/styles';
 import { BluetoothDevice, BluetoothDeviceEvent } from "react-native-bluetooth-classic";
@@ -8,8 +8,13 @@ import BlueComponentP from './blueComponentP';
 import DbComponentP from './dbComponentP';
 import HistoryComponentP from './historyComponentP';
 import SettingsComponentP from './settingsComponentP';
+import { useLogs } from '@/app/(main)/logContext';
 
-export default function IndexComponentP({ setRole }: { setRole: any}) {
+const TAG = "P/index";
+
+export default function IndexComponentP({ setRole }: {
+  setRole: React.Dispatch<React.SetStateAction<'CENTRAL' | 'PERIPHERAL'>>,
+}) {
   /* BlueState */
   const [arePermissionsGranted, setArePermissionsGranted] = useState(false);
   const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(false);
@@ -51,6 +56,7 @@ export default function IndexComponentP({ setRole }: { setRole: any}) {
 
   /* IndexState */
   const [pageIndex, setPageIndex] = useState(0);
+  const { addLog } = useLogs();
 
   const blueState = {
     arePermissionsGranted,
@@ -117,6 +123,10 @@ export default function IndexComponentP({ setRole }: { setRole: any}) {
     zgData,
     setZgData,
   };
+  
+  useEffect(() => {
+    addLog(TAG, '------------------------------');
+  }, []);
 
   return(
     <>

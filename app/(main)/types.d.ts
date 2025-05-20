@@ -54,6 +54,8 @@ declare type HistoryStateC = {
   >;
 };
 declare type ModelStateC = {
+  model: tf.GraphModel | null;
+  setModel: React.Dispatch<React.SetStateAction<tf.GraphModel | null>>;
   isModelLoaded: boolean;
   setIsModelLoaded: React.Dispatch<React.SetStateAction<boolean>>;
   isDbBufferedR: boolean;
@@ -188,6 +190,15 @@ declare type DualSensorData = {
   xg: number;
   yg: number;
   zg: number;
+}
+declare type SensorLineChartData = {
+  xData: number[],
+  yData: number[],
+  zData: number[],
+}
+declare type HistoryBardChartData = {
+  labels: [string, string, string, string, string, string],
+  data: [number, number, number, number, number, number],
 }
 
 /* DB */

@@ -1,23 +1,22 @@
 import RNBluetoothClassic, { BluetoothDevice, BluetoothDeviceEvent } from "react-native-bluetooth-classic";
-import React, { useEffect, useState } from 'react';
-import { PermissionsAndroid, ToastAndroid, View, TouchableOpacity } from 'react-native';
-import Tex from '@/app/(main)/base-components/tex';
-import themeI from '@/assets/themes';
-import styles from '@/assets/styles';
-
-import Icon from 'react-native-vector-icons/Feather';
+import React, { useEffect, useRef, useState } from 'react';
+import { PermissionsAndroid, ToastAndroid, View } from 'react-native';
 import { getLastRow } from '@/utils/sqlite_db_c';
 import SimpleCard from "../mini-components/simpleCard";
 import TextListItem from "../mini-components/textListItem";
 import SimpleSubCard from "../mini-components/simpleSubcard";
 import TextListItemSubCard from "../mini-components/textListItemSubCard";
-
+import { useLogs } from '@/app/(main)/logContext';
+import Tex from "../base-components/tex";
 
 const TAG = "C/blueComponent";
 
 type StateChangeEvent = /*unresolved*/ any;
 
 export default function BlueComponentC({ blueState }: { blueState: BlueStateC }) {
+  const [writeBuffer, setWriteBuffer] = useState([] as string[]);
+  const { addLog } = useLogs();
+
   const {
     arePermissionsGranted,
     setArePermissionsGranted,
@@ -48,15 +47,17 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
     receiveCount,
     setReceiveCount
   } = blueState;
+  
+  const connectedDeviceRef = useRef(connectedDevice);
 
   /* Init Bluetooth */
   useEffect(() => {
     initBluetooth();
     
     return () => {
-      cancelAcceptConnections();
-      cancelDiscovery();
-      disconnect();
+      if (isAccepting) cancelAcceptConnections();
+      if (isDisconnecting) cancelDiscovery();
+      if (connectedDevice) disconnect();
     }
   }, []);
 
@@ -85,7 +86,7 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
 
     // Broken connection event listener work around
     const checkConnectionsInterval = setInterval(async () => {
-      if (!connectedDevice) {
+      if (!connectedDeviceRef.current) {
         try {
           const connectedDevices_ = await RNBluetoothClassic.getConnectedDevices();
           if (connectedDevices_.length !== 0) {
@@ -109,8 +110,7 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
   /* Init Reception Listener */
   useEffect(() => {
     const onReceivedDataSub = connectedDevice?.onDataReceived((receivedData: any) => {
-      setReceivedData((prev) => (prev ? [...prev, receivedData] : [receivedData]));
-      setReceiveCount((prev) => (prev+1));
+      setReceivedData((prev) => (prev ? [...prev, receivedData.data] : [receivedData.data]));
     });
     
     return () => {
@@ -120,10 +120,24 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
 
   /* On Connection */
   useEffect(() => {
-      if (connectedDevice) {
-        sendDbAnchor();
-      }
-    }, [connectedDevice]);
+    if (connectedDevice) {
+      sendDbAnchor();
+    }
+    connectedDeviceRef.current = connectedDevice;
+  }, [connectedDevice]);
+
+  /* On receive */
+  useEffect(() => {
+    if (receivedData && receivedData[receivedData.length-1]) {
+      addLog(TAG, `Received message with length: ${receivedData[receivedData.length-1].length} !`);
+      setReceiveCount((prev) => (prev+1));
+    }
+  }, [receivedData]);
+
+  /* On Buffer update */
+  useEffect(() => {
+    sendfromBuffer();
+  }, [writeBuffer]);
 
   const initBluetooth = async () => {
     // Request Permissions
@@ -135,26 +149,27 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
       ]);
       const arePermissionsGranted_ = Object.values(granted).every(val => val === PermissionsAndroid.RESULTS.GRANTED);
       setArePermissionsGranted(arePermissionsGranted_);
+      addLog(TAG, `${arePermissionsGranted_ ? 'Permissions grated !' : 'Not all permissions granted !'}`);
     } catch (error) {
-      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
-    };
+      addLog(TAG, `${error}`);
+    }
 
     // Get Initial Bluetooth status
     try {
       const isBluetoothEnabled_ = await RNBluetoothClassic.isBluetoothEnabled();
       setIsBluetoothEnabled(isBluetoothEnabled_);
     } catch (error) {
-      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+      addLog(TAG, `${error}`);
     }
   }
   const startDiscovery = async () => {
     try {
       setIsDiscovering(true);
       const unpairedDevices_ = await RNBluetoothClassic.startDiscovery();
-      setUnpairedDevices(unpairedDevices_)
-      ToastAndroid.show(`Found ${unpairedDevices_.length} devices.`, ToastAndroid.SHORT);
+      setUnpairedDevices(unpairedDevices_);
+      addLog(TAG, `Found ${unpairedDevices_.length} devices.`);
     } catch (error) {
-      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+      addLog(TAG, `${error}`);
     } finally {
       setIsDiscovering(false);
     }
@@ -162,21 +177,24 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
   const cancelDiscovery = async () => {
     try {
       const cancelled = await RNBluetoothClassic.cancelDiscovery();
-      if (cancelled) setIsDiscovering(false);
+      if (cancelled) {
+        setIsDiscovering(false);
+        addLog(TAG, `Discovery cancelled !`);
+      }
     } catch (error) {
-      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+      addLog(TAG, `${error}`);
     }
   }
   const acceptConnections = async () => {
     setIsAccepting(true);
-      
-    try {      
+    try {
       const connectedDevice_ = await RNBluetoothClassic.accept({});
       setConnectedDevice(connectedDevice_);
     } catch (error) {
-      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+      addLog(TAG, `${error}`);
     } finally {
       setIsAccepting(false);
+      addLog(TAG, `Accepting success !`);
     }
   }
   const cancelAcceptConnections = async () => {
@@ -186,9 +204,12 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
 
     try {
       const cancelled = await RNBluetoothClassic.cancelAccept();
-      if (cancelled) setIsAccepting(false);
+      if (cancelled) {
+        setIsAccepting(false);
+        addLog(TAG, `Accept cancelled !`);
+      }
     } catch (error) {
-      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+      addLog(TAG, `${error}`);
     }
   }
   const connect = async (_device: BluetoothDevice) => {
@@ -198,14 +219,20 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
       let isPaired = false;
       bondedDevices?.forEach((device: BluetoothDevice) => {
         if (device.address === _device.address) isPaired = true;
+        addLog(TAG, `Device found paired !`);
       });
       if (!isPaired) {
+        addLog(TAG, `Pairing with device...`);
         const pairedDevice_ = await RNBluetoothClassic.pairDevice(_device.address);
       }
+      addLog(TAG, `Connecting to device...`);
       const connected = await _device?.connect();
-      if (connected) setConnectedDevice(_device);
+      if (connected) {
+        setConnectedDevice(_device);
+        addLog(TAG, `Connection success !`);
+      }
     } catch (error) {
-      
+      addLog(TAG, `${error}`);
     } finally {
       setIsConnecting(false);
     }
@@ -214,9 +241,12 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
     try {
       setIsDisconnecting(true);
       const disconnected = await connectedDevice?.disconnect();
-      if (disconnected) setConnectedDevice(null);
+      if (disconnected) {
+        setConnectedDevice(null);
+        addLog(TAG, `Disconnect success !`);
+      }
     } catch (error) {
-      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+      addLog(TAG, `${error}`);
     } finally {
       setIsDisconnecting(false);
     }
@@ -226,34 +256,45 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
       setIsUnpairing(true);
       const unpairedDevice_ = await RNBluetoothClassic.unpairDevice(deviceAddr);
     } catch (error) {
-      ToastAndroid.show(`Bluetooth: ${error}`, ToastAndroid.SHORT);
+      addLog(TAG, `${error}`);
     } finally {
       setIsUnpairing(false);
+      addLog(TAG, `Unpair success !`);
     }
   }
 
-  let writeBuffer = [];
   const write = async (message: string) => {
-    writeBuffer.push(message);
+    setWriteBuffer(prev => prev.length !==0 ? [...prev, message] : [message]);
+  };
+  const sendfromBuffer = async () => {
+    if (writeBuffer.length === 0) return;
     if (isWriting) return;
 
     try {
       setIsWriting(true);
       while (writeBuffer.length > 0) {
-        const message = writeBuffer.shift();
+        const cloneWriteBuffer = [...writeBuffer];
+        const message = cloneWriteBuffer.shift();
+        setWriteBuffer(cloneWriteBuffer);
         if (!message) continue;
+        addLog(TAG, `Writing message with length: ${message.length} !`);
         const writeStatus = await connectedDevice?.write(`${message}\n`);
+        if (writeStatus) addLog(TAG, `Write success !`);
       }
     } catch (error) {
-      console.log(error);
+      addLog(TAG, `${error}`);
     } finally {
       setIsWriting(false);
     }
-  };
+  }
 
   const sendDbAnchor = async () => {
+    addLog(TAG, `Sending dbAnchor...`);
+    const message = JSON.stringify(0);
+    write(message);
+    /*
     const lastRow = await getLastRow();
-    if (lastRow.length !== 0) {
+    if (lastRow.length !== 0) {  // Needs rework (Save anchor in database and exchange it with peripheral)
       const most_recent_row = lastRow.reduce((latest, current) =>
         current.createdAt > latest.createdAt ? current : latest
       );
@@ -264,6 +305,7 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
       const message = JSON.stringify(0);
       write(message);
     }
+    */
   };
 
   return (
@@ -272,14 +314,14 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
         <View>
           <TextListItem itemKey="Status" itemValue={isBluetoothEnabled ? 'Enabled' : 'Disabled'} />
           {(isBluetoothEnabled) && <>
-            <SimpleSubCard title={`Devices found ${isDisconnecting && '(Discovering...)'}`}>
+            <SimpleSubCard title={`Devices found ${isDiscovering ? '(Discovering...)': ''}`}>
               {unpairedDevices?.length != 0 ? (unpairedDevices?.map((device, index) => (
                 <TextListItemSubCard key={index} itemKey={device.name}
                   itemValue={connectedDevice ? (connectedDevice.name == device.name ? 'Disconnect' : 'Connect') : (isConnecting ? 'Connecting...' : 'Connect')}
                   onPressE={connectedDevice ? (connectedDevice.name == device.name ? () => disconnect() : () => connect(device)) : (isConnecting ? null : () => connect(device))}
                 />
               ))) : (
-                <TextListItemSubCard itemKey="No devices found" itemValue="" />
+                <TextListItemSubCard itemKey="No devices found" itemValue={isDiscovering ? 'Discovering...' : 'Discover'} onPressE={() => isDiscovering ? null : startDiscovery()} />
               )}
             </SimpleSubCard>
           </>}

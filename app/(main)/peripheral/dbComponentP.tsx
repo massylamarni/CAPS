@@ -1,14 +1,16 @@
-import { initDatabase, resetDatabase, getLastRow, getRowCount, addSensorData } from '@/utils/sqlite_db_p';
+import { initDatabase, getLastRow, getRowCount, addSensorData } from '@/utils/sqlite_db_p';
 import { useEffect, useState } from 'react';
-import { PermissionsAndroid, ToastAndroid, View, TouchableOpacity } from 'react-native';
-import Tex from '@/app/(main)/base-components/tex';
-import styles from '@/assets/styles';
+import { View } from 'react-native';
 import SimpleCard from '../mini-components/simpleCard';
 import TextListItem from '../mini-components/textListItem';
+import { useLogs } from '@/app/(main)/logContext';
 
-const TAG = "C/dbComponent";
+const TAG = "P/dbComponent";
 
 export default function DbComponentP({ dbState, sensorData }: { dbState: DbStateP, sensorData: SensorStateP["sensorData"] }) {
+  const  [sensorDataCount, setSensorDataCount] = useState(0);
+  const { addLog } = useLogs();
+
   const {
     isDbConnected,
     setIsDbConnected,
@@ -22,14 +24,14 @@ export default function DbComponentP({ dbState, sensorData }: { dbState: DbState
   }, []);
 
   useEffect(() => {
-    updateDb();
-  }, [sensorData]);
-
-  const updateDb = () => {
     if (sensorData) {
       addSensorData({...sensorData[0]});
+      if (sensorDataCount % 10 === 0) {
+        getDbStats();
+      }
+      setSensorDataCount(prev => (prev+1));
     }
-  }
+  }, [sensorData]);
 
   const initDb = async () => {
     setIsDbConnected(await initDatabase());

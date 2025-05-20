@@ -1,4 +1,4 @@
-import { PermissionsAndroid, ToastAndroid, View, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
 import Tex from '@/app/(main)/base-components/tex';
 import themeI from '@/assets/themes';
 import styles from '@/assets/styles';

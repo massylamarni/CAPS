@@ -1,4 +1,4 @@
-import { View, TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import Tex from '@/app/(main)/base-components/tex';
 import Icon from 'react-native-vector-icons/Feather';
 import themeI from '@/assets/themes';

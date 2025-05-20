@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, ToastAndroid, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import Tex from '@/app/(main)/base-components/tex';
 import styles from '@/assets/styles';
 import { useState } from 'react';
@@ -9,9 +9,15 @@ import ModelComponentC from './modelComponentC';
 import SensorComponentC from './sensorComponentC';
 import DbComponentC from './dbComponentC';
 import HistoryComponentC from './historyComponentC';
-import { BluetoothDevice, BluetoothDeviceEvent } from "react-native-bluetooth-classic";
+import { BluetoothDevice } from "react-native-bluetooth-classic";
+import { useLogs } from '@/app/(main)/logContext';
 
-export default function IndexComponentC({ setRole }: { setRole: any}) {
+const TAG = "C/index";
+type GraphModel = /*unresolved*/ any
+
+export default function IndexComponentC({ setRole }: {
+  setRole: React.Dispatch<React.SetStateAction<'CENTRAL' | 'PERIPHERAL'>>,
+}) {
   /* BlueState */
   const [arePermissionsGranted, setArePermissionsGranted] = useState(false);
   const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(false);
@@ -41,6 +47,7 @@ export default function IndexComponentC({ setRole }: { setRole: any}) {
   const [predictionStats, setPredictionStats] = useState(null as { predictedClass: number; count: number; }[] | null);
 
   /* ModelState */
+  const [model, setModel] = useState(null as GraphModel | null);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [isDbBufferedR, setIsDbBufferedR] = useState(false);
   const [isPredicting, setIsPredicting] = useState(false);
@@ -58,9 +65,11 @@ export default function IndexComponentC({ setRole }: { setRole: any}) {
 
   /* IndexState */
   const [pageIndex, setPageIndex] = useState(0);
+  const [isDbBufferedSS, setIsDbBufferedSS] = useState(false);
   const [settings, setSettings] = useState({
     isSimulating: false,
   });
+  const { addLog } = useLogs();
 
   const blueState = {
     arePermissionsGranted,
@@ -108,6 +117,8 @@ export default function IndexComponentC({ setRole }: { setRole: any}) {
   };
 
   const modelState = {
+    model,
+    setModel,
     isModelLoaded,
     setIsModelLoaded,
     isDbBufferedR,
@@ -138,6 +149,10 @@ export default function IndexComponentC({ setRole }: { setRole: any}) {
   };
 
   useEffect(() => {
+    addLog(TAG, '------------------------------');
+  }, []);
+
+  useEffect(() => {
     if (settings.isSimulating) {
       const syntheticDb = {
         sensorData: [
@@ -164,36 +179,22 @@ export default function IndexComponentC({ setRole }: { setRole: any}) {
             device_id: 1
           }
         ],
-        devices: [
-          {
-            id: 1,
-            mac: 'AA:BB:CC:DD:EE:01',
-            name: 'Cattle I',
-            created_at: 1747260000000
-          },
-          {
-            id: 2,
-            mac: 'AA:BB:CC:DD:EE:02',
-            name: 'Cattle II',
-            created_at: 1747260100000
-          }
-        ],
       };
       const syntheticData = {...sensorState.sensorData[0],
         createdAt: Date.now(),
         mac: 'MAC',
       };
-      if (isDbBufferedR) {
+      if (isDbBufferedSS) {
         setReceivedData(prev => (prev ? [...prev, JSON.stringify(syntheticData)] : [JSON.stringify(syntheticData)]));
       } else {
-        setReceivedData(prev => (prev ? [...prev, JSON.stringify(syntheticData)] : [JSON.stringify(syntheticDb)]));
-        setIsDbBufferedR(true);
+        setReceivedData(prev => (prev ? [...prev, JSON.stringify(syntheticDb)] : [JSON.stringify(syntheticDb)]));
+        setIsDbBufferedSS(true);
       }
     } else {
-      setIsDbBufferedR(false);
+      setIsDbBufferedSS(false);
       setReceivedData([]);
     }
-  }, [sensorState]);
+  }, [sensorState.sensorData]);
   
   return(
     <>
@@ -204,7 +205,7 @@ export default function IndexComponentC({ setRole }: { setRole: any}) {
               <BlueComponentC blueState={blueState} />
               <ModelComponentC modelState={modelState} receivedData={blueState.receivedData} />
               {settings.isSimulating && <SensorComponentC sensorState={sensorState} settings={{show_title: true, show_coord: true}} />}
-              <DbComponentC dbState={dbState} />
+              <DbComponentC dbState={dbState} isPredicting={modelState.isPredicting} />
             </>}
             {pageIndex == 1 && <>
               <HistoryComponentC historyState={historyState} dbStats={dbState.dbStats} />

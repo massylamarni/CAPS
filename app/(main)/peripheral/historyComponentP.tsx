@@ -1,24 +1,19 @@
 import { getLastRow } from '@/utils/sqlite_db_p';
-import { View, TouchableOpacity, Dimensions } from 'react-native';
-import { useEffect, useState } from 'react';
+import { View } from 'react-native';
+import { useEffect } from 'react';
 import Tex from '@/app/(main)/base-components/tex';
-import themeI from '@/assets/themes';
 import styles from '@/assets/styles';
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-  ProgressChart,
-  ContributionGraph,
-  StackedBarChart
-} from "react-native-chart-kit";
 import SimpleCard from '../mini-components/simpleCard';
 import DbListItem from '../mini-components/dbListItem';
 import TextListItemSubCard from '../mini-components/textListItemSubCard';
+import HistoryBarChart from '../mini-components/historyBarChart';
+import { useLogs } from '@/app/(main)/logContext';
 
-const TAG = "C/historyComponent";
+const TAG = "P/historyComponent";
 
 export default function HistoryComponentP({ historyState, dbStats }: { historyState: HistoryStateP, dbStats: DbStateP["dbStats"]}) {
+  const { addLog } = useLogs();
+  
   const {
     lastRow,
     setLastRow,
@@ -39,7 +34,7 @@ export default function HistoryComponentP({ historyState, dbStats }: { historySt
     <>
       <SimpleCard title='History'>
         <DbListItem entryName={`Cattle X`}>
-          <TextListItemSubCard itemKey='Created at:' itemValue={lastRow?.createdAt} />
+          <TextListItemSubCard itemKey='Created at:' itemValue={new Date(lastRow?.createdAt).toLocaleString()} />
           <TextListItemSubCard itemKey='Recorded:' itemValue={dbStats.row_count} />
         </DbListItem>
       </SimpleCard>
@@ -56,42 +51,7 @@ export default function HistoryComponentP({ historyState, dbStats }: { historySt
               <View style={styles.STATS_BAR_CHART_HEADER}>
                 <Tex style={styles.SUBCOMPONENT_TITLE}>Behvaior stats</Tex>
               </View>
-              <BarChart
-                data={
-                  {labels: ['0', '1', '2', '3', '7', '8'],
-                  datasets: [
-                    {
-                      data: [20, 45, 28, 80, 99, 43]
-                    }
-                  ]}
-                }
-                yAxisLabel=""
-                yAxisSuffix=""
-                width={Dimensions.get("window").width-40}
-                height={200}
-                showValuesOnTopOfBars={true}
-                withHorizontalLabels={true}
-                withVerticalLabels={true}
-                chartConfig={{
-                  backgroundColor: themeI.backgroundColors.component,
-                  backgroundGradientFrom: themeI.backgroundColors.component,
-                  backgroundGradientTo: themeI.backgroundColors.component,
-                  fillShadowGradient: themeI.fontColors.default,
-                  fillShadowGradientFrom: themeI.fontColors.default,
-                  fillShadowGradientTo: themeI.fontColors.default,
-                  fillShadowGradientOpacity: 1,
-                  fillShadowGradientFromOpacity: 1,
-                  fillShadowGradientToOpacity: 1,
-                  color: (opacity = 1) => themeI.fontColors.default,
-                  style: {
-                    borderRadius: 5,
-                  },
-                  propsForBackgroundLines: {
-                    stroke: "transparent"
-                  },
-                }}
-                verticalLabelRotation={30}
-              />
+              <HistoryBarChart barChartData={{labels: ['0', '1', '2', '3', '7', '8'], data: [20, 45, 28, 80, 99, 43]}} />
             </View>
           </View>
         </View>

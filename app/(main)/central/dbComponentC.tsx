@@ -1,14 +1,15 @@
-import { initDatabase, resetDatabase, getLastRow, getRowCount } from '@/utils/sqlite_db_c';
-import { useEffect, useState } from 'react';
-import { PermissionsAndroid, ToastAndroid, View, TouchableOpacity } from 'react-native';
-import Tex from '@/app/(main)/base-components/tex';
-import styles from '@/assets/styles';
+import { initDatabase, getLastRow, getRowCount } from '@/utils/sqlite_db_c';
+import { useEffect } from 'react';
+import { View } from 'react-native';
 import SimpleCard from '../mini-components/simpleCard';
 import TextListItem from '../mini-components/textListItem';
+import { useLogs } from '@/app/(main)/logContext';
 
 const TAG = "C/dbComponent";
 
-export default function DbComponentC({ dbState }: { dbState: DbStateC }) {
+export default function DbComponentC({ dbState, isPredicting }: { dbState: DbStateC, isPredicting: ModelStateC["isPredicting"] }) {
+  const { addLog } = useLogs();
+
   const {
     isDbConnected,
     setIsDbConnected,
@@ -21,10 +22,15 @@ export default function DbComponentC({ dbState }: { dbState: DbStateC }) {
     getDbStats();
   }, []);
 
+  useEffect(() => {
+    getDbStats();
+  }, [isPredicting]);
+
   const initDb = async () => {
     setIsDbConnected(await initDatabase());
   };
   const getDbStats = async () => {
+    addLog(TAG, `Getting database stats...`);
     const lastRow = await getLastRow();
     if (lastRow.length !== 0) {
       const rowCount = await getRowCount();
