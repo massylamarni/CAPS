@@ -1,20 +1,21 @@
 import RNBluetoothClassic, { BluetoothDevice, BluetoothDeviceEvent } from "react-native-bluetooth-classic";
 import React, { useEffect, useState } from 'react';
 import { PermissionsAndroid, ToastAndroid, View, TouchableOpacity } from 'react-native';
-import Tex from './base-components/tex';
+import Tex from '@/app/(main)/base-components/tex';
 import themeI from '@/assets/themes';
 import styles from '@/assets/styles';
 
 import Icon from 'react-native-vector-icons/Feather';
-import { getLastRow } from '@/utils/sqlite_db';
-import { BlueState } from ".";
+import { getAllSensorData, getLastRow } from '@/utils/sqlite_db_p';
+import SimpleCard from "../mini-components/simpleCard";
+import TextListItem from "../mini-components/textListItem";
 
 
 const TAG = "C/blueComponent";
 
 type StateChangeEvent = /*unresolved*/ any;
 
-export default function BlueComponent({ blueState }: { blueState: BlueState }) {
+export default function BlueComponentP({ blueState, sensorData }: { blueState: BlueStateP, sensorData: SensorStateP["sensorData"] }) {
   const {
     arePermissionsGranted,
     setArePermissionsGranted,
@@ -43,12 +44,17 @@ export default function BlueComponent({ blueState }: { blueState: BlueState }) {
     sendCount,
     setSendCount,
     receiveCount,
-    setReceiveCount
+    setReceiveCount,
+    dbAnchor,
+    setDbAnchor,
+    isDbBufferedS,
+    setIsDbBufferedS,
   } = blueState;
 
   /* Init Bluetooth */
   useEffect(() => {
     initBluetooth();
+    acceptConnections();
     
     return () => {
       cancelAcceptConnections();
@@ -105,7 +111,7 @@ export default function BlueComponent({ blueState }: { blueState: BlueState }) {
 
   /* Init Reception Listener */
   useEffect(() => {
-    const onReceivedDataSub = connectedDevice?.onDataReceived((receivedData) => {
+    const onReceivedDataSub = connectedDevice?.onDataReceived((receivedData: any) => {
       setReceivedData((prev) => (prev ? [...prev, receivedData] : [receivedData]));
       setReceiveCount((prev) => (prev+1));
     });
@@ -117,10 +123,32 @@ export default function BlueComponent({ blueState }: { blueState: BlueState }) {
 
   /* On Connection */
   useEffect(() => {
-      if (connectedDevice) {
-        sendDbAnchor();
+    if (connectedDevice) {
+      if (dbAnchor) {
+        exportDatabaseAsJson(JSON.parse(dbAnchor));
       }
-    }, [connectedDevice]);
+    }
+  }, [connectedDevice]);
+
+  /* On receive */
+  useEffect(() => {
+    if (receivedData) {
+      if (receivedData.length !== 0) {
+        setDbAnchor(receivedData[0]);
+      }
+    }
+  }, [receivedData]);
+
+  /* Stream data */
+  useEffect(() => {
+    if (isDbBufferedS) {
+      write(JSON.stringify(sensorData));
+    }
+  }, [sensorData]);
+
+  useEffect(() => {
+    if (isWriting) setSendCount(prev => (prev+1));
+  }, [isWriting]);
 
   const initBluetooth = async () => {
     // Request Permissions
@@ -250,12 +278,8 @@ export default function BlueComponent({ blueState }: { blueState: BlueState }) {
 
   const sendDbAnchor = async () => {
     const lastRow = await getLastRow();
-    if (lastRow.length !== 0) {
-      const most_recent_row = lastRow.reduce((latest, current) =>
-        current.DateTime > latest.DateTime ? current : latest
-      );
-
-      const message = JSON.stringify(most_recent_row.id);
+    if (lastRow) {
+      const message = JSON.stringify(lastRow.id);
       write(message);
     } else {
       const message = JSON.stringify(0);
@@ -263,59 +287,30 @@ export default function BlueComponent({ blueState }: { blueState: BlueState }) {
     }
   };
 
+  const exportDatabaseAsJson = async (_dbAnchor: number) => {
+    const sensorData = await getAllSensorData(_dbAnchor);
+
+    const largeMessage = JSON.stringify({
+      sensorData
+    });
+
+    await write(largeMessage);
+    setIsDbBufferedS(true);
+  };
+
   return (
     <>
-      <View style={[styles.COMPONENT_CARD, styles.ble_info]}>
-        <Tex style={styles.COMPONENT_TITLE} >
-          Bluetooth Info
-        </Tex>
+      <SimpleCard title="Bluetooth Info">
         <View style={styles.COMPONENT_WRAPPER}>
-          <View>
-            <View style={styles.COMPONENT_LIST_ITEM}>
-              <Tex>Status</Tex>
-              <Tex>{isBluetoothEnabled ? 'Enabled' : 'Disabled'}</Tex>
-            </View>
-            {(isBluetoothEnabled) && <>
-              <View style={[styles.SUBCOMPONENT_CARD, styles.MD_ROW_GAP]}>
-                <Tex
-                onPress={isDisconnecting ? cancelDiscovery : startDiscovery}
-                style={styles.SUBCOMPONENT_TITLE}>
-                  Devices found {isDisconnecting && '(Discovering...)'}
-                </Tex>
-                <View>
-                  {unpairedDevices?.length != 0 ? (unpairedDevices?.map((device, index) => (
-                    <View key={index} style={styles.SUBCOMPONENT_LIST_ITEM}>
-                      <Tex>{device.name}</Tex>
-                      {connectedDevice ? (<>
-                        <Tex>{connectedDevice.name == device.name ? 'Disconnect' : 'Connect'}</Tex>
-                      </>) : (<>
-                        <Tex onPress={() => connect(device)}>{isConnecting ? 'Connecting...' : 'Connect'}</Tex>
-                      </>)}
-                    </View>
-                  ))) : (
-                    <View style={styles.SUBCOMPONENT_LIST_ITEM}>
-                      <Tex>No devices found</Tex>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </>}
-            {connectedDevice && <View style={styles.COMPONENT_LIST_ITEM}>
-              <Tex>Connected to</Tex>
-              <Tex>{connectedDevice?.name}</Tex>
-            </View>}
-          </View>
-          <View>
-            <View style={styles.COMPONENT_LIST_ITEM}>
-              <Tex>Num of packets received</Tex>
-              <View style={styles.LEGEND_CONTAINER}>
-                <Icon style={styles.MD_COL_GAP} name="trending-down" size={themeI.legendSize.default} color={themeI.legendColors.default} />
-                <Tex>{receiveCount}</Tex>
-              </View>
-            </View>
-          </View>
+          <TextListItem itemKey="Status" itemValue={isBluetoothEnabled ? 'Enabled' : 'Disabled'} />
+          <TextListItem itemKey="Advertising as" itemValue="GALAXY" />
+          <TextListItem itemKey="Connected to" itemValue={connectedDevice?.name} />
+          {connectedDevice && <TextListItem itemKey="Connected to" itemValue={connectedDevice?.name} />}
         </View>
-      </View>
+        <View>
+          <TextListItem itemKey="Num of packets sent" itemValue={sendCount} iconName="trending-up" />
+        </View>
+      </SimpleCard>
     </>
   );
 }

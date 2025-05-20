@@ -1,14 +1,14 @@
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-react-native';
 import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
-import Tex from './base-components/tex';
-import ProgressBar from './mini-components/progressbar';
+import Tex from '@/app/(main)/base-components/tex';
 import themeI from '@/assets/themes';
 import styles from '@/assets/styles';
 import { useEffect, useState } from 'react';
 import { View, TouchableOpacity, ToastAndroid } from 'react-native';
-import { addPredictionData, importDevices } from '@/utils/sqlite_db';
-import { BlueState, ModelState } from '.';
+import { addPredictionData } from '@/utils/sqlite_db_c';
+import SimpleCard from '../mini-components/simpleCard';
+import ProbabilityItem from '../mini-components/probabilityItem';
 
 const input_3 = [
   [
@@ -45,24 +45,12 @@ const MIN_G = -16.51096916, MAX_G = 28.44993591;
 
 const TAG = "C/modelComponent";
 
-type ReceivedSensorData = {
-  xa: number,
-  ya: number,
-  za: number,
-  xg: number,
-  yg: number,
-  zg: number,
-  DateTime: number,
-  prediction: number,
-  mac: string,
-}
-
-export default function ModelComponent({ modelState, receivedData }: { modelState: ModelState, receivedData: BlueState["receivedData"]}) {
+export default function ModelComponentC({ modelState, receivedData }: { modelState: ModelStateC, receivedData: BlueStateC["receivedData"]}) {
   const {
     isModelLoaded,
     setIsModelLoaded,
-    isDbBuffered,
-    setIsDbBuffered,
+    isDbBufferedR,
+    setIsDbBufferedR,
     isPredicting,
     setIsPredicting,
     predictions,
@@ -118,10 +106,9 @@ export default function ModelComponent({ modelState, receivedData }: { modelStat
               setBufferEntriesCount(1)
             }
           });
-          importDevices(data.devices);
-          setIsDbBuffered(true);
+          setIsDbBufferedR(true);
         }
-        else if (isDbBuffered) {
+        else if (isDbBufferedR) {
           if (streamBuffer.length < SEGMENT_SIZE) {
             streamBuffer.push(data);
             setBufferEntriesCount(prev => (prev+1));
@@ -135,7 +122,7 @@ export default function ModelComponent({ modelState, receivedData }: { modelStat
     }
   }
 
-  const processAndMakePrediction = async (buffer: ReceivedSensorData[]) => {
+  const processAndMakePrediction = async (buffer: ReceivedSensorDataC[]) => {
     const preprocessSingleRow = (data: any): number[] => {  // Needs debug
       const normalizedData = {
         xa: (data.xa - MIN_A) / (MAX_A - MIN_A),
@@ -156,7 +143,7 @@ export default function ModelComponent({ modelState, receivedData }: { modelStat
     makePredictionAndSave(buffer[0], [preprocessedData]);
   }
 
-  const makePredictionAndSave = async (rawEntry: ReceivedSensorData, dataSegment: number[][][]) => {
+  const makePredictionAndSave = async (rawEntry: ReceivedSensorDataC, dataSegment: number[][][]) => {
     if (isPredicting) return;
     setIsPredicting(true);
 
@@ -182,32 +169,19 @@ export default function ModelComponent({ modelState, receivedData }: { modelStat
 
   return (
     <>
-      <View style={[styles.COMPONENT_CARD, styles.model_info]}>
-        <Tex style={styles.COMPONENT_TITLE} >
-          Model info
-        </Tex>
-        <View style={styles.COMPONENT_WRAPPER}>
-          {predictions && <>
-            {predictions.length != 0 && (predictions[0].map((prediction: any, index: any) => (
-              <View key={index} style={[styles.CLASS_PROBABILITY, styles.MD_ROW_GAP]}>
-                <View style={styles.CLASS_PROBABILITY_HEADER}>
-                  <Tex>{actionMapping[index]}</Tex>
-                  <Tex>{`${prediction.toFixed(2) * 100} %`}</Tex>
-                </View>
-                <View style={styles.CLASS_PROBABILITY_BODY}>
-                  <ProgressBar progress={prediction.toFixed(2) * 100} backgroundColor={themeI.progressBar.background} progressBarColor={themeI.progressBar.foreground} />
-                </View>
-              </View>
-            )))}
-          </>}
-          <>
-            <Tex>{isModelLoaded ? 'Model loaded !' : 'Loading model...'}</Tex>
-            <Tex>{`Processing chunk ${bufferEntriesCount}/10...`}</Tex>
-            {isDbBuffered && <Tex>Database buffered !</Tex>}
-            {isPredicting && <Tex>Predicting...</Tex>}
-          </>
-        </View>
-      </View>
+      <SimpleCard title='Model info' >
+        {predictions && <>
+          {predictions.length != 0 && (predictions[0].map((prediction: any, index: any) => (
+            <ProbabilityItem itemKey={actionMapping[index]} itemValue={prediction.toFixed(2) * 100} />
+          )))}
+        </>}
+        <>
+          <Tex>{isModelLoaded ? 'Model loaded !' : 'Loading model...'}</Tex>
+          <Tex>{`Processing chunk ${bufferEntriesCount}/10...`}</Tex>
+          {isDbBufferedR && <Tex>Database buffered !</Tex>}
+          {isPredicting && <Tex>Predicting...</Tex>}
+        </>
+      </SimpleCard>
     </>
   );
 }
