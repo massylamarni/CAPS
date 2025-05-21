@@ -1,6 +1,6 @@
 import RNBluetoothClassic, { BluetoothDevice, BluetoothDeviceEvent } from "react-native-bluetooth-classic";
 import React, { useEffect, useRef, useState } from 'react';
-import { PermissionsAndroid, ToastAndroid, View } from 'react-native';
+import { PermissionsAndroid, View, Platform } from 'react-native';
 import { getLastRow } from '@/utils/sqlite_db_c';
 import SimpleCard from "../mini-components/simpleCard";
 import TextListItem from "../mini-components/textListItem";
@@ -15,6 +15,7 @@ type StateChangeEvent = /*unresolved*/ any;
 
 export default function BlueComponentC({ blueState }: { blueState: BlueStateC }) {
   const [writeBuffer, setWriteBuffer] = useState([] as string[]);
+  const [processingDevice, setProcessingDevice] = useState(null as string | null);
   const { addLog } = useLogs();
 
   const {
@@ -74,9 +75,9 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
     }
     const onBluetoothError = (event: BluetoothDeviceEvent) => {
       if (event.device) {
-        ToastAndroid.show(`Device error`, ToastAndroid.SHORT);
+        addLog(TAG, `Device error !`);
       } else {
-        ToastAndroid.show(`Adapter related error`, ToastAndroid.SHORT);
+        addLog(TAG, `Adapter error !`);
       }
     }
     const onBluetoothEnabledSub = RNBluetoothClassic.onBluetoothEnabled(onBluetoothEnabled);
@@ -93,7 +94,7 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
             setConnectedDevice(connectedDevices_[0]);
           }
         } catch (error) {
-          ToastAndroid.show(`Failed to get connected devices: ${error}`, ToastAndroid.SHORT);
+          addLog(TAG, `${error}`);
         }
       }
     }, 3000);
@@ -142,14 +143,32 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
   const initBluetooth = async () => {
     // Request Permissions
     try {
-      const granted = await PermissionsAndroid.requestMultiple([
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-      ]);
-      const arePermissionsGranted_ = Object.values(granted).every(val => val === PermissionsAndroid.RESULTS.GRANTED);
-      setArePermissionsGranted(arePermissionsGranted_);
-      addLog(TAG, `${arePermissionsGranted_ ? 'Permissions grated !' : 'Not all permissions granted !'}`);
+      if (Platform.OS === 'android') {
+        const version = Platform.Version;
+        addLog(TAG, `Using android API version ${version}`);
+  
+        if (version >= 31) {
+          // Android 12+ (API 31+): request all needed permissions
+          const granted = await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+          ]);
+          
+          const arePermissionsGranted_ = Object.values(granted).every(val => val === PermissionsAndroid.RESULTS.GRANTED);
+          setArePermissionsGranted(arePermissionsGranted_);
+          addLog(TAG, `${arePermissionsGranted_ ? 'Permissions grated !' : 'Not all permissions granted !'}`);
+        } else {
+          // Android 9 (API 28) and below: request only location permission
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+          );
+          
+          const arePermissionsGranted_ = granted === PermissionsAndroid.RESULTS.GRANTED;
+          setArePermissionsGranted(arePermissionsGranted_);
+          addLog(TAG, `${arePermissionsGranted_ ? 'Permissions grated !' : 'Not all permissions granted !'}`);
+        }
+      }
     } catch (error) {
       addLog(TAG, `${error}`);
     }
@@ -189,12 +208,12 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
     setIsAccepting(true);
     try {
       const connectedDevice_ = await RNBluetoothClassic.accept({});
+      addLog(TAG, `Accepting success !`);
       setConnectedDevice(connectedDevice_);
     } catch (error) {
       addLog(TAG, `${error}`);
     } finally {
       setIsAccepting(false);
-      addLog(TAG, `Accepting success !`);
     }
   }
   const cancelAcceptConnections = async () => {
@@ -215,6 +234,7 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
   const connect = async (_device: BluetoothDevice) => {
     try {
       setIsConnecting(true);
+      setProcessingDevice(_device.address);
       const bondedDevices = await RNBluetoothClassic.getBondedDevices();
       let isPaired = false;
       bondedDevices?.forEach((device: BluetoothDevice) => {
@@ -255,11 +275,11 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
     try {
       setIsUnpairing(true);
       const unpairedDevice_ = await RNBluetoothClassic.unpairDevice(deviceAddr);
+      addLog(TAG, `Unpair success !`);
     } catch (error) {
       addLog(TAG, `${error}`);
     } finally {
       setIsUnpairing(false);
-      addLog(TAG, `Unpair success !`);
     }
   }
 
@@ -312,13 +332,16 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
         <View>
           <TextListItem itemKey="Status" itemValue={isBluetoothEnabled ? 'Enabled' : 'Disabled'} />
           {(isBluetoothEnabled) && <>
-            <SimpleSubCard title={`Devices found ${isDiscovering ? '(Discovering...)': ''}`}>
-              {unpairedDevices?.length != 0 ? (unpairedDevices?.map((device, index) => (
-                <TextListItemSubCard key={index} itemKey={device.name}
-                  itemValue={connectedDevice ? (connectedDevice.name == device.name ? 'Disconnect' : 'Connect') : (isConnecting ? 'Connecting...' : 'Connect')}
-                  onPressE={connectedDevice ? (connectedDevice.name == device.name ? () => disconnect() : () => connect(device)) : (isConnecting ? null : () => connect(device))}
-                />
-              ))) : (
+            <SimpleSubCard title={`Devices found`}>
+              {unpairedDevices?.length != 0 ? (<>
+                <TextListItemSubCard itemKey={`Found ${unpairedDevices.length} devices`} itemValue={isDiscovering ? 'Discovering...' : 'Discover'} onPressE={() => isDiscovering ? null : startDiscovery()} />
+                {unpairedDevices?.map((device, index) => (
+                  <TextListItemSubCard key={index} itemKey={device.name}
+                    itemValue={connectedDevice ? (connectedDevice.name === device.name ? 'Disconnect' : 'Connect') : ((isConnecting && (processingDevice ===  device.address)) ? 'Connecting...' : 'Connect')}
+                    onPressE={connectedDevice ? (connectedDevice.name === device.name ? () => disconnect() : () => connect(device)) : (isConnecting ? null : () => connect(device))}
+                  />
+                ))}
+              </>) : (
                 <TextListItemSubCard itemKey="No devices found" itemValue={isDiscovering ? 'Discovering...' : 'Discover'} onPressE={() => isDiscovering ? null : startDiscovery()} />
               )}
             </SimpleSubCard>

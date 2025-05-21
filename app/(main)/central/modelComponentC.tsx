@@ -3,12 +3,11 @@ import '@tensorflow/tfjs-react-native';
 import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
 import Tex from '@/app/(main)/base-components/tex';
 import { useEffect, useState } from 'react';
-import { ToastAndroid } from 'react-native';
 import { addPredictionData } from '@/utils/sqlite_db_c';
 import SimpleCard from '../mini-components/simpleCard';
 import ProbabilityItem from '../mini-components/probabilityItem';
 import { useLogs } from '@/app/(main)/logContext';
-import { BEHAVIOR_MAPPING, MIN_A, MAX_A, MIN_G, MAX_G } from '../constants';
+import { NEW_BEHAVIOR_MAPPING, MIN_A, MAX_A, MIN_G, MAX_G } from '../constants';
 
 const TAG = "C/modelComponent";
 
@@ -52,13 +51,13 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
 
       const modelJson = require('@/assets/models/model.json');
       const modelWeights = [require('@/assets/models/group1-shard1of1.bin')];
-      const model_ = await tf.loadGraphModel(bundleResourceIO(modelJson, modelWeights));
+      const model_ = await tf.loadLayersModel(bundleResourceIO(modelJson, modelWeights));
+      addLog(TAG, `Model loaded !`);
       setModel(model_);
     } catch (error) {
-      ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
+      addLog(TAG, `${error}`);
     } finally {
       setIsModelLoaded(true);
-      addLog(TAG, `Model loaded !`);
     }
   }
 
@@ -125,8 +124,10 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
     try {
       const inputTensor = tf.tensor(dataSegment, [1, 10, 6]);
       addLog(TAG, `Making a prediction...`);
-      const output = await model!.executeAsync(inputTensor) as any;
+      const output = await model!.predict(inputTensor);
       const prediction_ = output.arraySync();
+      console.log("Prediction:");
+      console.log(prediction_);
 
       setPredictions(prediction_);
       const confidence = Math.max(...prediction_[0]);
@@ -137,10 +138,9 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
       output.dispose();
       inputTensor.dispose();
     } catch (error) {
-      ToastAndroid.show(`Classify: ${error}`, ToastAndroid.SHORT);
+      addLog(TAG, `${error}`);
     } finally {
       setIsPredicting(false);
-      addLog(TAG, `Prediction saved !`);
     }
   };
 
@@ -149,7 +149,7 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
       <SimpleCard title='Model info' >
         {predictions && <>
           {predictions.length != 0 && (predictions[0].map((prediction: any, index: any) => (
-            <ProbabilityItem key={index} itemKey={BEHAVIOR_MAPPING[index]} itemValue={prediction.toFixed(2) * 100} />
+            <ProbabilityItem key={index} itemKey={NEW_BEHAVIOR_MAPPING[index]} itemValue={prediction.toFixed(2) * 100} />
           )))}
         </>}
         <>

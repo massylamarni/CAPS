@@ -1,6 +1,6 @@
 import RNBluetoothClassic, { BluetoothDevice, BluetoothDeviceEvent } from "react-native-bluetooth-classic";
 import React, { useEffect, useRef, useState } from 'react';
-import { PermissionsAndroid, ToastAndroid, View } from 'react-native';
+import { PermissionsAndroid, View, Platform  } from 'react-native';
 import { getAllSensorData, getLastRow } from '@/utils/sqlite_db_p';
 import SimpleCard from "../mini-components/simpleCard";
 import TextListItem from "../mini-components/textListItem";
@@ -75,9 +75,9 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
     }
     const onBluetoothError = (event: BluetoothDeviceEvent) => {
       if (event.device) {
-        ToastAndroid.show(`Device error`, ToastAndroid.SHORT);
+        addLog(TAG, `Device error !`);
       } else {
-        ToastAndroid.show(`Adapter related error`, ToastAndroid.SHORT);
+        addLog(TAG, `Adapter error !`);
       }
     }
     const onBluetoothEnabledSub = RNBluetoothClassic.onBluetoothEnabled(onBluetoothEnabled);
@@ -94,7 +94,7 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
             setConnectedDevice(connectedDevices_[0]);
           }
         } catch (error) {
-          ToastAndroid.show(`Failed to get connected devices: ${error}`, ToastAndroid.SHORT);
+          addLog(TAG, `${error}`);
         }
       }
     }, 3000);
@@ -160,14 +160,32 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
   const initBluetooth = async () => {
     // Request Permissions
     try {
-      const granted = await PermissionsAndroid.requestMultiple([
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-      ]);
-      const arePermissionsGranted_ = Object.values(granted).every(val => val === PermissionsAndroid.RESULTS.GRANTED);
-      setArePermissionsGranted(arePermissionsGranted_);
-      addLog(TAG, `${arePermissionsGranted_ ? 'Permissions grated !' : 'Not all permissions granted !'}`);
+      if (Platform.OS === 'android') {
+        const version = Platform.Version;
+        addLog(TAG, `Using android API version ${version}`);
+
+        if (version >= 31) {
+          // Android 12+ (API 31+): request all needed permissions
+          const granted = await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+          ]);
+          
+          const arePermissionsGranted_ = Object.values(granted).every(val => val === PermissionsAndroid.RESULTS.GRANTED);
+          setArePermissionsGranted(arePermissionsGranted_);
+          addLog(TAG, `${arePermissionsGranted_ ? 'Permissions grated !' : 'Not all permissions granted !'}`);
+        } else {
+          // Android 9 (API 28) and below: request only location permission
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+          );
+          
+          const arePermissionsGranted_ = Object.values(granted).every(val => val === PermissionsAndroid.RESULTS.GRANTED);
+          setArePermissionsGranted(arePermissionsGranted_);
+          addLog(TAG, `${arePermissionsGranted_ ? 'Permissions grated !' : 'Not all permissions granted !'}`);
+        }
+      }
     } catch (error) {
       addLog(TAG, `${error}`);
     };
@@ -206,12 +224,12 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
       
     try {      
       const connectedDevice_ = await RNBluetoothClassic.accept({});
+      addLog(TAG, `Accepting success !`);
       setConnectedDevice(connectedDevice_);
     } catch (error) {
       addLog(TAG, `${error}`);
     } finally {
       setIsAccepting(false);
-      addLog(TAG, `Accepting success !`);
     }
   }
   const cancelAcceptConnections = async () => {
@@ -272,11 +290,11 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
     try {
       setIsUnpairing(true);
       const unpairedDevice_ = await RNBluetoothClassic.unpairDevice(deviceAddr);
+      addLog(TAG, `Unpair success !`);
     } catch (error) {
       addLog(TAG, `${error}`);
     } finally {
       setIsUnpairing(false);
-      addLog(TAG, `Unpair success !`);
     }
   }
 
