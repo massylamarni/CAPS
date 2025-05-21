@@ -11,6 +11,8 @@ import DbComponentC from './dbComponentC';
 import HistoryComponentC from './historyComponentC';
 import { BluetoothDevice } from "react-native-bluetooth-classic";
 import { useLogs } from '@/app/(main)/logContext';
+import StateLogger from '@/app/(main)/stateLogger';
+
 
 const TAG = "C/index";
 type GraphModel = /*unresolved*/ any
@@ -336,7 +338,7 @@ export default function IndexComponentC({ setRole }: {
             {pageIndex == 0 && <>
               <BlueComponentC blueState={blueState} />
               <ModelComponentC modelState={modelState} receivedData={blueState.receivedData} />
-              {settings.isSimulating && <SensorComponentC sensorState={sensorState} settings={{show_title: true, show_coord: true}} />}
+              {settings.isSimulating && <SensorComponentC sensorState={sensorState} sensorSettings={{show_title: true, show_coord: true}} />}
               <DbComponentC dbState={dbState} isPredicting={modelState.isPredicting} />
             </>}
             {pageIndex == 1 && <>

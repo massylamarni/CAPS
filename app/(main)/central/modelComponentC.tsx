@@ -126,8 +126,6 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
       addLog(TAG, `Making a prediction...`);
       const output = await model!.predict(inputTensor);
       const prediction_ = output.arraySync();
-      console.log("Prediction:");
-      console.log(prediction_);
 
       setPredictions(prediction_);
       const confidence = Math.max(...prediction_[0]);

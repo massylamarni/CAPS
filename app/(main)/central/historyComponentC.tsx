@@ -53,7 +53,6 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
       setBarChartData(barChartData_);
     }
   }, [predictionStats]);
-  console.log(barChartData);
 
   return (
     <>

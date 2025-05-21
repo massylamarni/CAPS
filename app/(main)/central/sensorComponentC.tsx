@@ -12,7 +12,7 @@ const TAG = "C/sensorComponent";
 const FREQUENCY = 100; // 100ms = 10Hz
 const SEQUENCE_LENGTH = 10;
 
-export default function SensorComponentC({ sensorState, settings }: {sensorState: SensorStateC, settings:SensorViewSettingsC}) {
+export default function SensorComponentC({ sensorState, sensorSettings }: {sensorState: SensorStateC, sensorSettings:SensorViewSettingsC}) {
   const { addLog } = useLogs();
 
   const {
@@ -79,11 +79,11 @@ export default function SensorComponentC({ sensorState, settings }: {sensorState
 
   return (
     <>
-      <SimpleCard title={settings.show_title ? 'SensorInfo' : null}>
+      <SimpleCard title={sensorSettings.show_title ? 'SensorInfo' : null}>
         <View style={[styles.MINI_SENSOR_CHART]}>
           <View style={styles.MINI_SENSOR_CHART_HEADER}>
             <Tex style={styles.SUBCOMPONENT_TITLE}>Accelerometer</Tex>
-            {(settings.show_coord && sensorState.sensorData) && <Tex>
+            {(sensorSettings.show_coord && sensorState.sensorData) && <Tex>
               x: {sensorState.sensorData[sensorState.sensorData.length-1]?.xa.toFixed(3)},
               y: {sensorState.sensorData[sensorState.sensorData.length-1]?.ya.toFixed(3)},
               z: {sensorState.sensorData[sensorState.sensorData.length-1]?.za.toFixed(3)}
@@ -94,7 +94,7 @@ export default function SensorComponentC({ sensorState, settings }: {sensorState
         <View style={styles.MINI_SENSOR_CHART}>
           <View style={styles.MINI_SENSOR_CHART_HEADER}>
             <Tex style={styles.SUBCOMPONENT_TITLE}>Gyroscope</Tex>
-            {(settings.show_coord && sensorState.sensorData) && <Tex>
+            {(sensorSettings.show_coord && sensorState.sensorData) && <Tex>
               x: {sensorState.sensorData[sensorState.sensorData.length-1]?.xg.toFixed(3)},
               y: {sensorState.sensorData[sensorState.sensorData.length-1]?.yg.toFixed(3)},
               z: {sensorState.sensorData[sensorState.sensorData.length-1]?.zg.toFixed(3)}

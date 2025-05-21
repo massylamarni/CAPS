@@ -112,6 +112,10 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
   useEffect(() => {
     const onReceivedDataSub = connectedDevice?.onDataReceived((receivedData: any) => {
       setReceivedData((prev) => (prev ? [...prev, receivedData.data] : [receivedData.data]));
+      if (receivedData && receivedData[receivedData.length-1]) {
+        addLog(TAG, `Received message with length: ${receivedData[receivedData.length-1].length} !`);
+        setReceiveCount((prev) => (prev+1));
+      }
     });
     
     return () => {
@@ -126,14 +130,6 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
     }
     connectedDeviceRef.current = connectedDevice;
   }, [connectedDevice]);
-
-  /* On receive */
-  useEffect(() => {
-    if (receivedData && receivedData[receivedData.length-1]) {
-      addLog(TAG, `Received message with length: ${receivedData[receivedData.length-1].length} !`);
-      setReceiveCount((prev) => (prev+1));
-    }
-  }, [receivedData]);
 
   /* On Buffer update */
   useEffect(() => {

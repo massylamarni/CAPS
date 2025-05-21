@@ -112,6 +112,13 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
   useEffect(() => {
     const onReceivedDataSub = connectedDevice?.onDataReceived((receivedData: any) => {
       setReceivedData((prev) => (prev ? [...prev, receivedData.data] : [receivedData.data]));
+      if ((receivedData && receivedData[receivedData.length-1] && receivedData[receivedData.length-1] !== "") || typeof receivedData === 'number') {
+        setReceiveCount((prev) => (prev+1));
+        if (receivedData.length !== 0) {
+          addLog(TAG, `Received dbAnchor: ${receivedData[0] !}`);
+          setDbAnchor(receivedData[0]);
+        }
+      }
     });
     
     return () => {
@@ -128,17 +135,6 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
     }
     connectedDeviceRef.current = connectedDevice;
   }, [connectedDevice]);
-
-  /* On receive */
-  useEffect(() => {
-    if ((receivedData && receivedData[receivedData.length-1] && receivedData[receivedData.length-1] !== "") || typeof receivedData === 'number') {
-      setReceiveCount((prev) => (prev+1));
-      if (receivedData.length !== 0) {
-        addLog(TAG, `Received dbAnchor: ${receivedData[0] !}`);
-        setDbAnchor(receivedData[0]);
-      }
-    }
-  }, [receivedData]);
 
   /* Stream data */
   useEffect(() => {

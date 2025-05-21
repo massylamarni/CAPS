@@ -135,7 +135,7 @@ export default function IndexComponentP({ setRole }: {
           <View style={styles.VIEW}>
             {pageIndex == 0 && <>
               <BlueComponentP blueState={blueState} sensorData={sensorState.sensorData} />
-              <SensorComponentP sensorState={sensorState} settings={{show_title: true, show_coord: true}} />
+              <SensorComponentP sensorState={sensorState} sensorSettings={{show_title: true, show_coord: true}} />
               <DbComponentP dbState={dbState} sensorData={sensorState.sensorData} />
             </>}
             {pageIndex == 1 && <>
