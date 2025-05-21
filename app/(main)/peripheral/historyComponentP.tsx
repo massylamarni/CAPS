@@ -27,9 +27,8 @@ export default function HistoryComponentP({ historyState, dbStats }: { historySt
 
   useEffect(() => {
     init();
-  }), [];
+  }, []);
 
-  console.log(predictionStats);
   return (
     <>
       <SimpleCard title='History'>

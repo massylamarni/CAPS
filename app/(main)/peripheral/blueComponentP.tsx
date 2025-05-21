@@ -289,15 +289,13 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
 
     try {
       setIsWriting(true);
-      while (writeBuffer.length > 0) {
-        const cloneWriteBuffer = [...writeBuffer];
-        const message = cloneWriteBuffer.shift();
-        setWriteBuffer(cloneWriteBuffer);
-        if (!message) continue;
-        addLog(TAG, `Writing message with length: ${message.length} !`);
-        const writeStatus = await connectedDevice?.write(`${message}\n`);
-        if (writeStatus) addLog(TAG, `Write success !`);
-      }
+      const cloneWriteBuffer = [...writeBuffer];
+      const message = cloneWriteBuffer.shift();
+      setWriteBuffer(cloneWriteBuffer);
+      if (!message) return;
+      addLog(TAG, `Writing message with length: ${message.length} !`);
+      const writeStatus = await connectedDevice?.write(`${message}\n`);
+      if (writeStatus) addLog(TAG, `Write success !`);
     } catch (error) {
       addLog(TAG, `${error}`);
     } finally {

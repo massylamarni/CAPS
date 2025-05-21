@@ -67,7 +67,6 @@ export const addPredictionData = async (data: DbPredictionInputC) => {
       'INSERT INTO prediction_data (predictionDateTime, xa, ya, za, xg, yg, zg, createdAt, predictedClass, confidence, device_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [Date.now(), data.xa, data.ya, data.za, data.xg, data.yg, data.zg, data.createdAt, data.predictedClass, data.confidence, deviceId]
     );
-    if (DEBUG) console.log('Data saved successfully');
   } catch (error) {
     console.error('Error saving data:', error);
   }
@@ -161,7 +160,6 @@ export const resetDatabase = async () => {
         await db.execAsync('DROP TABLE IF EXISTS prediction_data');
         await db.execAsync('DROP TABLE IF EXISTS devices');
         initDatabase();
-        if (DEBUG) console.log('Database fully reset');
         return true;
     } catch (error) {
         console.error('Error resetting database:', error);

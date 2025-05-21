@@ -8,10 +8,12 @@ import DbListItem from '../mini-components/dbListItem';
 import TextListItemSubCard from '../mini-components/textListItemSubCard';
 import HistoryBarChart from '../mini-components/historyBarChart';
 import { useLogs } from '@/app/(main)/logContext';
+import { NEW_BEHAVIOR_MAPPING } from '../constants';
 
 const TAG = "C/historyComponent";
 
 export default function HistoryComponentC({ historyState, dbStats }: { historyState: HistoryStateC, dbStats: DbStateC["dbStats"]}) {
+  const [barChartData, setBarChartData] = useState([0, 0, 0, 0, 0, 0] as HistoryBardChartData["data"]);
   const { addLog } = useLogs();
 
   const {
@@ -29,9 +31,30 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
 
   useEffect(() => {
     init();
-  }), [];
+  }, []);
 
-  console.log(predictionStats);
+  useEffect(() => {
+    if (predictionStats && predictionStats.length !== 0) {
+      addLog(TAG, `Got prediction stats with length: ${predictionStats.length} !`);
+      let barChartData_ = [0, 0, 0, 0, 0, 0] as HistoryBardChartData["data"];
+      NEW_BEHAVIOR_MAPPING.forEach((behavior, behaviorIndex) => {
+        let foundIndex = -1;
+        predictionStats.forEach((predictionStat, predictionIndex) => {
+          if (predictionStat.predictedClass === behaviorIndex+1) {
+            foundIndex = predictionIndex;
+          }
+        });
+        if (foundIndex !== -1) {
+          barChartData_[behaviorIndex] = predictionStats[foundIndex].count;
+        } else {
+          barChartData_[behaviorIndex] = 0;
+        }
+      });
+      setBarChartData(barChartData_);
+    }
+  }, [predictionStats]);
+  console.log(barChartData);
+
   return (
     <>
       <SimpleCard title='History'>
@@ -55,7 +78,7 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
               <View style={styles.STATS_BAR_CHART_HEADER}>
                 <Tex style={styles.SUBCOMPONENT_TITLE}>Behvaior stats</Tex>
               </View>
-              <HistoryBarChart barChartData={{labels: ['0', '1', '2', '3', '7', '8'], data: [20, 45, 28, 80, 99, 43]}} />
+              <HistoryBarChart barChartData={{labels: NEW_BEHAVIOR_MAPPING as HistoryBardChartData["labels"], data: barChartData}} />
             </View>
           </View>
         </View>

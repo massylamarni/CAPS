@@ -33,7 +33,6 @@ export const addSensorData = async (data: DbSensorInputP) => {
       'INSERT INTO sensor_data (createdAt, xa, ya, za, xg, yg, zg) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [Date.now(), data.xa, data.ya, data.za, data.xg, data.yg, data.zg]
     );
-    if (DEBUG) console.log('Data saved successfully');
   } catch (error) {
     console.error('Error saving data:', error);
   }
@@ -105,7 +104,6 @@ export const resetDatabase = async () => {
     try {
         await db.execAsync('DROP TABLE IF EXISTS sensor_data');
         initDatabase();
-        if (DEBUG) console.log('Database fully reset');
         return true;
     } catch (error) {
         console.error('Error resetting database:', error);
