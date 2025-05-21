@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import Tex from '@/app/(main)/base-components/tex';
 import styles from '@/assets/styles';
@@ -8,7 +8,8 @@ import BlueComponentP from './blueComponentP';
 import DbComponentP from './dbComponentP';
 import HistoryComponentP from './historyComponentP';
 import SettingsComponentP from './settingsComponentP';
-import { useLogs } from '@/app/(main)/logContext';
+import { useLogs } from '@/utils/logContext';
+import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
 
 const TAG = "P/index";
 
@@ -16,46 +17,46 @@ export default function IndexComponentP({ setRole }: {
   setRole: React.Dispatch<React.SetStateAction<'CENTRAL' | 'PERIPHERAL'>>,
 }) {
   /* BlueState */
-  const [arePermissionsGranted, setArePermissionsGranted] = useState(false);
-  const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(false);
-  const [isDiscovering, setIsDiscovering] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [isDisconnecting, setIsDisconnecting] = useState(false);
-  const [isUnpairing, setIsUnpairing] = useState(false);
-  const [isAccepting, setIsAccepting] = useState(false);
-  const [isWriting, setIsWriting] = useState(false);
-  const [unpairedDevices, setUnpairedDevices] = useState([] as BluetoothDevice[]);
-  const [bondedDevices, setBondedDevices] = useState([] as BluetoothDevice[]);
-  const [connectedDevice, setConnectedDevice] = useState(null as BluetoothDevice | null);
-  const [receivedData, setReceivedData] = useState(null as any[] | null);
-  const [sendCount, setSendCount] = useState(0);
-  const [receiveCount, setReceiveCount] = useState(0);
-  const [dbAnchor, setDbAnchor] = useState(null as string | null);
-  const [isDbBufferedS, setIsDbBufferedS] = useState(false);
+  const [arePermissionsGranted, setArePermissionsGranted] = useState(false, "setArePermissionsGranted");
+  const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(false, "setIsBluetoothEnabled");
+  const [isDiscovering, setIsDiscovering] = useState(false, "setIsDiscovering");
+  const [isConnecting, setIsConnecting] = useState(false, "setIsConnecting");
+  const [isDisconnecting, setIsDisconnecting] = useState(false, "setIsDisconnecting");
+  const [isUnpairing, setIsUnpairing] = useState(false, "setIsUnpairing");
+  const [isAccepting, setIsAccepting] = useState(false, "setIsAccepting");
+  const [isWriting, setIsWriting] = useState(false, "setIsWriting");
+  const [unpairedDevices, setUnpairedDevices] = useState([] as BluetoothDevice[], "setUnpairedDevices");
+  const [bondedDevices, setBondedDevices] = useState([] as BluetoothDevice[], "setBondedDevices");
+  const [connectedDevice, setConnectedDevice] = useState(null as BluetoothDevice | null, "setConnectedDevice");
+  const [receivedData, setReceivedData] = useState(null as any[] | null, "setReceivedData");
+  const [sendCount, setSendCount] = useState(0, "setSendCount");
+  const [receiveCount, setReceiveCount] = useState(0, "setReceiveCount");
+  const [dbAnchor, setDbAnchor] = useState(null as string | null, "setDbAnchor");
+  const [isDbBufferedS, setIsDbBufferedS] = useState(false, "setIsDbBufferedS");
 
   /* DbState */
-  const [isDbConnected, setIsDbConnected] = useState(false);
+  const [isDbConnected, setIsDbConnected] = useState(false, "setIsDbConnected");
   const [dbStats, setDbStats] = useState({
     last_read: 0,
     last_row: null as DbSensorOutputP | null,
     row_count: 0,
-  });
+  }, "setDbStats");
   
   /* HistoryState */
-  const [lastRow, setLastRow] = useState(null as DbSensorOutputP | null);
-  const [predictionStats, setPredictionStats] = useState(null as { predictedClass: number; count: number; }[] | null);
+  const [lastRow, setLastRow] = useState(null as DbSensorOutputP | null, "setLastRow");
+  const [predictionStats, setPredictionStats] = useState(null as { predictedClass: number; count: number; }[] | null, "setPredictionStats");
 
   /* sensorState */
-  const [sensorData, setSensorData] = useState([{ xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 }]);
-  const [xaData, setXaData] = useState([0] as number[]);
-  const [yaData, setYaData] = useState([0] as number[]);
-  const [zaData, setZaData] = useState([0] as number[]);
-  const [xgData, setXgData] = useState([0] as number[]);
-  const [ygData, setYgData] = useState([0] as number[]);
-  const [zgData, setZgData] = useState([0] as number[]);
+  const [sensorData, setSensorData] = useState([{ xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 }], "setSensorData");
+  const [xaData, setXaData] = useState([0] as number[], "setXaData");
+  const [yaData, setYaData] = useState([0] as number[], "setYaData");
+  const [zaData, setZaData] = useState([0] as number[], "setZaData");
+  const [xgData, setXgData] = useState([0] as number[], "setXgData");
+  const [ygData, setYgData] = useState([0] as number[], "setYgData");
+  const [zgData, setZgData] = useState([0] as number[], "setZgData");
 
   /* IndexState */
-  const [pageIndex, setPageIndex] = useState(0);
+  const [pageIndex, setPageIndex] = useState(0, "setPageIndex");
   const { addLog } = useLogs();
 
   const blueState = {

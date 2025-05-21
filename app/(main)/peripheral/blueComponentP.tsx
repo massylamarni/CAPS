@@ -1,17 +1,19 @@
 import RNBluetoothClassic, { BluetoothDevice, BluetoothDeviceEvent } from "react-native-bluetooth-classic";
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { PermissionsAndroid, View, Platform  } from 'react-native';
 import { getAllSensorData, getLastRow } from '@/utils/sqlite_db_p';
 import SimpleCard from "../mini-components/simpleCard";
 import TextListItem from "../mini-components/textListItem";
-import { useLogs } from '@/app/(main)/logContext';
+import { useLogs } from '@/utils/logContext';
+import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
+import { RECEIVE_BUFFER_SIZE } from "@/utils/constants";
 
 const TAG = "P/blueComponent";
 
 type StateChangeEvent = /*unresolved*/ any;
 
 export default function BlueComponentP({ blueState, sensorData }: { blueState: BlueStateP, sensorData: SensorStateP["sensorData"] }) {
-  const [writeBuffer, setWriteBuffer] = useState([] as string[]);
+  const [writeBuffer, setWriteBuffer] = useState([] as string[], "setWriteBuffer");
   const { addLog } = useLogs();
 
   const {
@@ -111,7 +113,7 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
   /* Init Reception Listener */
   useEffect(() => {
     const onReceivedDataSub = connectedDevice?.onDataReceived((receivedData: any) => {
-      setReceivedData((prev) => (prev ? [...prev, receivedData.data] : [receivedData.data]));
+      setReceivedData((prev) => (prev ? [...prev.slice(-(RECEIVE_BUFFER_SIZE-1)), receivedData.data] : [receivedData.data]));
       if ((receivedData && receivedData[receivedData.length-1] && receivedData[receivedData.length-1] !== "") || typeof receivedData === 'number') {
         setReceiveCount((prev) => (prev+1));
         if (receivedData.length !== 0) {
@@ -295,7 +297,7 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
   }
 
   const write = async (message: string) => {
-    setWriteBuffer(prev => prev.length !==0 ? [...prev, message] : [message]);
+    setWriteBuffer((prev: any) => prev.length !==0 ? [...prev, message] : [message]);
   };
   const sendfromBuffer = async () => {
     if (writeBuffer.length === 0) return;

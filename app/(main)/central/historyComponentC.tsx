@@ -1,19 +1,20 @@
 import { getLastRow, getPredictionStats } from '@/utils/sqlite_db_c';
 import { View } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Tex from '@/app/(main)/base-components/tex';
 import styles from '@/assets/styles';
 import SimpleCard from '../mini-components/simpleCard';
 import DbListItem from '../mini-components/dbListItem';
 import TextListItemSubCard from '../mini-components/textListItemSubCard';
 import HistoryBarChart from '../mini-components/historyBarChart';
-import { useLogs } from '@/app/(main)/logContext';
-import { NEW_BEHAVIOR_MAPPING } from '../constants';
+import { useLogs } from '@/utils/logContext';
+import { BEHAVIOR_MAPPING } from '@/utils/constants';
+import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
 
 const TAG = "C/historyComponent";
 
 export default function HistoryComponentC({ historyState, dbStats }: { historyState: HistoryStateC, dbStats: DbStateC["dbStats"]}) {
-  const [barChartData, setBarChartData] = useState([0, 0, 0, 0, 0, 0] as HistoryBardChartData["data"]);
+  const [barChartData, setBarChartData] = useState([0, 0, 0, 0, 0, 0] as HistoryBardChartData["data"], "setBarChartData");
   const { addLog } = useLogs();
 
   const {
@@ -37,7 +38,7 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
     if (predictionStats && predictionStats.length !== 0) {
       addLog(TAG, `Got prediction stats with length: ${predictionStats.length} !`);
       let barChartData_ = [0, 0, 0, 0, 0, 0] as HistoryBardChartData["data"];
-      NEW_BEHAVIOR_MAPPING.forEach((behavior, behaviorIndex) => {
+      BEHAVIOR_MAPPING.forEach((behavior, behaviorIndex) => {
         let foundIndex = -1;
         predictionStats.forEach((predictionStat, predictionIndex) => {
           if (predictionStat.predictedClass === behaviorIndex+1) {
@@ -65,19 +66,19 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
         ))}
       </SimpleCard>
 
-      <SimpleCard title='History'>
+      <SimpleCard title='Behavior stats'>
         <View style={styles.HISTORY_CHARTS}>
           <View style={styles.HISTORY_CHARTS_HEADER}>
-            <Tex style={styles.SUBCOMPONENT_TITLE}>Select TimeRange</Tex>
-            <Tex>Last 1h</Tex>
+            {/* <Tex style={styles.SUBCOMPONENT_TITLE}>Select TimeRange</Tex>
+            <Tex>Last 1h</Tex> */}
           </View>
           <View style={styles.HISTORY_CHARTS_BODY}>
             {/* <SensorView /> */}
             <View style={styles.STATS_BAR_CHART}>
               <View style={styles.STATS_BAR_CHART_HEADER}>
-                <Tex style={styles.SUBCOMPONENT_TITLE}>Behvaior stats</Tex>
+                {/* <Tex style={styles.SUBCOMPONENT_TITLE}>Behvaior count</Tex> */}
               </View>
-              <HistoryBarChart barChartData={{labels: NEW_BEHAVIOR_MAPPING as HistoryBardChartData["labels"], data: barChartData}} />
+              <HistoryBarChart barChartData={{labels: BEHAVIOR_MAPPING as HistoryBardChartData["labels"], data: barChartData}} />
             </View>
           </View>
         </View>

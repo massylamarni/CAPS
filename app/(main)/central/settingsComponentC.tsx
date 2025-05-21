@@ -1,8 +1,10 @@
 import ButtonListItem from '../mini-components/buttonListItem';
 import { View, ScrollView } from 'react-native';
 import { resetDatabase } from '@/utils/sqlite_db_c';
-import { useLogs } from '@/app/(main)/logContext';
+import { useLogs } from '@/utils/logContext';
 import Tex from '../base-components/tex';
+import SimpleCard from '../mini-components/simpleCard';
+import styles from '@/assets/styles';
 
 const TAG = "C/settingsComponent";
 
@@ -11,7 +13,7 @@ export default function SettingsComponentC({ setSettings, setRole }: { setSettin
 
   return (
     <>
-      <View>
+      <SimpleCard title="Settings">
         <ButtonListItem
           onPressE={() => setSettings((prev: any) => ({...prev, isSimulating: !prev.isSimulating }))}
           label='Simulate data reception'
@@ -24,13 +26,15 @@ export default function SettingsComponentC({ setSettings, setRole }: { setSettin
           onPressE={() => resetDatabase()}
           label='Reset database'
         />
-      </View>
+      </SimpleCard>
 
-      <ScrollView>
-        {logs.map((log, index) => (
-          <Tex key={index}>{log}</Tex>
-        ))}
-      </ScrollView>
+      <SimpleCard title="Logs">
+        <ScrollView>
+          {logs.map((log, index) => (
+            <Tex key={index}>{log}</Tex>
+          ))}
+        </ScrollView>
+      </SimpleCard>
     </>
   );
 }

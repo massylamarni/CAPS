@@ -78,8 +78,6 @@ const styles = StyleSheet.create({
 
   /* History view */
   HISTORY_ITEM: {
-    borderWidth: 1,
-    borderColor: themeI.borderColors.default,
     borderRadius: themeI.borderRadius.md,
     padding: themeI.padding.sm,
   },
@@ -180,7 +178,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: themeI.padding.md,
   }
 });
 export default styles;

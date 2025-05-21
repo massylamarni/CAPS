@@ -2,20 +2,19 @@ import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-react-native';
 import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
 import Tex from '@/app/(main)/base-components/tex';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { addPredictionData } from '@/utils/sqlite_db_c';
 import SimpleCard from '../mini-components/simpleCard';
 import ProbabilityItem from '../mini-components/probabilityItem';
-import { useLogs } from '@/app/(main)/logContext';
-import { NEW_BEHAVIOR_MAPPING, MIN_A, MAX_A, MIN_G, MAX_G } from '../constants';
+import { useLogs } from '@/utils/logContext';
+import { BEHAVIOR_MAPPING, MIN_A, MAX_A, MIN_G, MAX_G, INPUT_SEQUENCE_LENGTH } from '@/utils/constants';
+import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
 
 const TAG = "C/modelComponent";
 
-const SEGMENT_SIZE = 10;
-
 export default function ModelComponentC({ modelState, receivedData }: { modelState: ModelStateC, receivedData: BlueStateC["receivedData"]}) {
-  const [streamBuffer, setStreamBuffer] = useState([] as any);
-  const [dbBuffer, setDbBuffer] = useState([] as any);
+  const [streamBuffer, setStreamBuffer] = useState([] as any, "setStreamBuffer");
+  const [dbBuffer, setDbBuffer] = useState([] as any, "setDbBuffer");
   const { addLog } = useLogs();
 
   const {
@@ -70,7 +69,7 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
           addLog(TAG, `Chunking received database...`);
           const dbData = data.sensorData;
           dbData?.forEach((entry: any) => {
-            if (dbBuffer.length < SEGMENT_SIZE) {
+            if (dbBuffer.length < INPUT_SEQUENCE_LENGTH) {
               setDbBuffer((prev: any) => [...prev, entry]);
               setBufferEntriesCount(dbBuffer.length);
             } else {
@@ -83,7 +82,7 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
         }
         else if (isDbBufferedR) {
           addLog(TAG, `Chunking received stream...`);
-          if (streamBuffer.length < SEGMENT_SIZE) {
+          if (streamBuffer.length < INPUT_SEQUENCE_LENGTH) {
             setStreamBuffer((prev: any) => [...prev, data]);
             setBufferEntriesCount(streamBuffer.length);
           } else {
@@ -147,7 +146,7 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
       <SimpleCard title='Model info' >
         {predictions && <>
           {predictions.length != 0 && (predictions[0].map((prediction: any, index: any) => (
-            <ProbabilityItem key={index} itemKey={NEW_BEHAVIOR_MAPPING[index]} itemValue={prediction.toFixed(2) * 100} />
+            <ProbabilityItem key={index} itemKey={BEHAVIOR_MAPPING[index]} itemValue={prediction.toFixed(2) * 100} />
           )))}
         </>}
         <>

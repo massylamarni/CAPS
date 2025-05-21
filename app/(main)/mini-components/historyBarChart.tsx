@@ -19,10 +19,12 @@ export default function HistoryBarChart({ barChartData }: { barChartData: Histor
       }
       yAxisLabel=""
       yAxisSuffix=""
+      xLabelsOffset={0}
+      yLabelsOffset={0}
       width={Dimensions.get("window").width-40}
       height={200}
       showValuesOnTopOfBars={true}
-      withHorizontalLabels={true}
+      withHorizontalLabels={false}
       withVerticalLabels={true}
       chartConfig={{
         backgroundColor: themeI.backgroundColors.component,

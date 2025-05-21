@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import Tex from '@/app/(main)/base-components/tex';
 import styles from '@/assets/styles';
@@ -9,65 +9,68 @@ import SensorComponentC from './sensorComponentC';
 import DbComponentC from './dbComponentC';
 import HistoryComponentC from './historyComponentC';
 import { BluetoothDevice } from "react-native-bluetooth-classic";
-import { useLogs } from '@/app/(main)/logContext';
+import { useLogs } from '@/utils/logContext';
+import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
+import { RECEIVE_BUFFER_SIZE } from '@/utils/constants';
 
 const TAG = "C/index";
+
 type GraphModel = /*unresolved*/ any
 
 export default function IndexComponentC({ setRole }: {
   setRole: React.Dispatch<React.SetStateAction<'CENTRAL' | 'PERIPHERAL'>>,
 }) {
   /* BlueState */
-  const [arePermissionsGranted, setArePermissionsGranted] = useState(false);
-  const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(false);
-  const [isDiscovering, setIsDiscovering] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [isDisconnecting, setIsDisconnecting] = useState(false);
-  const [isUnpairing, setIsUnpairing] = useState(false);
-  const [isAccepting, setIsAccepting] = useState(false);
-  const [isWriting, setIsWriting] = useState(false);
-  const [unpairedDevices, setUnpairedDevices] = useState([] as BluetoothDevice[]);
-  const [bondedDevices, setBondedDevices] = useState([] as BluetoothDevice[]);
-  const [connectedDevice, setConnectedDevice] = useState(null as BluetoothDevice | null);
-  const [receivedData, setReceivedData] = useState(null as any[] | null);
-  const [sendCount, setSendCount] = useState(0);
-  const [receiveCount, setReceiveCount] = useState(0);
+  const [arePermissionsGranted, setArePermissionsGranted] = useState(false, "setArePermissionsGranted");
+  const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(false, "setIsBluetoothEnabled");
+  const [isDiscovering, setIsDiscovering] = useState(false, "setIsDiscovering");
+  const [isConnecting, setIsConnecting] = useState(false, "setIsConnecting");
+  const [isDisconnecting, setIsDisconnecting] = useState(false, "setIsDisconnecting");
+  const [isUnpairing, setIsUnpairing] = useState(false, "setIsUnpairing");
+  const [isAccepting, setIsAccepting] = useState(false, "setIsAccepting");
+  const [isWriting, setIsWriting] = useState(false, "setIsWriting");
+  const [unpairedDevices, setUnpairedDevices] = useState([] as BluetoothDevice[], "setUnpairedDevices");
+  const [bondedDevices, setBondedDevices] = useState([] as BluetoothDevice[], "setBondedDevices");
+  const [connectedDevice, setConnectedDevice] = useState(null as BluetoothDevice | null, "setConnectedDevice");
+  const [receivedData, setReceivedData] = useState(null as any[] | null, "setReceivedData");
+  const [sendCount, setSendCount] = useState(0, "setSendCount");
+  const [receiveCount, setReceiveCount] = useState(0, "setReceiveCount");
 
   /* DbState */
-  const [isDbConnected, setIsDbConnected] = useState(false);
+  const [isDbConnected, setIsDbConnected] = useState(false, "setIsDbConnected");
   const [dbStats, setDbStats] = useState({
     last_read: 0,
     last_row: null as DbPredictionOutputC | null,
     row_count: 0,
-  });
+  }, "setDbStats");
 
   /* HistoryState */
-  const [lastRow, setLastRow] = useState(null as DbPredictionOutputC[] | null);
-  const [predictionStats, setPredictionStats] = useState(null as { predictedClass: number; count: number; }[] | null);
+  const [lastRow, setLastRow] = useState(null as DbPredictionOutputC[] | null, "setLastRow");
+  const [predictionStats, setPredictionStats] = useState(null as { predictedClass: number; count: number; }[] | null, "setPredictionStats");
 
   /* ModelState */
-  const [model, setModel] = useState(null as GraphModel | null);
-  const [isModelLoaded, setIsModelLoaded] = useState(false);
-  const [isDbBufferedR, setIsDbBufferedR] = useState(false);
-  const [isPredicting, setIsPredicting] = useState(false);
-  const [predictions, setPredictions] = useState([] as any[]);
-  const [bufferEntriesCount, setBufferEntriesCount] = useState(0);
+  const [model, setModel] = useState(null as GraphModel | null, "setModel");
+  const [isModelLoaded, setIsModelLoaded] = useState(false, "setIsModelLoaded");
+  const [isDbBufferedR, setIsDbBufferedR] = useState(false, "setIsDbBufferedR");
+  const [isPredicting, setIsPredicting] = useState(false, "setIsPredicting");
+  const [predictions, setPredictions] = useState([] as any[], "setPredictions");
+  const [bufferEntriesCount, setBufferEntriesCount] = useState(0, "setBufferEntriesCount");
 
   /* sensorState */
-  const [sensorData, setSensorData] = useState([{ xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 }]);
-  const [xaData, setXaData] = useState([0] as number[]);
-  const [yaData, setYaData] = useState([0] as number[]);
-  const [zaData, setZaData] = useState([0] as number[]);
-  const [xgData, setXgData] = useState([0] as number[]);
-  const [ygData, setYgData] = useState([0] as number[]);
-  const [zgData, setZgData] = useState([0] as number[]);
+  const [sensorData, setSensorData] = useState([{ xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 }], "setSensorData");
+  const [xaData, setXaData] = useState([0] as number[], "setXaData");
+  const [yaData, setYaData] = useState([0] as number[], "setYaData");
+  const [zaData, setZaData] = useState([0] as number[], "setZaData");
+  const [xgData, setXgData] = useState([0] as number[], "setXgData");
+  const [ygData, setYgData] = useState([0] as number[], "setYgData");
+  const [zgData, setZgData] = useState([0] as number[], "setZgData");
 
   /* IndexState */
-  const [pageIndex, setPageIndex] = useState(0);
-  const [isDbBufferedSS, setIsDbBufferedSS] = useState(false);
+  const [pageIndex, setPageIndex] = useState(0, "setPageIndex");
+  const [isDbBufferedSS, setIsDbBufferedSS] = useState(false, "setIsDbBufferedSS");
   const [settings, setSettings] = useState({
     isSimulating: false,
-  });
+  }, "setSettings");
   const { addLog } = useLogs();
 
   const blueState = {
@@ -316,9 +319,9 @@ export default function IndexComponentC({ setRole }: {
         mac: 'MAC',
       };
       if (isDbBufferedSS) {
-        setReceivedData((prev: any) => (prev ? [...prev, JSON.stringify(syntheticData)] : [JSON.stringify(syntheticData)]));
+        setReceivedData((prev: any) => (prev ? [...prev.slice(-(RECEIVE_BUFFER_SIZE-1)), JSON.stringify(syntheticData)] : [JSON.stringify(syntheticData)]));
       } else {
-        setReceivedData((prev: any) => (prev ? [...prev, JSON.stringify(syntheticDb)] : [JSON.stringify(syntheticDb)]));
+        setReceivedData((prev: any) => (prev ? [...prev.slice(-(RECEIVE_BUFFER_SIZE-1)), JSON.stringify(syntheticDb)] : [JSON.stringify(syntheticDb)]));
         setIsDbBufferedSS(true);
       }
     } else {

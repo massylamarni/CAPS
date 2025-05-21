@@ -1,21 +1,22 @@
 import RNBluetoothClassic, { BluetoothDevice, BluetoothDeviceEvent } from "react-native-bluetooth-classic";
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { PermissionsAndroid, View, Platform } from 'react-native';
 import { getLastRow } from '@/utils/sqlite_db_c';
 import SimpleCard from "../mini-components/simpleCard";
 import TextListItem from "../mini-components/textListItem";
 import SimpleSubCard from "../mini-components/simpleSubcard";
 import TextListItemSubCard from "../mini-components/textListItemSubCard";
-import { useLogs } from '@/app/(main)/logContext';
-import Tex from "../base-components/tex";
+import { useLogs } from '@/utils/logContext';
+import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
+import { RECEIVE_BUFFER_SIZE } from "@/utils/constants";
 
 const TAG = "C/blueComponent";
 
 type StateChangeEvent = /*unresolved*/ any;
 
 export default function BlueComponentC({ blueState }: { blueState: BlueStateC }) {
-  const [writeBuffer, setWriteBuffer] = useState([] as string[]);
-  const [processingDevice, setProcessingDevice] = useState(null as string | null);
+  const [writeBuffer, setWriteBuffer] = useState([] as string[], "setWriteBuffer");
+  const [processingDevice, setProcessingDevice] = useState(null as string | null, "setProcessingDevice");
   const { addLog } = useLogs();
 
   const {
@@ -111,7 +112,7 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
   /* Init Reception Listener */
   useEffect(() => {
     const onReceivedDataSub = connectedDevice?.onDataReceived((receivedData: any) => {
-      setReceivedData((prev) => (prev ? [...prev, receivedData.data] : [receivedData.data]));
+      setReceivedData((prev) => (prev ? [...prev.slice(-(RECEIVE_BUFFER_SIZE-1)), receivedData.data] : [receivedData.data]));
       if (receivedData && receivedData[receivedData.length-1]) {
         addLog(TAG, `Received message with length: ${receivedData[receivedData.length-1].length} !`);
         setReceiveCount((prev) => (prev+1));
@@ -231,6 +232,9 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
     try {
       setIsConnecting(true);
       setProcessingDevice(_device.address);
+      if (connectedDevice) {
+        await disconnect();
+      }
       const bondedDevices = await RNBluetoothClassic.getBondedDevices();
       let isPaired = false;
       bondedDevices?.forEach((device: BluetoothDevice) => {
@@ -280,7 +284,7 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
   }
 
   const write = async (message: string) => {
-    setWriteBuffer(prev => prev.length !==0 ? [...prev, message] : [message]);
+    setWriteBuffer((prev: any) => prev.length !==0 ? [...prev, message] : [message]);
   };
   const sendfromBuffer = async () => {
     if (writeBuffer.length === 0) return;

@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import SimpleCard from '../mini-components/simpleCard';
 import TextListItem from '../mini-components/textListItem';
-import { useLogs } from '@/app/(main)/logContext';
+import { useLogs } from '@/utils/logContext';
 
 const TAG = "C/dbComponent";
 

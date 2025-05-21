@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LogProvider } from "@/app/(main)/logContext";
+import { LogProvider } from "@/utils/logContext";
 import IndexComponentC from "./central/indexC";
 import IndexComponentP from "./peripheral/indexP";
 

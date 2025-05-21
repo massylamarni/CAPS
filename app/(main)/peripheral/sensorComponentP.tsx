@@ -5,12 +5,10 @@ import Tex from '@/app/(main)/base-components/tex';
 import styles from '@/assets/styles';
 import SimpleCard from '../mini-components/simpleCard';
 import SensorLineChart from '../mini-components/sensorLineChart';
-import { useLogs } from '@/app/(main)/logContext';
+import { useLogs } from '@/utils/logContext';
+import { FREQUENCY, DRAWING_SEQUENCE_LENGTH } from '@/utils/constants';
 
 const TAG = "P/sensorComponent";
-
-const FREQUENCY = 100; // 100ms = 10Hz
-const SEQUENCE_LENGTH = 10;
 
 export default function SensorComponentP({ sensorState, sensorSettings }: {sensorState: SensorStateP, sensorSettings:SensorViewSettingsP}) {
   const { addLog } = useLogs();
@@ -68,12 +66,12 @@ export default function SensorComponentP({ sensorState, sensorSettings }: {senso
 
     if (sensorState.sensorData) {
       const { xa, ya, za, xg, yg, zg } = sensorState.sensorData[sensorState.sensorData.length - 1];
-      setXaData(prev => [...prev.slice(-(SEQUENCE_LENGTH-1)), xa]);
-      setYaData(prev => [...prev.slice(-(SEQUENCE_LENGTH-1)), ya]);
-      setZaData(prev => [...prev.slice(-(SEQUENCE_LENGTH-1)), za]);
-      setXgData(prev => [...prev.slice(-(SEQUENCE_LENGTH-1)), xg]);
-      setYgData(prev => [...prev.slice(-(SEQUENCE_LENGTH-1)), yg]);
-      setZgData(prev => [...prev.slice(-(SEQUENCE_LENGTH-1)), zg]);
+      setXaData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), xa]);
+      setYaData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), ya]);
+      setZaData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), za]);
+      setXgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), xg]);
+      setYgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), yg]);
+      setZgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), zg]);
     }
   }, [sensorState.sensorData]);
 

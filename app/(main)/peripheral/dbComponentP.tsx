@@ -1,14 +1,15 @@
 import { initDatabase, getLastRow, getRowCount, addSensorData } from '@/utils/sqlite_db_p';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import SimpleCard from '../mini-components/simpleCard';
 import TextListItem from '../mini-components/textListItem';
-import { useLogs } from '@/app/(main)/logContext';
+import { useLogs } from '@/utils/logContext';
+import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
 
 const TAG = "P/dbComponent";
 
 export default function DbComponentP({ dbState, sensorData }: { dbState: DbStateP, sensorData: SensorStateP["sensorData"] }) {
-  const  [sensorDataCount, setSensorDataCount] = useState(0);
+  const  [sensorDataCount, setSensorDataCount] = useState(0, "setSensorDataCount");
   const { addLog } = useLogs();
 
   const {
@@ -29,7 +30,7 @@ export default function DbComponentP({ dbState, sensorData }: { dbState: DbState
       if (sensorDataCount % 10 === 0) {
         getDbStats();
       }
-      setSensorDataCount(prev => (prev+1));
+      setSensorDataCount((prev: any) => (prev+1));
     }
   }, [sensorData]);
 

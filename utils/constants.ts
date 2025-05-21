@@ -1,3 +1,4 @@
+/* Model */
 const input_3 = [
   [
     [0.6624112139793409, 0.4200060111869891, 0.4646516004657842, 0.3875061240709629, 0.4287423407000519, 0.5171309258532488],
@@ -26,8 +27,14 @@ const input_2 = [
     [0.4748256370303961, 0.5280119996404757, 0.403953453069681, 0.2938916203690769, 0.6350915434916222, 0.67519818433455],
   ],
 ];
-export const BEHAVIOR_MAPPING = ["Grazing", "Standing", "Walking", "Resting", "Mating", "Scratching", "Licking"];
-export const NEW_BEHAVIOR_MAPPING = ["Grazing", "Standing", "Walking", "Resting", "Scratching", "Licking"];
-
+export const INPUT_SEQUENCE_LENGTH = 10;
 export const MIN_A = -74.08409134, MAX_A = 43.37365402;
 export const MIN_G = -16.51096916, MAX_G = 28.44993591;
+export const BEHAVIOR_MAPPING = ["Grazing", "Standing", "Walking", "Resting", "Scratching", "Licking"];
+
+/* Bluetooth */
+export const RECEIVE_BUFFER_SIZE = 3;
+
+/* Sensors */
+export const FREQUENCY = 100; // 100ms = 10Hz
+export const DRAWING_SEQUENCE_LENGTH = 10;
