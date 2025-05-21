@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import Tex from '@/app/(main)/base-components/tex';
 import styles from '@/assets/styles';
-import { useState } from 'react';
 import SettingsComponent from './settingsComponentC';
 import BlueComponentC from './blueComponentC';
 import ModelComponentC from './modelComponentC';
@@ -11,8 +10,6 @@ import DbComponentC from './dbComponentC';
 import HistoryComponentC from './historyComponentC';
 import { BluetoothDevice } from "react-native-bluetooth-classic";
 import { useLogs } from '@/app/(main)/logContext';
-import StateLogger from '@/app/(main)/stateLogger';
-
 
 const TAG = "C/index";
 type GraphModel = /*unresolved*/ any
@@ -319,9 +316,9 @@ export default function IndexComponentC({ setRole }: {
         mac: 'MAC',
       };
       if (isDbBufferedSS) {
-        setReceivedData(prev => (prev ? [...prev, JSON.stringify(syntheticData)] : [JSON.stringify(syntheticData)]));
+        setReceivedData((prev: any) => (prev ? [...prev, JSON.stringify(syntheticData)] : [JSON.stringify(syntheticData)]));
       } else {
-        setReceivedData(prev => (prev ? [...prev, JSON.stringify(syntheticDb)] : [JSON.stringify(syntheticDb)]));
+        setReceivedData((prev: any) => (prev ? [...prev, JSON.stringify(syntheticDb)] : [JSON.stringify(syntheticDb)]));
         setIsDbBufferedSS(true);
       }
     } else {
