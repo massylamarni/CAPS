@@ -1,0 +1,56 @@
+export const lang_ar = {
+    bluetooth_info: "معلومات البلوتوث",
+    status: "الحالة",
+    devices_found: "الأجهزة المُكتشفة",
+    no_devices_found: "لم يتم العثور على أجهزة",
+    number_of_packets_received: "عدد الحزم المستلمة",
+    number_of_packets_sent: "عدد الحزم المرسلة",
+    enabled: "مُفعل",
+    disabled: "معطل",
+    discover: "اكتشاف",
+    discovering: "جاري الاكتشاف...",
+    connect: "اتصال",
+    disconnect: "قطع الاتصال",
+    connecting: "جاري الاتصال...",
+    connected_to: "متصل بـ",
+
+    model_info: "معلومات النموذج",
+    model_loaded: "تم تحميل النموذج!",
+    loading_model: "جارٍ تحميل النموذج...",
+    processing_chunk: "جارٍ معالجة الجزء",
+    database_buffered: "تم تخزين قاعدة البيانات مؤقتًا!",
+    making_a_prediction: "جارٍ التنبؤ...",
+
+    database_info: "معلومات قاعدة البيانات",
+    last_read: "آخر قراءة",
+    last_write: "آخر كتابة",
+    row_count: "عدد الصفوف",
+    connected: "متصل",
+    disconnected: "غير متصل",
+
+    home: "الرئيسية",
+    history: "السجل",
+    settings: "الإعدادات",
+
+    no_entries_to_show: "لا توجد بيانات لعرضها",
+    behavior_stats: "إحصائيات السلوك",
+    cattle: "الماشية",
+    created_at: "تاريخ الإنشاء",
+    recorded: "مسجل",
+
+    grazing: "يرعى",
+    standing: "واقف",
+    walking: "يمشي",
+    resting: "يرتاح",
+    scratching: "يحكّ",
+    licking: "يلعق",
+
+    simulate_data_reception: "محاكاة استلام البيانات",
+    switch_roles: "تبديل الأدوار",
+    reset_database: "إعادة تعيين قاعدة البيانات",
+    logs: "السجلات",
+
+    sensor_info: "معلومات المستشعر",
+    accelerometer: "مقياس التسارع",
+    gyroscope: "جيروسكوب"
+}

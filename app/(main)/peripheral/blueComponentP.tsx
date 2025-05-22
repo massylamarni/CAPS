@@ -7,6 +7,7 @@ import TextListItem from "../mini-components/textListItem";
 import { useLogs } from '@/utils/logContext';
 import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
 import { RECEIVE_BUFFER_SIZE } from "@/utils/constants";
+import { lang } from "@/assets/languages/lang-provider";
 
 const TAG = "P/blueComponent";
 
@@ -333,14 +334,13 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
 
   return (
     <>
-      <SimpleCard title="Bluetooth Info">
+      <SimpleCard title={lang["bluetooth_info"]}>
         <View>
-          <TextListItem itemKey="Status" itemValue={isBluetoothEnabled ? 'Enabled' : 'Disabled'} />
-          <TextListItem itemKey="Advertising as" itemValue="GALAXY" />
-          {connectedDevice && <TextListItem itemKey="Connected to" itemValue={connectedDevice?.name} />}
+          <TextListItem itemKey={lang["status"]} itemValue={isBluetoothEnabled ? lang["enabled"] : lang["disabled"]} />
+          {connectedDevice && <TextListItem itemKey={lang["connected_to"]} itemValue={connectedDevice?.name} />}
         </View>
         <View>
-          <TextListItem itemKey="Num of packets sent" itemValue={sendCount} iconName="trending-up" />
+          <TextListItem itemKey={lang["number_of_packets_sent"]} itemValue={sendCount} iconName="trending-up" />
         </View>
       </SimpleCard>
     </>

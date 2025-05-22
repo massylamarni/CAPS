@@ -10,6 +10,7 @@ import HistoryBarChart from '../mini-components/historyBarChart';
 import { useLogs } from '@/utils/logContext';
 import { BEHAVIOR_MAPPING } from '@/utils/constants';
 import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
+import { lang } from '@/assets/languages/lang-provider';
 
 const TAG = "C/historyComponent";
 
@@ -57,16 +58,16 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
 
   return (
     <>
-      <SimpleCard title='History'>
-        {lastRow?.map((entry, index) => (
-          <DbListItem key={index} entryName={`Cattle ${entry.device_id}`}>
-            <TextListItemSubCard itemKey='Created at:' itemValue={new Date(entry.createdAt).toLocaleString()} />
-            <TextListItemSubCard itemKey='Recorded:' itemValue={dbStats.row_count} />
+      <SimpleCard title={lang["history"]}>
+        {(lastRow && lastRow.length !== 0) ? (lastRow.map((entry, index) => (
+          <DbListItem key={index} entryName={`${lang["cattle"]} ${entry.device_id}`}>
+            <TextListItemSubCard itemKey={`${lang["created_at"]}:`} itemValue={new Date(entry.createdAt).toLocaleString()} />
+            <TextListItemSubCard itemKey={`${lang["recorded"]}:`} itemValue={dbStats.row_count} />
           </DbListItem>
-        ))}
+        ))) : <Tex>{lang["no_entries_to_show"]}</Tex>}
       </SimpleCard>
 
-      <SimpleCard title='Behavior stats'>
+      <SimpleCard title={lang["behavior_stats"]}>
         <View style={styles.HISTORY_CHARTS}>
           <View style={styles.HISTORY_CHARTS_HEADER}>
             {/* <Tex style={styles.SUBCOMPONENT_TITLE}>Select TimeRange</Tex>

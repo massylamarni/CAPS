@@ -1,0 +1,56 @@
+export const lang_fr = {
+    bluetooth_info: "Infos Bluetooth",
+    status: "Statut",
+    devices_found: "Appareils trouvés",
+    no_devices_found: "Aucun appareil trouvé",
+    number_of_packets_received: "Nombre de paquets reçus",
+    number_of_packets_sent: "Nombre de paquets envoyés",
+    enabled: "Activé",
+    disabled: "Désactivé",
+    discover: "Découvrir",
+    discovering: "Découverte...",
+    connect: "Connecter",
+    disconnect: "Déconnecter",
+    connecting: "Connexion...",
+    connected_to: "Connecté à",
+    
+    model_info: "Infos du modèle",
+    model_loaded: "Modèle chargé !",
+    loading_model: "Chargement du modèle...",
+    processing_chunk: "Traitement du segment",
+    database_buffered: "Base de données mise en mémoire tampon !",
+    making_a_prediction: "Prédiction en cours...",
+
+    database_info: "Infos base de données",
+    last_read: "Dernière lecture",
+    last_write: "Dernière écriture",
+    row_count: "Nombre de lignes",
+    connected: "Connecté",
+    disconnected: "Déconnecté",
+
+    home: "Accueil",
+    history: "Historique",
+    settings: "Paramètres",
+
+    no_entries_to_show: "Aucune entrée à afficher",
+    behavior_stats: "Statistiques de comportement",
+    cattle: "Bétail",
+    created_at: "Créé le",
+    recorded: "Enregistré",
+
+    grazing: "Pâturage",
+    standing: "Debout",
+    walking: "Marche",
+    resting: "Repos",
+    scratching: "Grattage",
+    licking: "Léchage",
+
+    simulate_data_reception: "Simuler la réception de données",
+    switch_roles: "Changer de rôles",
+    reset_database: "Réinitialiser la base de données",
+    logs: "Journaux",
+
+    sensor_info: "Infos capteurs",
+    accelerometer: "Accéléromètre",
+    gyroscope: "Gyroscope"
+}

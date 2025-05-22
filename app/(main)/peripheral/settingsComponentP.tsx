@@ -4,6 +4,7 @@ import { resetDatabase } from '@/utils/sqlite_db_p';
 import { useLogs } from '@/utils/logContext';
 import Tex from '../base-components/tex';
 import SimpleCard from '../mini-components/simpleCard';
+import { lang } from '@/assets/languages/lang-provider';
 
 const TAG = "C/settingsComponent";
 
@@ -12,18 +13,18 @@ export default function SettingsComponentP({ setRole }: { setRole: any}) {
   
   return (
     <>
-      <SimpleCard title="Settings">
+      <SimpleCard title={lang["settings"]}>
         <ButtonListItem
           onPressE={() => setRole((prev: 'CENTRAL' | 'PERIPHERAL') => (prev === 'CENTRAL' ? 'PERIPHERAL' : 'CENTRAL'))}
-          label='Switch roles'
+          label={lang["switch_roles"]}
         />
         <ButtonListItem
           onPressE={() => resetDatabase()}
-          label='Reset database'
+          label={lang["reset_database"]}
         />
       </SimpleCard>
 
-      <SimpleCard title="Logs">
+      <SimpleCard title={lang["logs"]}>
         <ScrollView>
           {logs.map((log, index) => (
             <Tex key={index}>{log}</Tex>

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "NodeApp",
-    "slug": "NodeApp",
+    "name": "cbps",
+    "slug": "cbps",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "sheme",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.massyl.NodeApp",
+      "package": "com.massyl.cbps",
       "permissions": [
         "BLUETOOTH",
         "BLUETOOTH_ADMIN",
@@ -45,6 +45,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "878b1e31-369d-4670-8814-08f6a04f3086"
+      }
     }
   }
 }

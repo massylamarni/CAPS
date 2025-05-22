@@ -7,6 +7,8 @@ import SimpleCard from '../mini-components/simpleCard';
 import SensorLineChart from '../mini-components/sensorLineChart';
 import { useLogs } from '@/utils/logContext';
 import { FREQUENCY, DRAWING_SEQUENCE_LENGTH } from '@/utils/constants';
+import { lang } from '@/assets/languages/lang-provider';
+import SimpleSubCard from '../mini-components/simpleSubcard';
 
 const TAG = "C/sensorComponent";
 
@@ -75,31 +77,19 @@ export default function SensorComponentC({ sensorState, sensorSettings }: {senso
     }
   }, [sensorState.sensorData]);
 
+  const lastSensorData = sensorState.sensorData[sensorState.sensorData.length-1];
+
   return (
     <>
-      <SimpleCard title={sensorSettings.show_title ? 'SensorInfo' : null}>
-        <View style={[styles.MINI_SENSOR_CHART]}>
-          <View style={styles.MINI_SENSOR_CHART_HEADER}>
-            <Tex style={styles.SUBCOMPONENT_TITLE}>Accelerometer</Tex>
-            {(sensorSettings.show_coord && sensorState.sensorData) && <Tex>
-              x: {sensorState.sensorData[sensorState.sensorData.length-1]?.xa.toFixed(3)},
-              y: {sensorState.sensorData[sensorState.sensorData.length-1]?.ya.toFixed(3)},
-              z: {sensorState.sensorData[sensorState.sensorData.length-1]?.za.toFixed(3)}
-            </Tex>}
-          </View>
+      <SimpleCard title={sensorSettings.show_title ? lang["sensor_info"] : null}>
+        <SimpleSubCard title={lang["accelerometer"]} potentialValue={(sensorSettings.show_coord && sensorState.sensorData) ?
+          `x: ${lastSensorData?.xa.toFixed(3)}, y: ${lastSensorData?.ya.toFixed(3)}, z: ${lastSensorData?.za.toFixed(3)}` : ''}>
           <SensorLineChart xyzData={{xData: xaData, yData: yaData, zData: zaData}} />
-        </View>
-        <View style={styles.MINI_SENSOR_CHART}>
-          <View style={styles.MINI_SENSOR_CHART_HEADER}>
-            <Tex style={styles.SUBCOMPONENT_TITLE}>Gyroscope</Tex>
-            {(sensorSettings.show_coord && sensorState.sensorData) && <Tex>
-              x: {sensorState.sensorData[sensorState.sensorData.length-1]?.xg.toFixed(3)},
-              y: {sensorState.sensorData[sensorState.sensorData.length-1]?.yg.toFixed(3)},
-              z: {sensorState.sensorData[sensorState.sensorData.length-1]?.zg.toFixed(3)}
-            </Tex>}
-          </View>
+        </SimpleSubCard>
+        <SimpleSubCard title={lang["gyroscope"]} potentialValue={(sensorSettings.show_coord && sensorState.sensorData) ?
+          `x: ${lastSensorData?.xg.toFixed(3)}, y: ${lastSensorData?.yg.toFixed(3)}, z: ${lastSensorData?.zg.toFixed(3)}` : ''}>
           <SensorLineChart xyzData={{xData: xgData, yData: ygData, zData: zgData}} />
-        </View>
+        </SimpleSubCard>
       </SimpleCard>
     </>
   );

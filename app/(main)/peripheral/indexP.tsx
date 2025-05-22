@@ -133,18 +133,16 @@ export default function IndexComponentP({ setRole }: {
     <>
       <SafeAreaView style={styles.MAIN}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.VIEW}>
-            {pageIndex == 0 && <>
-              <BlueComponentP blueState={blueState} sensorData={sensorState.sensorData} />
-              <SensorComponentP sensorState={sensorState} sensorSettings={{show_title: true, show_coord: true}} />
-              <DbComponentP dbState={dbState} sensorData={sensorState.sensorData} />
-            </>}
-            {pageIndex == 1 && <>
-              <HistoryComponentP historyState={historyState} dbStats={dbState.dbStats} />
-            </>}
-            {pageIndex == 2 && <>
-              <SettingsComponentP setRole={setRole} />
-            </>}
+          <View style={[styles.VIEW, pageIndex !== 0 && styles.HIDDEN]}>
+            <BlueComponentP blueState={blueState} sensorData={sensorState.sensorData} />
+            <SensorComponentP sensorState={sensorState} sensorSettings={{show_title: true, show_coord: true}} />
+            <DbComponentP dbState={dbState} sensorData={sensorState.sensorData} />
+          </View>
+          <View style={[styles.VIEW, pageIndex !== 1 && styles.HIDDEN]}>
+            <HistoryComponentP historyState={historyState} dbStats={dbState.dbStats} />
+          </View>
+          <View style={[styles.VIEW, pageIndex !== 2 && styles.HIDDEN]}>
+            <SettingsComponentP setRole={setRole} />
           </View>
         </ScrollView>
         <View style={styles.navbar}>

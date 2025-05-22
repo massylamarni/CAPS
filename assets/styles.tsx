@@ -3,6 +3,7 @@ import themeI from "./themes";
 
 const styles = StyleSheet.create({
   MAIN: {
+    paddingTop: 30,
     height: "100%",
     backgroundColor: themeI.backgroundColors.back,
   },
@@ -36,15 +37,45 @@ const styles = StyleSheet.create({
 
   /* SubComponents */
   SUBCOMPONENT_CARD: {
-    paddingLeft: themeI.padding.sm,
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#ffffff20',
+    borderStyle: 'dashed',
+    marginTop: themeI.spacing.lg,
+    paddingVertical: themeI.padding.sm,
+    paddingHorizontal: themeI.padding.sm,
+    borderRadius: themeI.borderRadius.md,
   },
   SUBCOMPONENT_TITLE: {
+    position: 'absolute',
+    top: 0,
+    left: themeI.spacing.lg,
+    transform: [{ translateY: '-50%' }],
     marginBottom: themeI.spacing.md,
     fontWeight: 'bold',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '98%',
   },
   SUBCOMPONENT_LIST_ITEM: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  /* Buttons */
+  SMALL_BUTTON: {
+    backgroundColor: '#509050',
+    paddingVertical: 3,
+    paddingHorizontal: 5,
+    borderRadius: themeI.borderRadius.md,
+  },
+  SMALL_BUTTON_GREYED: {
+    backgroundColor: '#505050',
+    paddingVertical: 3,
+    paddingHorizontal: 5,
+    borderRadius: themeI.borderRadius.md,
   },
 
   /* Sensor chart */

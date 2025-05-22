@@ -5,6 +5,7 @@ import SimpleCard from '../mini-components/simpleCard';
 import TextListItem from '../mini-components/textListItem';
 import { useLogs } from '@/utils/logContext';
 import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
+import { lang } from '@/assets/languages/lang-provider';
 
 const TAG = "P/dbComponent";
 
@@ -49,12 +50,12 @@ export default function DbComponentP({ dbState, sensorData }: { dbState: DbState
 
   return (
     <>
-      <SimpleCard title='Database Info'>
+      <SimpleCard title={lang["database_info"]}>
         <View>
-          <TextListItem itemKey='Status' itemValue={isDbConnected ? 'Connected' : 'Disconnected'} />
-          <TextListItem itemKey='Last read' itemValue={new Date(dbStats?.last_read).toLocaleString()} />
-          <TextListItem itemKey='Last write' itemValue={new Date(dbStats?.last_row?.createdAt ?? 0).toLocaleString()} />
-          <TextListItem itemKey='Row count' itemValue={dbStats?.row_count} />
+          <TextListItem itemKey={lang["status"]} itemValue={isDbConnected ? lang["connected"] : lang["disconnected"]} />
+          <TextListItem itemKey={lang["last_read"]} itemValue={new Date(dbStats?.last_read).toLocaleString()} />
+          <TextListItem itemKey={lang["last_write"]} itemValue={new Date(dbStats?.last_row?.createdAt ?? 0).toLocaleString()} />
+          <TextListItem itemKey={lang["row_count"]} itemValue={dbStats?.row_count} />
         </View>
       </SimpleCard>
     </>

@@ -1,0 +1,56 @@
+export const lang_ch = {
+    bluetooth_info: "蓝牙信息",
+    status: "状态",
+    devices_found: "发现的设备",
+    no_devices_found: "未发现设备",
+    number_of_packets_received: "接收的数据包数量",
+    number_of_packets_sent: "发送的数据包数量",
+    enabled: "已启用",
+    disabled: "已禁用",
+    discover: "搜索",
+    discovering: "正在搜索...",
+    connect: "连接",
+    disconnect: "断开连接",
+    connecting: "正在连接...",
+    connected_to: "已连接至",
+
+    model_info: "模型信息",
+    model_loaded: "模型已加载！",
+    loading_model: "正在加载模型...",
+    processing_chunk: "正在处理数据块",
+    database_buffered: "数据库已缓存！",
+    making_a_prediction: "正在进行预测...",
+
+    database_info: "数据库信息",
+    last_read: "最后读取",
+    last_write: "最后写入",
+    row_count: "行数",
+    connected: "已连接",
+    disconnected: "已断开",
+
+    home: "主页",
+    history: "历史记录",
+    settings: "设置",
+
+    no_entries_to_show: "暂无数据可显示",
+    behavior_stats: "行为统计",
+    cattle: "牲畜",
+    created_at: "创建时间",
+    recorded: "已记录",
+
+    grazing: "吃草",
+    standing: "站立",
+    walking: "行走",
+    resting: "休息",
+    scratching: "搔痒",
+    licking: "舔舐",
+
+    simulate_data_reception: "模拟接收数据",
+    switch_roles: "切换角色",
+    reset_database: "重置数据库",
+    logs: "日志",
+
+    sensor_info: "传感器信息",
+    accelerometer: "加速度计",
+    gyroscope: "陀螺仪"
+}

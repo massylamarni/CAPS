@@ -7,6 +7,7 @@ import SimpleCard from '../mini-components/simpleCard';
 import SensorLineChart from '../mini-components/sensorLineChart';
 import { useLogs } from '@/utils/logContext';
 import { FREQUENCY, DRAWING_SEQUENCE_LENGTH } from '@/utils/constants';
+import { lang } from '@/assets/languages/lang-provider';
 
 const TAG = "P/sensorComponent";
 
@@ -77,10 +78,10 @@ export default function SensorComponentP({ sensorState, sensorSettings }: {senso
 
   return (
     <>
-      <SimpleCard title={sensorSettings.show_title ? 'SensorInfo' : null}>
+      <SimpleCard title={sensorSettings.show_title ? lang["sensor_info"] : null}>
         <View style={[styles.MINI_SENSOR_CHART]}>
           <View style={styles.MINI_SENSOR_CHART_HEADER}>
-            <Tex style={styles.SUBCOMPONENT_TITLE}>Accelerometer</Tex>
+            <Tex style={styles.SUBCOMPONENT_TITLE}>{lang["accelerometer"]}</Tex>
             {(sensorSettings.show_coord && sensorState.sensorData) && <Tex>
               x: {sensorState.sensorData[sensorState.sensorData.length-1]?.xa.toFixed(3)},
               y: {sensorState.sensorData[sensorState.sensorData.length-1]?.ya.toFixed(3)},
@@ -91,7 +92,7 @@ export default function SensorComponentP({ sensorState, sensorSettings }: {senso
         </View>
         <View style={styles.MINI_SENSOR_CHART}>
           <View style={styles.MINI_SENSOR_CHART_HEADER}>
-            <Tex style={styles.SUBCOMPONENT_TITLE}>Gyroscope</Tex>
+            <Tex style={styles.SUBCOMPONENT_TITLE}>{lang["gyroscope"]}</Tex>
             {(sensorSettings.show_coord && sensorState.sensorData) && <Tex>
               x: {sensorState.sensorData[sensorState.sensorData.length-1]?.xg.toFixed(3)},
               y: {sensorState.sensorData[sensorState.sensorData.length-1]?.yg.toFixed(3)},

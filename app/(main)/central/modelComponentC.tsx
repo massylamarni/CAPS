@@ -9,6 +9,7 @@ import ProbabilityItem from '../mini-components/probabilityItem';
 import { useLogs } from '@/utils/logContext';
 import { BEHAVIOR_MAPPING, MIN_A, MAX_A, MIN_G, MAX_G, INPUT_SEQUENCE_LENGTH } from '@/utils/constants';
 import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
+import { lang } from '@/assets/languages/lang-provider';
 
 const TAG = "C/modelComponent";
 
@@ -143,17 +144,17 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
 
   return (
     <>
-      <SimpleCard title='Model info' >
+      <SimpleCard title={lang["model_info"]} >
         {predictions && <>
           {predictions.length != 0 && (predictions[0].map((prediction: any, index: any) => (
             <ProbabilityItem key={index} itemKey={BEHAVIOR_MAPPING[index]} itemValue={prediction.toFixed(2) * 100} />
           )))}
         </>}
         <>
-          <Tex>{isModelLoaded ? 'Model loaded !' : 'Loading model...'}</Tex>
-          <Tex>{`Processing chunk ${bufferEntriesCount}/10...`}</Tex>
-          {isDbBufferedR && <Tex>Database buffered !</Tex>}
-          {isPredicting && <Tex>Predicting...</Tex>}
+          <Tex>{isModelLoaded ? lang["model_loaded"] : lang["loading_model"]}</Tex>
+          <Tex>{`${lang["processing_chunk"]} ${bufferEntriesCount}/10...`}</Tex>
+          {isDbBufferedR && <Tex>{lang["database_buffered"]}</Tex>}
+          {isPredicting && <Tex>{lang["making_a_prediction"]}</Tex>}
         </>
       </SimpleCard>
     </>

@@ -12,6 +12,8 @@ import { BluetoothDevice } from "react-native-bluetooth-classic";
 import { useLogs } from '@/utils/logContext';
 import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
 import { RECEIVE_BUFFER_SIZE } from '@/utils/constants';
+import { lang } from '@/assets/languages/lang-provider';
+
 
 const TAG = "C/index";
 
@@ -334,25 +336,23 @@ export default function IndexComponentC({ setRole }: {
     <>
       <SafeAreaView style={styles.MAIN}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.VIEW}>
-            {pageIndex == 0 && <>
-              <BlueComponentC blueState={blueState} />
-              <ModelComponentC modelState={modelState} receivedData={blueState.receivedData} />
-              {settings.isSimulating && <SensorComponentC sensorState={sensorState} sensorSettings={{show_title: true, show_coord: true}} />}
-              <DbComponentC dbState={dbState} isPredicting={modelState.isPredicting} />
-            </>}
-            {pageIndex == 1 && <>
-              <HistoryComponentC historyState={historyState} dbStats={dbState.dbStats} />
-            </>}
-            {pageIndex == 2 && <>
-              <SettingsComponent setSettings={setSettings} setRole={setRole} />
-            </>}
+          <View style={[styles.VIEW, pageIndex !== 0 && styles.HIDDEN]}>
+            <BlueComponentC blueState={blueState} />
+            <ModelComponentC modelState={modelState} receivedData={blueState.receivedData} />
+            {settings.isSimulating && <SensorComponentC sensorState={sensorState} sensorSettings={{show_title: true, show_coord: true}} />}
+            <DbComponentC dbState={dbState} isPredicting={modelState.isPredicting} />
+          </View>
+          <View style={[styles.VIEW, pageIndex !== 1 && styles.HIDDEN]}>
+            <HistoryComponentC historyState={historyState} dbStats={dbState.dbStats} />
+          </View>
+          <View style={[styles.VIEW, pageIndex !== 2 && styles.HIDDEN]}>
+            <SettingsComponent setSettings={setSettings} setRole={setRole} />
           </View>
         </ScrollView>
         <View style={styles.navbar}>
-          <TouchableOpacity onPress={() => setPageIndex(0)} style={[styles.navButton]}><Tex>Home</Tex></TouchableOpacity>
-          <TouchableOpacity onPress={() => setPageIndex(1)} style={[styles.navButton]}><Tex>History</Tex></TouchableOpacity>
-          <TouchableOpacity onPress={() => setPageIndex(2)} style={[styles.navButton]}><Tex>Settings</Tex></TouchableOpacity>
+          <TouchableOpacity onPress={() => setPageIndex(0)} style={[styles.navButton]}><Tex>{lang["home"]}</Tex></TouchableOpacity>
+          <TouchableOpacity onPress={() => setPageIndex(1)} style={[styles.navButton]}><Tex>{lang["history"]}</Tex></TouchableOpacity>
+          <TouchableOpacity onPress={() => setPageIndex(2)} style={[styles.navButton]}><Tex>{lang["settings"]}</Tex></TouchableOpacity>
         </View>
       </SafeAreaView>
     </>

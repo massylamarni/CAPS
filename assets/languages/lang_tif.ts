@@ -1,0 +1,56 @@
+export const lang_tif = {
+    bluetooth_info: "ⴱⵍⵓⵜⵓⵙ ⵉⵏⴼⵓⴼⵓⵙⵉⵏ",
+    status: "ⴰⵙⵓⴷⵓ",
+    devices_found: "ⴰⴷⵔⴰⵔ ⵉⵙⵉⵏ ⴼ ⵉⵙⴰⵏ",
+    no_devices_found: "ⵓⵔ ⴰⴷⵔⴰⵔ ⵉⵙⵉⵏ",
+    number_of_packets_received: "ⴰⵙⵉⵏ ⵏ ⴰⵙⵏⵏⴰⵡ ⵉⵙⵉ ⵓⵙⵎⵎⴰⵏ",
+    number_of_packets_sent: "ⴰⵙⵉⵏ ⵏ ⴰⵙⵏⵏⴰⵡ ⵉⵙⵉ ⵓⵙⵙⵎⵎⵓⵏ",
+    enabled: "ⴰⵎⵔⴰⵣ",
+    disabled: "ⴰⵎⴳⴰⵔ",
+    discover: "ⴰⵎⴰⴳⴷⵓ",
+    discovering: "ⵓⵎⴰⴳⴷⵓ...",
+    connect: "ⴰⵎⴰⴹⵉ",
+    disconnect: "ⴰⴹⵓⴽ",
+    connecting: "ⵓⵎⴰⴹⵉ...",
+    connected_to: "ⵓⴹⵉⵏ ⵏ",
+
+    model_info: "ⴰⵙⵏⴼⴰⴼ ⵏ ⵜⵙⵙⵓⵔⵜ",
+    model_loaded: "ⵜⵙⵙⵓⵔⵜ ⵓⵙⵎⵎⴰⵏⵜ!",
+    loading_model: "ⵓⵎⵎⴰⵔⵓ ⵜⵙⵙⵓⵔⵜ...",
+    processing_chunk: "ⵓⵎⵎⴰⴹ ⴰⴼⴰⵍⵍⵉ",
+    database_buffered: "ⵜⴰⴱⴱⴰⵡⴰⵙⵜ ⵓⵙⵎⵎⴰⵏⵜ!",
+    making_a_prediction: "ⵓⵎⵎⴰⵔ ⵜⴰⵎⵓⵔⵜ...",
+
+    database_info: "ⴰⵙⵏⴼⴰⴼ ⵏ ⵜⴰⴱⴱⴰⵡⴰⵙⵜ",
+    last_read: "ⴰⵎⴰⵣⵣⴰ ⵏ ⵉⵙⴳⴷ",
+    last_write: "ⴰⵎⴰⵣⵣⴰ ⵏ ⵜⵓⵜⴰⵎⴰⵏⵜ",
+    row_count: "ⴰⵙⵉⵏ ⵏ ⴰⵙⴳⴷⴷⵓⵏ",
+    connected: "ⵓⴹⵉⵏ",
+    disconnected: "ⵓⴹⵉⵏ ⵓⴼⵉⵏⵏⴰ",
+
+    home: "ⴰⴳⴷⴰⵔ",
+    history: "ⵜⴰⵎⵙⴷⵓⵔⵜ",
+    settings: "ⵜⵙⵙⵓⴽⴽⵓⵏ",
+
+    no_entries_to_show: "ⵓⵔ ⴰⵙⵍⴻⵏ ⵉⵙⵓⵏⵓ ⴼ ⵓⴼⴰⵍ",
+    behavior_stats: "ⵉⵙⵙⴰⵏⵉⵏ ⵏ ⵜⵉⴼⵔⴰⵙ",
+    cattle: "ⴰⵙⵎⵎⴰⵙ",
+    created_at: "ⵜⵓⵜⵍⵍⵉⵜ ⴰⴳⴷⴰⵔ ⵜⵓⴼⴰⵙ",
+    recorded: "ⵓⵙⵎⵎⴰⵏⵜ",
+
+    grazing: "ⴰⵙⵎⵓⴽ",
+    standing: "ⴰⵣⵣⴰⵡ",
+    walking: "ⴰⴽⴽⴰⵍ",
+    resting: "ⴰⵙⴰⵍ",
+    scratching: "ⵜⴰⵣⵉⵣⵉⵏⵜ",
+    licking: "ⵜⴰⴽⴽⵓⵍⵜ",
+
+    simulate_data_reception: "ⵜⵓⵜⴰⵍⵍⴰ ⵏ ⴰⵙⵏⵏⴰⵡ ⵉⵙⵉ",
+    switch_roles: "ⴰⵎⵎⴰⴳⴷ ⵏ ⵓⵎⴰⵔⵉ",
+    reset_database: "ⴰⵎⵎⴰⵙ ⵜⴰⴱⴱⴰⵡⴰⵙⵜ",
+    logs: "ⵉⵙⵍⵍⴰⵏ",
+
+    sensor_info: "ⴰⵙⵏⴼⴰⴼ ⵏ ⵜⴰⵣⵓⵍⵍⵉ",
+    accelerometer: "ⴰⴽⵙⵍⵉⵔⵓⵎⴻⵜⵓⵔ",
+    gyroscope: "ⴳⵉⵔⵓⵙⴽⵓⵎ"
+}

@@ -8,6 +8,7 @@ import DbListItem from '../mini-components/dbListItem';
 import TextListItemSubCard from '../mini-components/textListItemSubCard';
 import HistoryBarChart from '../mini-components/historyBarChart';
 import { useLogs } from '@/utils/logContext';
+import { lang } from '@/assets/languages/lang-provider';
 
 const TAG = "P/historyComponent";
 
@@ -31,10 +32,10 @@ export default function HistoryComponentP({ historyState, dbStats }: { historySt
 
   return (
     <>
-      <SimpleCard title='History'>
-        <DbListItem entryName={`Cattle X`}>
-          <TextListItemSubCard itemKey='Created at:' itemValue={new Date(lastRow?.createdAt).toLocaleString()} />
-          <TextListItemSubCard itemKey='Recorded:' itemValue={dbStats.row_count} />
+      <SimpleCard title={lang["history"]}>
+        <DbListItem entryName={`${lang["cattle"]} X`}>
+          <TextListItemSubCard itemKey={`${lang["created_at"]}:`} itemValue={new Date(lastRow?.createdAt).toLocaleString()} />
+          <TextListItemSubCard itemKey={`${lang["recorded"]}:`} itemValue={dbStats.row_count} />
         </DbListItem>
       </SimpleCard>
     </>

@@ -9,6 +9,7 @@ import TextListItemSubCard from "../mini-components/textListItemSubCard";
 import { useLogs } from '@/utils/logContext';
 import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
 import { RECEIVE_BUFFER_SIZE } from "@/utils/constants";
+import { lang } from "@/assets/languages/lang-provider";
 
 const TAG = "C/blueComponent";
 
@@ -328,28 +329,28 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
 
   return (
     <>
-      <SimpleCard title="Bluetooth Info">
+      <SimpleCard title={lang["bluetooth_info"]}>
         <View>
-          <TextListItem itemKey="Status" itemValue={isBluetoothEnabled ? 'Enabled' : 'Disabled'} />
+          <TextListItem itemKey={lang["status"]} itemValue={isBluetoothEnabled ? lang["enabled"] : lang["disabled"]} />
           {(isBluetoothEnabled) && <>
-            <SimpleSubCard title={`Devices found`}>
+            <SimpleSubCard title={lang["devices_found"]}>
               {unpairedDevices?.length != 0 ? (<>
-                <TextListItemSubCard itemKey={`Found ${unpairedDevices.length} devices`} itemValue={isDiscovering ? 'Discovering...' : 'Discover'} onPressE={() => isDiscovering ? null : startDiscovery()} />
+                <TextListItemSubCard itemKey={`Found ${unpairedDevices.length} devices`} itemValue={isDiscovering ? lang["discovering"] : lang["discover"]} onPressE={() => isDiscovering ? cancelDiscovery() : startDiscovery()} />
                 {unpairedDevices?.map((device, index) => (
                   <TextListItemSubCard key={index} itemKey={device.name}
-                    itemValue={connectedDevice ? (connectedDevice.name === device.name ? 'Disconnect' : 'Connect') : ((isConnecting && (processingDevice ===  device.address)) ? 'Connecting...' : 'Connect')}
+                    itemValue={connectedDevice ? (connectedDevice.name === device.name ? lang["disconnect"] : lang["connect"]) : ((isConnecting && (processingDevice ===  device.address)) ? lang["connecting"] : lang["connect"])}
                     onPressE={connectedDevice ? (connectedDevice.name === device.name ? () => disconnect() : () => connect(device)) : (isConnecting ? null : () => connect(device))}
                   />
                 ))}
               </>) : (
-                <TextListItemSubCard itemKey="No devices found" itemValue={isDiscovering ? 'Discovering...' : 'Discover'} onPressE={() => isDiscovering ? null : startDiscovery()} />
+                <TextListItemSubCard itemKey={lang["no_devices_found"]} itemValue={isDiscovering ? lang["discovering"] : lang["discover"]} onPressE={() => isDiscovering ? null : startDiscovery()} />
               )}
             </SimpleSubCard>
           </>}
-          {connectedDevice && <TextListItem itemKey="Connected to" itemValue={connectedDevice?.name} />}
+          {connectedDevice && <TextListItem itemKey={lang["connected_to"]} itemValue={connectedDevice?.name} />}
         </View>
         <View>
-          <TextListItem itemKey="Num of packets received" itemValue={receiveCount} iconName="trending-down"/>
+          <TextListItem itemKey={lang["number_of_packets_received"]} itemValue={receiveCount} iconName="trending-down"/>
         </View>
       </SimpleCard>
     </>
