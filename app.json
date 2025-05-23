@@ -41,7 +41,10 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-font",
+      "expo-web-browser",
+      "onnxruntime-react-native"
     ],
     "experiments": {
       "typedRoutes": true
