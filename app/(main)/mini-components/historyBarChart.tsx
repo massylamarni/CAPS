@@ -1,50 +1,42 @@
-import { Dimensions } from 'react-native';
+import { Dimensions, View } from 'react-native';
 import themeI from '@/assets/themes';
-import {
-  BarChart,
-} from "react-native-chart-kit";
+import { BarChart } from "react-native-gifted-charts";
+import SimpleSubCard from './simpleSubcard';
+import Tex from '../base-components/tex';
+
 
 export default function HistoryBarChart({ barChartData }: { barChartData: HistoryBardChartData}) {
   const { labels, data } = barChartData;
+  const formattedData = labels.map((label, index) => ({
+    label: label,
+    value: data[index],
+    topLabelComponent: () => (
+      <Tex>{data[index]}</Tex>
+    )
+  }));
 
   return(
-    <BarChart
-      data={
-        {labels: labels,
-        datasets: [
-          {
-            data: data
-          }
-        ]}
-      }
-      yAxisLabel=""
-      yAxisSuffix=""
-      xLabelsOffset={0}
-      yLabelsOffset={0}
-      width={Dimensions.get("window").width-40}
-      height={200}
-      showValuesOnTopOfBars={true}
-      withHorizontalLabels={false}
-      withVerticalLabels={true}
-      chartConfig={{
-        backgroundColor: themeI.backgroundColors.component,
-        backgroundGradientFrom: themeI.backgroundColors.component,
-        backgroundGradientTo: themeI.backgroundColors.component,
-        fillShadowGradient: themeI.fontColors.default,
-        fillShadowGradientFrom: themeI.fontColors.default,
-        fillShadowGradientTo: themeI.fontColors.default,
-        fillShadowGradientOpacity: 1,
-        fillShadowGradientFromOpacity: 1,
-        fillShadowGradientToOpacity: 1,
-        color: (opacity = 1) => themeI.fontColors.default,
-        style: {
-          borderRadius: 5,
-        },
-        propsForBackgroundLines: {
-          stroke: "transparent"
-        },
-      }}
-      verticalLabelRotation={0}
-    />
+    <SimpleSubCard title='Nombre total de comportements enregistés'>
+      <View style={{ marginTop: 10 }}>
+        <BarChart
+          data={formattedData}
+          frontColor="#fff"
+          hideRules
+          adjustToWidth
+          maxValue={Math.max(...data) + 1}
+          xAxisLabelTextStyle={{ color: "#fff", fontSize: 10 }}   
+          xAxisColor={"#fff"}
+          xAxisThickness={0}
+          yAxisLabelWidth={0}
+          yAxisColor={undefined}
+          yAxisThickness={0}
+          barBorderRadius={4}
+          barWidth={41}
+          initialSpacing={0}
+          spacing={22}
+          endSpacing={0}
+        />
+      </View>
+    </SimpleSubCard>
   )
 }

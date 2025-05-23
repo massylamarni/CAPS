@@ -6,7 +6,7 @@ import Tex from '../base-components/tex';
 import SimpleCard from '../mini-components/simpleCard';
 import { lang } from '@/assets/languages/lang-provider';
 
-const TAG = "C/settingsComponent";
+const TAG = "P/settingsComponent";
 
 export default function SettingsComponentP({ setRole }: { setRole: any}) {
   const { logs, addLog } = useLogs();

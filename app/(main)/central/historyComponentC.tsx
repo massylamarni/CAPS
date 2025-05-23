@@ -31,6 +31,14 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
     setPredictionStats(await getPredictionStats());
   };
 
+  const updatePredictionStats = async () => {
+    setPredictionStats(await getPredictionStats());
+  };
+
+  useEffect(() => {
+    updatePredictionStats();
+  }, [dbStats]);
+
   useEffect(() => {
     init();
   }, []);
@@ -42,7 +50,7 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
       BEHAVIOR_MAPPING.forEach((behavior, behaviorIndex) => {
         let foundIndex = -1;
         predictionStats.forEach((predictionStat, predictionIndex) => {
-          if (predictionStat.predictedClass === behaviorIndex+1) {
+          if (predictionStat.predictedClass === behaviorIndex) {
             foundIndex = predictionIndex;
           }
         });
