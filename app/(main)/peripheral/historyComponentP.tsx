@@ -18,17 +18,15 @@ export default function HistoryComponentP({ historyState, dbStats }: { historySt
   const {
     lastRow,
     setLastRow,
-    predictionStats,
-    setPredictionStats,
   } = historyState;
   
-  const init = async () => {
+  const updateHistory = async () => {
     setLastRow(await getLastRow());
   };
 
   useEffect(() => {
-    init();
-  }, []);
+    updateHistory();
+  }, [dbStats]);
 
   return (
     <>

@@ -8,7 +8,7 @@ import { lang } from '@/assets/languages/lang-provider';
 
 const TAG = "C/dbComponent";
 
-export default function DbComponentC({ dbState, isPredicting }: { dbState: DbStateC, isPredicting: ModelStateC["isPredicting"] }) {
+export default function DbComponentC({ dbState, predictions }: { dbState: DbStateC, predictions: ModelStateC["predictions"] }) {
   const { addLog } = useLogs();
 
   const {
@@ -25,7 +25,7 @@ export default function DbComponentC({ dbState, isPredicting }: { dbState: DbSta
 
   useEffect(() => {
     getDbStats();
-  }, [isPredicting]);
+  }, [predictions]);
 
   const initDb = async () => {
     setIsDbConnected(await initDatabase());

@@ -114,13 +114,12 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
   /* Init Reception Listener */
   useEffect(() => {
     const onReceivedDataSub = connectedDevice?.onDataReceived((receivedData: any) => {
-      setReceivedData((prev) => (prev ? [...prev.slice(-(RECEIVE_BUFFER_SIZE-1)), receivedData.data] : [receivedData.data]));
-      if ((receivedData && receivedData[receivedData.length-1] && receivedData[receivedData.length-1] !== "") || typeof receivedData === 'number') {
+      if ((receivedData.data && receivedData.data !== "")) {
+        addLog(TAG, `Received message with length: ${receivedData.data.length} !`);
+        setReceivedData((prev) => (prev ? [...prev.slice(-(RECEIVE_BUFFER_SIZE-1)), receivedData.data] : [receivedData.data]));
         setReceiveCount((prev) => (prev+1));
-        if (receivedData.length !== 0) {
-          addLog(TAG, `Received dbAnchor: ${receivedData[0] !}`);
-          setDbAnchor(receivedData[0]);
-        }
+        addLog(TAG, `Received dbAnchor: ${receivedData.data !}`);
+        setDbAnchor(receivedData.data);
       }
     });
     
@@ -131,13 +130,14 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
 
   /* On Connection */
   useEffect(() => {
-    if (connectedDevice) {
-      if (dbAnchor) {
-        exportDatabaseAsJson(JSON.parse(dbAnchor));
-      }
-    }
     connectedDeviceRef.current = connectedDevice;
   }, [connectedDevice]);
+
+  useEffect(() => {
+    if (connectedDevice && dbAnchor && !isDbBufferedS) {
+      exportDatabaseAsJson(JSON.parse(dbAnchor ?? "0"));
+    }
+  }, [dbAnchor]);
 
   /* Stream data */
   useEffect(() => {
@@ -151,10 +151,6 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
   useEffect(() => {
     sendfromBuffer();
   }, [writeBuffer]);
-
-  useEffect(() => {
-    if (isWriting) setSendCount(prev => (prev+1));
-  }, [isWriting]);
 
   const initBluetooth = async () => {
     // Request Permissions
@@ -301,8 +297,7 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
     setWriteBuffer((prev: any) => prev.length !==0 ? [...prev, message] : [message]);
   };
   const sendfromBuffer = async () => {
-    if (writeBuffer.length === 0) return;
-    if (isWriting) return;
+    if (isWriting || writeBuffer.length === 0) return;
 
     try {
       setIsWriting(true);
@@ -312,6 +307,7 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
       if (!message) return;
       addLog(TAG, `Writing message with length: ${message.length} !`);
       const writeStatus = await connectedDevice?.write(`${message}\n`);
+      setSendCount(prev => (prev+1));
       if (writeStatus) addLog(TAG, `Write success !`);
     } catch (error) {
       addLog(TAG, `${error}`);

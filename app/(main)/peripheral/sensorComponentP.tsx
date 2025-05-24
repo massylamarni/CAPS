@@ -53,6 +53,13 @@ export default function SensorComponentP({ sensorState, sensorSettings }: {senso
           yg: gyroData.y,
           zg: gyroData.z
       };
+      
+      setXaData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), accelData.x]);
+      setYaData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), accelData.y]);
+      setZaData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), accelData.z]);
+      setXgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), gyroData.x]);
+      setYgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), gyroData.y]);
+      setZgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), gyroData.z]);
 
       setSensorData([groupedData]);
     }, FREQUENCY);
@@ -63,19 +70,6 @@ export default function SensorComponentP({ sensorState, sensorSettings }: {senso
       clearInterval(sensorDataInterval);
     }
   }, []);
-
-  useEffect(() => {
-
-    if (sensorState.sensorData) {
-      const { xa, ya, za, xg, yg, zg } = sensorState.sensorData[sensorState.sensorData.length - 1];
-      setXaData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), xa]);
-      setYaData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), ya]);
-      setZaData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), za]);
-      setXgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), xg]);
-      setYgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), yg]);
-      setZgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), zg]);
-    }
-  }, [sensorState.sensorData]);
   
   const lastSensorData = sensorState.sensorData[sensorState.sensorData.length-1];
 

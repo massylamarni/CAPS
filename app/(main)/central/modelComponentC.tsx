@@ -29,8 +29,6 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
     setIsPredicting,
     predictions,
     setPredictions,
-    bufferEntriesCount,
-    setBufferEntriesCount,
   } = modelState;
 
   useEffect(() => {
@@ -64,7 +62,7 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
   const chunkAndProcess = () => {
     if (model) {
       const receivedData_ = receivedData;
-      if (receivedData_ && receivedData_[receivedData_.length-1] && receivedData_[receivedData_.length-1] !== "") {
+      if (receivedData_ && receivedData_[receivedData_.length-1]) {
         const data = JSON.parse(receivedData_[receivedData_.length-1]);
         if (data.sensorData) {
           addLog(TAG, `Chunking received database...`);
@@ -72,24 +70,21 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
           dbData?.forEach((entry: any) => {
             if (dbBuffer.length < INPUT_SEQUENCE_LENGTH) {
               setDbBuffer((prev: any) => [...prev, entry]);
-              setBufferEntriesCount(dbBuffer.length);
             } else {
               processAndMakePrediction(dbBuffer);
               setDbBuffer([entry]);
-              setBufferEntriesCount(1)
             }
           });
           setIsDbBufferedR(true);
+          setDbBuffer([]);
         }
         else if (isDbBufferedR) {
           addLog(TAG, `Chunking received stream...`);
           if (streamBuffer.length < INPUT_SEQUENCE_LENGTH) {
             setStreamBuffer((prev: any) => [...prev, data]);
-            setBufferEntriesCount(streamBuffer.length);
           } else {
             processAndMakePrediction(streamBuffer);
             setStreamBuffer([data]);
-            setBufferEntriesCount(1);
           }
         }
       }   
@@ -97,6 +92,7 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
   }
 
   const processAndMakePrediction = async (buffer: ReceivedSensorDataC[]) => {
+    console.log(buffer);
     const preprocessSingleRow = (data: any): number[] => {  // Needs debug
       const normalizedData = {
         xa: (data.xa - MIN_A) / (MAX_A - MIN_A),
@@ -152,7 +148,7 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
         </>}
         <>
           <Tex>{isModelLoaded ? lang["model_loaded"] : lang["loading_model"]}</Tex>
-          <Tex>{`${lang["processing_chunk"]} ${bufferEntriesCount}/10...`}</Tex>
+          <Tex>{`${lang["processing_chunk"]} ${dbBuffer.length+streamBuffer.length}/10...`}</Tex>
           {isDbBufferedR && <Tex>{lang["database_buffered"]}</Tex>}
           {isPredicting && <Tex>{lang["making_a_prediction"]}</Tex>}
         </>

@@ -44,7 +44,6 @@ export default function IndexComponentP({ setRole }: {
   
   /* HistoryState */
   const [lastRow, setLastRow] = useState(null as DbSensorOutputP | null, "setLastRow");
-  const [predictionStats, setPredictionStats] = useState(null as { predictedClass: number; count: number; }[] | null, "setPredictionStats");
 
   /* sensorState */
   const [sensorData, setSensorData] = useState([{ xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 }], "setSensorData");
@@ -104,8 +103,6 @@ export default function IndexComponentP({ setRole }: {
   const historyState = {
     lastRow,
     setLastRow,
-    predictionStats,
-    setPredictionStats,
   };
 
   const sensorState = {

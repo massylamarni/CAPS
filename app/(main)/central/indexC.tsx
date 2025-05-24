@@ -328,7 +328,6 @@ export default function IndexComponentC({ setRole }: {
       }
     } else {
       setIsDbBufferedSS(false);
-      setReceivedData([]);
     }
   }, [sensorState.sensorData]);
   
@@ -340,7 +339,7 @@ export default function IndexComponentC({ setRole }: {
             <BlueComponentC blueState={blueState} />
             <ModelComponentC modelState={modelState} receivedData={blueState.receivedData} />
             {settings.isSimulating && <SensorComponentC sensorState={sensorState} sensorSettings={{show_title: true, show_coord: true}} />}
-            <DbComponentC dbState={dbState} isPredicting={modelState.isPredicting} />
+            <DbComponentC dbState={dbState} predictions={modelState.predictions} />
           </View>
           <View style={[styles.VIEW, pageIndex !== 1 && styles.HIDDEN]}>
             <HistoryComponentC historyState={historyState} dbStats={dbState.dbStats} />

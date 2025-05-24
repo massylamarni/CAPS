@@ -25,23 +25,15 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
     setPredictionStats,
   } = historyState;
   
-  const init = async () => {
+  const updateHistory = async () => {
     addLog(TAG, `Gettings stats...`);
     setLastRow(await getLastRow());
     setPredictionStats(await getPredictionStats());
   };
 
-  const updatePredictionStats = async () => {
-    setPredictionStats(await getPredictionStats());
-  };
-
   useEffect(() => {
-    updatePredictionStats();
+    updateHistory();
   }, [dbStats]);
-
-  useEffect(() => {
-    init();
-  }, []);
 
   useEffect(() => {
     if (predictionStats && predictionStats.length !== 0) {

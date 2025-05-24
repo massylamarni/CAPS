@@ -10,6 +10,7 @@ import { useLogs } from '@/utils/logContext';
 import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
 import { RECEIVE_BUFFER_SIZE } from "@/utils/constants";
 import { lang } from "@/assets/languages/lang-provider";
+import styles from "@/assets/styles";
 
 const TAG = "C/blueComponent";
 
@@ -113,9 +114,9 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
   /* Init Reception Listener */
   useEffect(() => {
     const onReceivedDataSub = connectedDevice?.onDataReceived((receivedData: any) => {
-      setReceivedData((prev) => (prev ? [...prev.slice(-(RECEIVE_BUFFER_SIZE-1)), receivedData.data] : [receivedData.data]));
-      if (receivedData && receivedData[receivedData.length-1]) {
-        addLog(TAG, `Received message with length: ${receivedData[receivedData.length-1].length} !`);
+      if ((receivedData.data && receivedData.data !== "")) {
+        addLog(TAG, `Received message with length: ${receivedData.data.length} !`);
+        setReceivedData((prev) => (prev ? [...prev.slice(-(RECEIVE_BUFFER_SIZE-1)), receivedData.data] : [receivedData.data]));
         setReceiveCount((prev) => (prev+1));
       }
     });
@@ -288,8 +289,7 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
     setWriteBuffer((prev: any) => prev.length !==0 ? [...prev, message] : [message]);
   };
   const sendfromBuffer = async () => {
-    if (writeBuffer.length === 0) return;
-    if (isWriting) return;
+    if (isWriting || writeBuffer.length === 0) return;
 
     try {
       setIsWriting(true);
@@ -308,9 +308,11 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
   }
 
   const sendDbAnchor = async () => {
-    addLog(TAG, `Sending dbAnchor...`);
-    const message = JSON.stringify(0);
-    write(message);
+    if (!receivedData || receivedData.length === 0) {
+      addLog(TAG, `Sending dbAnchor...`);
+      const message = JSON.stringify(0);
+      write(message);
+    }
     /*
     const lastRow = await getLastRow();
     if (lastRow.length !== 0) {  // Needs rework (Save anchor in database and exchange it with peripheral)
@@ -333,17 +335,18 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
         <View>
           <TextListItem itemKey={lang["status"]} itemValue={isBluetoothEnabled ? lang["enabled"] : lang["disabled"]} />
           {(isBluetoothEnabled) && <>
-            <SimpleSubCard title={lang["devices_found"]}>
-              {unpairedDevices?.length != 0 ? (<>
-                <TextListItemSubCard itemKey={`Found ${unpairedDevices.length} devices`} itemValue={isDiscovering ? lang["discovering"] : lang["discover"]} onPressE={() => isDiscovering ? cancelDiscovery() : startDiscovery()} />
-                {unpairedDevices?.map((device, index) => (
-                  <TextListItemSubCard key={index} itemKey={device.name}
-                    itemValue={connectedDevice ? (connectedDevice.name === device.name ? lang["disconnect"] : lang["connect"]) : ((isConnecting && (processingDevice ===  device.address)) ? lang["connecting"] : lang["connect"])}
-                    onPressE={connectedDevice ? (connectedDevice.name === device.name ? () => disconnect() : () => connect(device)) : (isConnecting ? null : () => connect(device))}
-                  />
-                ))}
-              </>) : (
-                <TextListItemSubCard itemKey={lang["no_devices_found"]} itemValue={isDiscovering ? lang["discovering"] : lang["discover"]} onPressE={() => isDiscovering ? null : startDiscovery()} />
+            <SimpleSubCard title={lang["devices_found"]} potentialValue={isDiscovering ? lang["discovering"] : lang["discover"]} onPressE={() => isDiscovering ? cancelDiscovery() : startDiscovery()} processing={isDiscovering}>
+              {unpairedDevices?.length != 0 ? (
+                <>
+                  {unpairedDevices?.map((device, index) => (
+                    <TextListItemSubCard key={index} style={(index === unpairedDevices.length-1) ? null : styles.MD_ROW_GAP} itemKey={device.name}
+                      itemValue={connectedDevice ? (connectedDevice.name === device.name ? lang["disconnect"] : lang["connect"]) : ((isConnecting && (processingDevice ===  device.address)) ? lang["connecting"] : lang["connect"])}
+                      onPressE={connectedDevice ? (connectedDevice.name === device.name ? () => disconnect() : () => connect(device)) : (isConnecting ? null : () => connect(device))}
+                    />
+                  ))}
+                </>
+              ) : (
+                <TextListItemSubCard itemKey={lang["no_devices_found"]} itemValue={''} />
               )}
             </SimpleSubCard>
           </>}

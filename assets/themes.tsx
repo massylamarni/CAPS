@@ -24,7 +24,7 @@ const themeI = {
     preview: '#EEEEEE'
   },
   borderColors: {
-    default: '#00000030',
+    default: '#ffffff20',
   },
   font: {
     bold: 'inter-bold',

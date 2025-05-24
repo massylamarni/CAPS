@@ -12,7 +12,6 @@ export default function SensorLineChart({ xyzData }: { xyzData: SensorLineChartD
   
 
   return(
-    <View style={{ marginTop: 10}}>
       <LineChart
         data={formatData(xData, "#ff0000")}
         data2={formatData(yData, "00ff00")}
@@ -40,6 +39,5 @@ export default function SensorLineChart({ xyzData }: { xyzData: SensorLineChartD
         noOfSectionsBelowXAxis={2}
         stepHeight={10}
       />
-    </View>
   )
 }

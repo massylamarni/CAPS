@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   SUBCOMPONENT_CARD: {
     position: 'relative',
     borderWidth: 1,
-    borderColor: '#ffffff20',
+    borderColor: themeI.borderColors.default,
     borderStyle: 'dashed',
     marginTop: themeI.spacing.lg,
     paddingVertical: themeI.padding.sm,
@@ -65,15 +65,33 @@ const styles = StyleSheet.create({
   },
 
   /* Buttons */
+  SMALL_TITLE_BUTTON: {
+    backgroundColor: themeI.backgroundColors.component,
+    paddingVertical: 1,
+    paddingHorizontal: 5,
+    borderRadius: themeI.borderRadius.md,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: themeI.borderColors.default,
+  },
+  SMALL_TITLE_BUTTON_GREYED: {
+    backgroundColor: themeI.backgroundColors.component,
+    paddingVertical: 1,
+    paddingHorizontal: 5,
+    borderRadius: themeI.borderRadius.md,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: themeI.borderColors.default,
+  },
   SMALL_BUTTON: {
     backgroundColor: '#509050',
-    paddingVertical: 3,
+    paddingVertical: 2,
     paddingHorizontal: 5,
     borderRadius: themeI.borderRadius.md,
   },
   SMALL_BUTTON_GREYED: {
     backgroundColor: '#505050',
-    paddingVertical: 3,
+    paddingVertical: 2,
     paddingHorizontal: 5,
     borderRadius: themeI.borderRadius.md,
   },

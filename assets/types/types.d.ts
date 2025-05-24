@@ -161,10 +161,6 @@ declare type DbStateP = {
 declare type HistoryStateP = {
   lastRow: DbEntry | null;
   setLastRow: React.Dispatch<React.SetStateAction<DbEntry | null>>;
-  predictionStats: { predictedClass: number; count: number }[] | null;
-  setPredictionStats: React.Dispatch<
-    React.SetStateAction<{ predictedClass: number; count: number }[] | null>
-  >;
 };
 
 /* Settings */

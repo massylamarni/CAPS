@@ -6,10 +6,10 @@ import styles from '@/assets/styles';
 import Icon from 'react-native-vector-icons/Feather';
 import { useStateLogger } from '../useStateLogger';
 
-export default function TextListItemSubCard({ itemKey, itemValue, iconName, onPressE = null, processing= false }: { itemKey: string, itemValue: string | number, iconName?: string, onPressE?: any, processing?: boolean }) {
+export default function TextListItemSubCard({ itemKey, itemValue, iconName, onPressE = null, processing= false, style = null }: { itemKey: string, itemValue: string | number, iconName?: string, onPressE?: any, processing?: boolean, style?: any }) {
 
   return(
-    <View style={styles.SUBCOMPONENT_LIST_ITEM}>
+    <View style={[styles.SUBCOMPONENT_LIST_ITEM, style]}>
       <Tex>{itemKey}</Tex>
       <View style={styles.LEGEND_CONTAINER}>
         {iconName && <Icon style={styles.MD_COL_GAP} name={iconName} size={themeI.legendSize.default} color={themeI.legendColors.default} />}

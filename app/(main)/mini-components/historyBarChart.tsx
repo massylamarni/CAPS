@@ -17,7 +17,6 @@ export default function HistoryBarChart({ barChartData }: { barChartData: Histor
 
   return(
     <SimpleSubCard title='Nombre total de comportements enregistés'>
-      <View style={{ marginTop: 10 }}>
         <BarChart
           data={formattedData}
           frontColor="#fff"
@@ -36,7 +35,6 @@ export default function HistoryBarChart({ barChartData }: { barChartData: Histor
           spacing={22}
           endSpacing={0}
         />
-      </View>
     </SimpleSubCard>
   )
 }
