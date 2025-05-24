@@ -61,7 +61,7 @@ export default function SensorComponentP({ sensorState, sensorSettings }: {senso
       setYgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), gyroData.y]);
       setZgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), gyroData.z]);
 
-      setSensorData([groupedData]);
+      setSensorData(prev => [groupedData]);
     }, FREQUENCY);
 
     return () => {

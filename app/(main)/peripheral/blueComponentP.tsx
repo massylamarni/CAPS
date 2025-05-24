@@ -143,7 +143,7 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
   useEffect(() => {
     if (isDbBufferedS) {
       addLog(TAG, `Streaming data...`);
-      write(JSON.stringify(sensorData));
+      write(JSON.stringify(sensorData[0]));
     }
   }, [sensorData]);
 
@@ -220,7 +220,7 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
     try {      
       const connectedDevice_ = await RNBluetoothClassic.accept({});
       addLog(TAG, `Accepting success !`);
-      setConnectedDevice(connectedDevice_);
+      // setConnectedDevice(connectedDevice_);
     } catch (error) {
       addLog(TAG, `${error}`);
     } finally {

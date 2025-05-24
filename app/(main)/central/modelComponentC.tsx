@@ -67,32 +67,34 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
         if (data.sensorData) {
           addLog(TAG, `Chunking received database...`);
           const dbData = data.sensorData;
-          dbData?.forEach((entry: any) => {
-            if (dbBuffer.length < INPUT_SEQUENCE_LENGTH) {
-              setDbBuffer((prev: any) => [...prev, entry]);
+          let dbBuffer_ = [...dbBuffer];
+          dbData.forEach((entry: any) => {
+            if (dbBuffer_.length < INPUT_SEQUENCE_LENGTH) {
+              dbBuffer_.push(entry);
             } else {
-              processAndMakePrediction(dbBuffer);
-              setDbBuffer([entry]);
+              processAndMakePrediction(dbBuffer_);
+              dbBuffer_ = [entry];
             }
+            setDbBuffer(dbBuffer_);
           });
           setIsDbBufferedR(true);
           setDbBuffer([]);
         }
         else if (isDbBufferedR) {
           addLog(TAG, `Chunking received stream...`);
-          if (streamBuffer.length < INPUT_SEQUENCE_LENGTH) {
-            setStreamBuffer((prev: any) => [...prev, data]);
+          let streamBuffer_ = [...streamBuffer];
+          if (streamBuffer_.length < INPUT_SEQUENCE_LENGTH) {
+            streamBuffer_.push(data);
           } else {
-            processAndMakePrediction(streamBuffer);
-            setStreamBuffer([data]);
+            processAndMakePrediction(streamBuffer_);
+            streamBuffer_ = [data];
           }
+          setStreamBuffer(streamBuffer_);
         }
       }   
     }
   }
-
   const processAndMakePrediction = async (buffer: ReceivedSensorDataC[]) => {
-    console.log(buffer);
     const preprocessSingleRow = (data: any): number[] => {  // Needs debug
       const normalizedData = {
         xa: (data.xa - MIN_A) / (MAX_A - MIN_A),
@@ -120,7 +122,7 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
     try {
       const inputTensor = tf.tensor(dataSegment, [1, 10, 6]);
       addLog(TAG, `Making a prediction...`);
-      const output = await model!.predict(inputTensor);
+      const output = model!.predict(inputTensor);
       const prediction_ = output.arraySync();
 
       setPredictions(prediction_);
@@ -129,7 +131,11 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
       addLog(TAG, `Saving prediction...`);
       addPredictionData({...rawEntry, confidence: confidence, predictedClass: predictedClass});
 
-      output.dispose();
+      if (Array.isArray(output)) {
+        output.forEach(t => t.dispose());
+      } else {
+        output.dispose();
+      }
       inputTensor.dispose();
     } catch (error) {
       addLog(TAG, `${error}`);
