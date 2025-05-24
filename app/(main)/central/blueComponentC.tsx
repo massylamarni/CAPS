@@ -88,26 +88,11 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
     const onDeviceDisconnectedSub = RNBluetoothClassic.onDeviceDisconnected(onDeviceDisconnected);
     const onBluetoothErrorSub = RNBluetoothClassic.onError(onBluetoothError);
 
-    // Broken connection event listener work around
-    const checkConnectionsInterval = setInterval(async () => {
-      if (!connectedDeviceRef.current) {
-        try {
-          const connectedDevices_ = await RNBluetoothClassic.getConnectedDevices();
-          if (connectedDevices_.length !== 0) {
-            setConnectedDevice(connectedDevices_[0]);
-          }
-        } catch (error) {
-          addLog(TAG, `${error}`);
-        }
-      }
-    }, 3000);
-
     return () => {
       onBluetoothDisabledSub?.remove();
       onBluetoothEnabledSub?.remove();
       onDeviceDisconnectedSub?.remove();
       onBluetoothErrorSub?.remove();
-      clearInterval(checkConnectionsInterval);
     }
   }, []);
 

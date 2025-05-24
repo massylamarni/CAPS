@@ -18,18 +18,8 @@ export default function SensorComponentP({ sensorState, sensorSettings }: {senso
   const {
     sensorData,
     setSensorData,
-    xaData,
-    setXaData,
-    yaData,
-    setYaData,
-    zaData,
-    setZaData,
-    xgData,
-    setXgData,
-    ygData,
-    setYgData,
-    zgData,
-    setZgData,
+    xyzData,
+    setXyzData,
   } = sensorState;
 
   /* Init sensorData */
@@ -45,23 +35,23 @@ export default function SensorComponentP({ sensorState, sensorSettings }: {senso
         gyroData = data;
     });
     const sensorDataInterval = setInterval(() => {
-      const groupedData = {
-          xa: accelData.x,
-          ya: accelData.y,
-          za: accelData.z,
-          xg: gyroData.x,
-          yg: gyroData.y,
-          zg: gyroData.z
-      };
-      
-      setXaData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), accelData.x]);
-      setYaData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), accelData.y]);
-      setZaData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), accelData.z]);
-      setXgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), gyroData.x]);
-      setYgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), gyroData.y]);
-      setZgData(prev => [...prev.slice(-(DRAWING_SEQUENCE_LENGTH-1)), gyroData.z]);
+      setXyzData(prev => ({
+        xa: [...prev.xa.slice(-(DRAWING_SEQUENCE_LENGTH-1)), accelData.x],
+        ya: [...prev.ya.slice(-(DRAWING_SEQUENCE_LENGTH-1)), accelData.y],
+        za: [...prev.za.slice(-(DRAWING_SEQUENCE_LENGTH-1)), accelData.z],
+        xg: [...prev.xg.slice(-(DRAWING_SEQUENCE_LENGTH-1)), gyroData.x],
+        yg: [...prev.yg.slice(-(DRAWING_SEQUENCE_LENGTH-1)), gyroData.y],
+        zg: [...prev.zg.slice(-(DRAWING_SEQUENCE_LENGTH-1)), gyroData.z],
+      }));
 
-      setSensorData(prev => [groupedData]);
+      setSensorData({
+        xa: accelData.x,
+        ya: accelData.y,
+        za: accelData.z,
+        xg: gyroData.x,
+        yg: gyroData.y,
+        zg: gyroData.z
+      });
     }, FREQUENCY);
 
     return () => {
@@ -70,19 +60,17 @@ export default function SensorComponentP({ sensorState, sensorSettings }: {senso
       clearInterval(sensorDataInterval);
     }
   }, []);
-  
-  const lastSensorData = sensorState.sensorData[sensorState.sensorData.length-1];
 
   return (
     <>
       <SimpleCard title={sensorSettings.show_title ? lang["sensor_info"] : null}>
         <SimpleSubCard title={lang["accelerometer"]} potentialValue={(sensorSettings.show_coord && sensorState.sensorData) ?
-          `x: ${lastSensorData?.xa.toFixed(3)}, y: ${lastSensorData?.ya.toFixed(3)}, z: ${lastSensorData?.za.toFixed(3)}` : ''}>
-          <SensorLineChart xyzData={{xData: xaData, yData: yaData, zData: zaData}} />
+          `x: ${sensorState.sensorData?.xa.toFixed(3)}, y: ${sensorState.sensorData?.ya.toFixed(3)}, z: ${sensorState.sensorData?.za.toFixed(3)}` : ''}>
+          <SensorLineChart xyzData={{xData: xyzData.xa, yData: xyzData.ya, zData: xyzData.za}} />
         </SimpleSubCard>
         <SimpleSubCard title={lang["gyroscope"]} potentialValue={(sensorSettings.show_coord && sensorState.sensorData) ?
-          `x: ${lastSensorData?.xg.toFixed(3)}, y: ${lastSensorData?.yg.toFixed(3)}, z: ${lastSensorData?.zg.toFixed(3)}` : ''}>
-          <SensorLineChart xyzData={{xData: xgData, yData: ygData, zData: zgData}} />
+          `x: ${sensorState.sensorData?.xg.toFixed(3)}, y: ${sensorState.sensorData?.yg.toFixed(3)}, z: ${sensorState.sensorData?.zg.toFixed(3)}` : ''}>
+          <SensorLineChart xyzData={{xData: xyzData.xg, yData: xyzData.yg, zData: xyzData.zg}} />
         </SimpleSubCard>
       </SimpleCard>
     </>

@@ -59,9 +59,9 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
     acceptConnections();
     
     return () => {
-      cancelAcceptConnections();
-      cancelDiscovery();
-      disconnect();
+      if (isAccepting) cancelAcceptConnections();
+      if (isDisconnecting) cancelDiscovery();
+      if (connectedDevice) disconnect();
     }
   }, []);
 
@@ -88,26 +88,11 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
     const onDeviceDisconnectedSub = RNBluetoothClassic.onDeviceDisconnected(onDeviceDisconnected);
     const onBluetoothErrorSub = RNBluetoothClassic.onError(onBluetoothError);
 
-    // Broken connection event listener work around
-    const checkConnectionsInterval = setInterval(async () => {
-      if (!connectedDeviceRef.current) {
-        try {
-          const connectedDevices_ = await RNBluetoothClassic.getConnectedDevices();
-          if (connectedDevices_.length !== 0) {
-            setConnectedDevice(connectedDevices_[0]);
-          }
-        } catch (error) {
-          addLog(TAG, `${error}`);
-        }
-      }
-    }, 3000);
-
     return () => {
       onBluetoothDisabledSub?.remove();
       onBluetoothEnabledSub?.remove();
       onDeviceDisconnectedSub?.remove();
       onBluetoothErrorSub?.remove();
-      clearInterval(checkConnectionsInterval);
     }
   }, []);
 
@@ -141,9 +126,14 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
 
   /* Stream data */
   useEffect(() => {
-    if (isDbBufferedS) {
-      addLog(TAG, `Streaming data...`);
-      write(JSON.stringify(sensorData[0]));
+    if (connectedDevice) {
+      if (isDbBufferedS) {
+        addLog(TAG, `Streaming data...`);
+        write(JSON.stringify(sensorData));
+      }
+    }
+    else if (isDbBufferedS) {
+      setIsDbBufferedS(false);
     }
   }, [sensorData]);
 
@@ -176,7 +166,7 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
             PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
           );
           
-          const arePermissionsGranted_ = Object.values(granted).every(val => val === PermissionsAndroid.RESULTS.GRANTED);
+          const arePermissionsGranted_ = granted === PermissionsAndroid.RESULTS.GRANTED;
           setArePermissionsGranted(arePermissionsGranted_);
           addLog(TAG, `${arePermissionsGranted_ ? 'Permissions grated !' : 'Not all permissions granted !'}`);
         }
@@ -217,10 +207,10 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
   const acceptConnections = async () => {
     setIsAccepting(true);
       
-    try {      
+    try {
       const connectedDevice_ = await RNBluetoothClassic.accept({});
       addLog(TAG, `Accepting success !`);
-      // setConnectedDevice(connectedDevice_);
+      setConnectedDevice(connectedDevice_);
     } catch (error) {
       addLog(TAG, `${error}`);
     } finally {

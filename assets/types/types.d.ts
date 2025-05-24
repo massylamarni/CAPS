@@ -68,20 +68,10 @@ declare type ModelStateC = {
   setBufferEntriesCount: React.Dispatch<React.SetStateAction<number>>;
 };
 declare type SensorStateC = {
-  sensorData: SensorSample[];
-  setSensorData: React.Dispatch<React.SetStateAction<SensorSample[]>>;
-  xaData: number[];
-  setXaData: React.Dispatch<React.SetStateAction<number[]>>;
-  yaData: number[];
-  setYaData: React.Dispatch<React.SetStateAction<number[]>>;
-  zaData: number[];
-  setZaData: React.Dispatch<React.SetStateAction<number[]>>;
-  xgData: number[];
-  setXgData: React.Dispatch<React.SetStateAction<number[]>>;
-  ygData: number[];
-  setYgData: React.Dispatch<React.SetStateAction<number[]>>;
-  zgData: number[];
-  setZgData: React.Dispatch<React.SetStateAction<number[]>>;
+  sensorData: SensorSample;
+  setSensorData: React.Dispatch<React.SetStateAction<SensorSample>>;
+  xyzData: {xa: number[], ya: number[], za: number[], xg: number[], yg: number[], zg: number[]};
+  setXyzData: React.Dispatch<React.SetStateAction<{xa: number[], ya: number[], za: number[], xg: number[], yg: number[], zg: number[]}>>;
 };
 
 declare type BlueStateP = {
@@ -127,20 +117,10 @@ declare type SensorSampleP = {
   zg: number;
 };
 declare type SensorStateP = {
-  sensorData: SensorSample[];
-  setSensorData: React.Dispatch<React.SetStateAction<SensorSample[]>>;
-  xaData: number[];
-  setXaData: React.Dispatch<React.SetStateAction<number[]>>;
-  yaData: number[];
-  setYaData: React.Dispatch<React.SetStateAction<number[]>>;
-  zaData: number[];
-  setZaData: React.Dispatch<React.SetStateAction<number[]>>;
-  xgData: number[];
-  setXgData: React.Dispatch<React.SetStateAction<number[]>>;
-  ygData: number[];
-  setYgData: React.Dispatch<React.SetStateAction<number[]>>;
-  zgData: number[];
-  setZgData: React.Dispatch<React.SetStateAction<number[]>>;
+  sensorData: SensorSample;
+  setSensorData: React.Dispatch<React.SetStateAction<SensorSample>>;
+  xyzData: {xa: number[], ya: number[], za: number[], xg: number[], yg: number[], zg: number[]};
+  setXyzData: React.Dispatch<React.SetStateAction<{xa: number[], ya: number[], za: number[], xg: number[], yg: number[], zg: number[]}>>;
 };
 declare type DbStateP = {
   isDbConnected: boolean;

@@ -38,7 +38,7 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
   useEffect(() => {
     if (predictionStats && predictionStats.length !== 0) {
       addLog(TAG, `Got prediction stats with length: ${predictionStats.length} !`);
-      let barChartData_ = [0, 0, 0, 0, 0, 0] as HistoryBardChartData["data"];
+      const barChartData_ = [0, 0, 0, 0, 0, 0] as HistoryBardChartData["data"];
       BEHAVIOR_MAPPING.forEach((behavior, behaviorIndex) => {
         let foundIndex = -1;
         predictionStats.forEach((predictionStat, predictionIndex) => {

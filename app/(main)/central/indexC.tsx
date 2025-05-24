@@ -59,13 +59,8 @@ export default function IndexComponentC({ setRole }: {
   const [bufferEntriesCount, setBufferEntriesCount] = useState(0, "setBufferEntriesCount");
 
   /* sensorState */
-  const [sensorData, setSensorData] = useState([{ xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 }], "setSensorData");
-  const [xaData, setXaData] = useState([0] as number[], "setXaData");
-  const [yaData, setYaData] = useState([0] as number[], "setYaData");
-  const [zaData, setZaData] = useState([0] as number[], "setZaData");
-  const [xgData, setXgData] = useState([0] as number[], "setXgData");
-  const [ygData, setYgData] = useState([0] as number[], "setYgData");
-  const [zgData, setZgData] = useState([0] as number[], "setZgData");
+  const [sensorData, setSensorData] = useState({ xa: 0, ya: 0, za: 0, xg: 0, yg: 0, zg: 0 }, "setSensorData");
+  const [xyzData, setXyzData] = useState({xa: [], ya: [], za: [], xg: [], yg: [], zg: []} as {xa: number[], ya: number[], za: number[], xg: number[], yg: number[], zg: number[]}, "setXyzData");
 
   /* IndexState */
   const [pageIndex, setPageIndex] = useState(0, "setPageIndex");
@@ -138,18 +133,8 @@ export default function IndexComponentC({ setRole }: {
   const sensorState = {
     sensorData,
     setSensorData,
-    xaData,
-    setXaData,
-    yaData,
-    setYaData,
-    zaData,
-    setZaData,
-    xgData,
-    setXgData,
-    ygData,
-    setYgData,
-    zgData,
-    setZgData,
+    xyzData,
+    setXyzData,
   };
 
   useEffect(() => {
@@ -316,7 +301,7 @@ export default function IndexComponentC({ setRole }: {
           }
         ],
       };
-      const syntheticData = {...sensorState.sensorData[0],
+      const syntheticData = {...sensorState.sensorData,
         createdAt: Date.now(),
         mac: 'MAC',
       };

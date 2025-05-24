@@ -27,7 +27,7 @@ export default function DbComponentP({ dbState, sensorData }: { dbState: DbState
 
   useEffect(() => {
     if (sensorData) {
-      addSensorData({...sensorData[0]});
+      addSensorData({...sensorData});
       if (sensorDataCount % 10 === 0) {
         getDbStats();
       }
