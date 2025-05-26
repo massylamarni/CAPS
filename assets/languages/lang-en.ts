@@ -52,5 +52,7 @@ export const lang_en = {
 
     sensor_info: "Sensor info",
     accelerometer: "Accelerometer",
-    gyroscope: "Gyroscope"
+    gyroscope: "Gyroscope",
+
+    select: "Select"
 }

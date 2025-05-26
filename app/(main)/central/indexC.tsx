@@ -322,7 +322,7 @@ export default function IndexComponentC({ setRole }: {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={[styles.VIEW, pageIndex !== 0 && styles.HIDDEN]}>
             <BlueComponentC blueState={blueState} />
-            <ModelComponentC modelState={modelState} receivedData={blueState.receivedData} />
+            <ModelComponentC modelState={modelState} receivedData={blueState.receivedData} address={blueState.connectedDevice?.address} />
             {settings.isSimulating && <SensorComponentC sensorState={sensorState} sensorSettings={{show_title: true, show_coord: true}} />}
             <DbComponentC dbState={dbState} predictions={modelState.predictions} />
           </View>

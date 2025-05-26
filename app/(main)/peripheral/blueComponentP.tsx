@@ -118,6 +118,7 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
     connectedDeviceRef.current = connectedDevice;
   }, [connectedDevice]);
 
+  /* On dbAnchor reception */
   useEffect(() => {
     if (connectedDevice && dbAnchor && !isDbBufferedS) {
       exportDatabaseAsJson(JSON.parse(dbAnchor ?? "0"));
@@ -189,10 +190,9 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
       const unpairedDevices_ = await RNBluetoothClassic.startDiscovery();
       setUnpairedDevices(unpairedDevices_);
       addLog(TAG, `Found ${unpairedDevices_.length} devices.`);
+      setIsDiscovering(false);
     } catch (error) {
       addLog(TAG, `${error}`);
-    } finally {
-      setIsDiscovering(false);
     }
   }
   const cancelDiscovery = async () => {
@@ -211,10 +211,9 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
       const connectedDevice_ = await RNBluetoothClassic.accept({});
       addLog(TAG, `Accepting success !`);
       setConnectedDevice(connectedDevice_);
+      setIsAccepting(false);
     } catch (error) {
       addLog(TAG, `${error}`);
-    } finally {
-      setIsAccepting(false);
     }
   }
   const cancelAcceptConnections = async () => {
@@ -251,10 +250,9 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
         setConnectedDevice(_device);
         addLog(TAG, `Connection success !`);
       }
+      setIsConnecting(false);
     } catch (error) {
       addLog(TAG, `${error}`);
-    } finally {
-      setIsConnecting(false);
     }
   }
   const disconnect = async () => {
@@ -265,10 +263,9 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
         setConnectedDevice(null);
         addLog(TAG, `Disconnect success !`);
       }
+      setIsDisconnecting(false);
     } catch (error) {
       addLog(TAG, `${error}`);
-    } finally {
-      setIsDisconnecting(false);
     }
   }
   const unpairDevice = async (deviceAddr: string) => {
@@ -276,10 +273,9 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
       setIsUnpairing(true);
       const unpairedDevice_ = await RNBluetoothClassic.unpairDevice(deviceAddr);
       addLog(TAG, `Unpair success !`);
+      setIsUnpairing(false);
     } catch (error) {
       addLog(TAG, `${error}`);
-    } finally {
-      setIsUnpairing(false);
     }
   }
 
@@ -299,10 +295,9 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
       const writeStatus = await connectedDevice?.write(`${message}\n`);
       setSendCount(prev => (prev+1));
       if (writeStatus) addLog(TAG, `Write success !`);
+      setIsWriting(false);
     } catch (error) {
       addLog(TAG, `${error}`);
-    } finally {
-      setIsWriting(false);
     }
   }
 
@@ -310,10 +305,16 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
     addLog(TAG, `Exporting database...`);
     const sensorData = await getAllSensorData(_dbAnchor);
 
+    const smallMessage = JSON.stringify({
+      header: {
+        dbLength: sensorData.length,
+      }
+    });
     const largeMessage = JSON.stringify({
       sensorData
     });
 
+    await write(smallMessage);
     await write(largeMessage);
     setIsDbBufferedS(true);
   };

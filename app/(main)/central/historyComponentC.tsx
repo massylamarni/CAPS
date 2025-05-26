@@ -16,7 +16,12 @@ const TAG = "C/historyComponent";
 
 export default function HistoryComponentC({ historyState, dbStats }: { historyState: HistoryStateC, dbStats: DbStateC["dbStats"]}) {
   const [barChartData, setBarChartData] = useState([0, 0, 0, 0, 0, 0] as HistoryBardChartData["data"], "setBarChartData");
+  const [deviceId, setDeviceId] = useState(null);
   const { addLog } = useLogs();
+  const getDefaultTimeRange = () => {
+    const now = Date.now();
+    return [now - (24 * 60 * 60 * 1000), now];
+  };
 
   const {
     lastRow,
@@ -28,7 +33,15 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
   const updateHistory = async () => {
     addLog(TAG, `Gettings stats...`);
     setLastRow(await getLastRow());
-    setPredictionStats(await getPredictionStats());
+    if (deviceId) {
+      const [startTime, endTime] = getDefaultTimeRange();
+      const _predictionStats = await getPredictionStats(startTime, endTime);
+      _predictionStats.forEach(_predictionStat => {
+        if (_predictionStat.device_id === deviceId) {
+          setPredictionStats(_predictionStat.stats);
+        }
+      });
+    }
   };
 
   useEffect(() => {
@@ -60,14 +73,14 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
     <>
       <SimpleCard title={lang["history"]}>
         {(lastRow && lastRow.length !== 0) ? (lastRow.map((entry, index) => (
-          <DbListItem key={index} entryName={`${lang["cattle"]} ${entry.device_id}`}>
+          <DbListItem key={index} onPressE={() => {setDeviceId(entry.device_id)}} entryName={`${lang["cattle"]} ${entry.device_id}`}>
             <TextListItemSubCard itemKey={`${lang["created_at"]}:`} itemValue={new Date(entry.createdAt).toLocaleString()} />
             <TextListItemSubCard itemKey={`${lang["recorded"]}:`} itemValue={dbStats.row_count} />
           </DbListItem>
         ))) : <Tex>{lang["no_entries_to_show"]}</Tex>}
       </SimpleCard>
 
-      <SimpleCard title={lang["behavior_stats"]}>
+      {deviceId && <SimpleCard title={lang["behavior_stats"]}>
         <View style={styles.HISTORY_CHARTS}>
           <View style={styles.HISTORY_CHARTS_HEADER}>
             {/* <Tex style={styles.SUBCOMPONENT_TITLE}>Select TimeRange</Tex>
@@ -83,7 +96,7 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
             </View>
           </View>
         </View>
-      </SimpleCard>
+      </SimpleCard>}
     </>
   );
 }

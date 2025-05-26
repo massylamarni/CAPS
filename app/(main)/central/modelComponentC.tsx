@@ -13,9 +13,10 @@ import { lang } from '@/assets/languages/lang-provider';
 
 const TAG = "C/modelComponent";
 
-export default function ModelComponentC({ modelState, receivedData }: { modelState: ModelStateC, receivedData: BlueStateC["receivedData"]}) {
+export default function ModelComponentC({ modelState, receivedData, address }: { modelState: ModelStateC, receivedData: BlueStateC["receivedData"], address: 'string' | undefined}) {
   const [streamBuffer, setStreamBuffer] = useState([] as any, "setStreamBuffer");
   const [dbBuffer, setDbBuffer] = useState([] as any, "setDbBuffer");
+  const [receivedHeader, setReceivedHeader] = useState({ dbLength: null });
   const { addLog } = useLogs();
 
   const {
@@ -52,10 +53,9 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
       const model_ = await tf.loadLayersModel(bundleResourceIO(modelJson, modelWeights));
       addLog(TAG, `Model loaded !`);
       setModel(model_);
+      setIsModelLoaded(true);
     } catch (error) {
       addLog(TAG, `${error}`);
-    } finally {
-      setIsModelLoaded(true);
     }
   }
 
@@ -64,7 +64,10 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
       const receivedData_ = receivedData;
       if (receivedData_ && receivedData_[receivedData_.length-1]) {
         const data = JSON.parse(receivedData_[receivedData_.length-1]);
-        if (data.sensorData) {
+        if (data.header) {
+          setReceivedHeader(data.header);
+        }
+        else if (data.sensorData) {
           addLog(TAG, `Chunking received database...`);
           const dbData = data.sensorData;
           let dbBuffer_ = [...dbBuffer];
@@ -129,7 +132,7 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
       const confidence = Math.max(...prediction_[0]);
       const predictedClass = prediction_[0].indexOf(confidence);
       addLog(TAG, `Saving prediction...`);
-      addPredictionData({...rawEntry, confidence: confidence, predictedClass: predictedClass});
+      addPredictionData({...rawEntry, mac: address ?? 'MAC', confidence: confidence, predictedClass: predictedClass});
 
       if (Array.isArray(output)) {
         output.forEach(t => t.dispose());
@@ -137,10 +140,9 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
         output.dispose();
       }
       inputTensor.dispose();
+      setIsPredicting(false);
     } catch (error) {
       addLog(TAG, `${error}`);
-    } finally {
-      setIsPredicting(false);
     }
   };
 
@@ -155,6 +157,7 @@ export default function ModelComponentC({ modelState, receivedData }: { modelSta
         <>
           <Tex>{isModelLoaded ? lang["model_loaded"] : lang["loading_model"]}</Tex>
           <Tex>{`${lang["processing_chunk"]} ${dbBuffer.length+streamBuffer.length}/10...`}</Tex>
+          {receivedHeader.dbLength && <Tex>{`Receiving database of lenght: ${receivedHeader.dbLength} from ${address}`}</Tex>}
           {isDbBufferedR && <Tex>{lang["database_buffered"]}</Tex>}
           {isPredicting && <Tex>{lang["making_a_prediction"]}</Tex>}
         </>

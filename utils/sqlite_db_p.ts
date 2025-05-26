@@ -8,7 +8,7 @@ const db = SQLite.openDatabaseSync('sensor.db');
 
 export const initDatabase = async () => {
   try {
-    db.execAsync(
+    await db.execAsync(
     `CREATE TABLE IF NOT EXISTS sensor_data (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       xa REAL,
@@ -19,11 +19,10 @@ export const initDatabase = async () => {
       zg REAL,
       createdAt INTEGER
     )`);
+    return true;
   } catch(e) {
     console.error('DB init error:', e);
     return false;
-  } finally {
-    return true;
   }
 };
 
@@ -101,13 +100,13 @@ export const getAllSensorData = async (dbAnchor: number): Promise<DbSensorOutput
 };
 
 export const resetDatabase = async () => {
-    try {
-        await db.execAsync('DROP TABLE IF EXISTS sensor_data');
-        initDatabase();
-        return true;
-    } catch (error) {
-        console.error('Error resetting database:', error);
-        return false;
-    }
+  try {
+    await db.execAsync('DROP TABLE IF EXISTS sensor_data');
+    await initDatabase();
+    return true;
+  } catch (error) {
+    console.error('Error resetting database:', error);
+    return false;
+  }
 };
 

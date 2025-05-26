@@ -8,14 +8,14 @@ const db = SQLite.openDatabaseSync('predict.db');
 
 export const initDatabase = async () => {
   try {
-    db.execAsync(
+    await db.execAsync(
       `CREATE TABLE IF NOT EXISTS devices (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         mac TEXT UNIQUE NOT NULL,
         name TEXT,
         createdAt INTEGER
     )`);
-    db.execAsync(
+    await db.execAsync(
       `CREATE TABLE IF NOT EXISTS prediction_data (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       xa REAL,
@@ -31,11 +31,10 @@ export const initDatabase = async () => {
       device_id INTEGER NOT NULL,
       FOREIGN KEY (device_id) REFERENCES devices(id)
     )`);
+    return true;
   } catch(e) {
     console.error('DB init error:', e);
     return false;
-  } finally {
-    return true;
   }
 };
 
@@ -61,6 +60,7 @@ const manageDeviceId = async (mac: string) => {
 };
 export const addPredictionData = async (data: DbPredictionInputC) => {
   try {
+    console.log(data);
     const deviceId = await manageDeviceId(data.mac);
     if (deviceId === -1) throw new Error('Device ID not found');
     await db.runAsync(
@@ -112,54 +112,84 @@ export const getRowCount = async () => {
 
 export const getDownsampledData = async (startTime: number, endTime: number, intervalMs: number) => {
   try {
-    const result = await db.getAllAsync<DbPredictionOutputC>(
+    const rows = await db.getAllAsync<DbPredictionOutputC>(
       `
       SELECT pd.*
       FROM prediction_data pd
       INNER JOIN (
         SELECT
+          device_id,
           MIN(predictionDateTime) as minTime,
           ((predictionDateTime - ?) / ?) as bucket
         FROM prediction_data
         WHERE predictionDateTime BETWEEN ? AND ?
-        GROUP BY bucket
+        GROUP BY device_id, bucket
       ) grouped
-      ON pd.predictionDateTime = grouped.minTime
-      ORDER BY pd.predictionDateTime ASC
+      ON pd.device_id = grouped.device_id AND pd.predictionDateTime = grouped.minTime
+      ORDER BY pd.device_id ASC, pd.predictionDateTime ASC
       `,
       [startTime, intervalMs, startTime, endTime]
     );
 
-    return result;
+    const groupedByDevice = rows.reduce((acc, row) => {
+      const existing = acc.find(d => d.device_id === row.device_id);
+      if (existing) {
+        existing.data.push(row);
+      } else {
+        acc.push({ device_id: row.device_id, data: [row] });
+      }
+      return acc;
+    }, [] as { device_id: number; data: DbPredictionOutputC[] }[]);
+
+    return groupedByDevice;
   } catch (error) {
     console.error('Error retrieving downsampled data:', error);
     return [];
   }
 };
 
-export const getPredictionStats = async () => {
+export const getPredictionStats = async (startTime: number, endTime: number) => {
   try {
-    const result = await db.getAllAsync<{ predictedClass: number; count: number }>(
+    const rows = await db.getAllAsync<{ device_id: number; predictedClass: number; count: number }>(
       `
-      SELECT predictedClass, COUNT(*) as count
+      SELECT device_id, predictedClass, COUNT(*) as count
       FROM prediction_data
-      GROUP BY predictedClass
-      ORDER BY predictedClass ASC
+      WHERE predictionDateTime BETWEEN ? AND ?
+      GROUP BY device_id, predictedClass
+      ORDER BY device_id ASC, predictedClass ASC
       `,
+      [startTime, endTime]
     );
 
-    return result;
+    // Group by device_id
+    const grouped = new Map<number, { predictedClass: number; count: number }[]>();
+
+    for (const row of rows) {
+      if (!grouped.has(row.device_id)) {
+        grouped.set(row.device_id, []);
+      }
+      grouped.get(row.device_id)!.push({
+        predictedClass: row.predictedClass,
+        count: row.count,
+      });
+    }
+
+    return Array.from(grouped.entries()).map(([device_id, stats]) => ({
+      device_id,
+      stats,
+    }));
   } catch (error) {
-    console.error('Error getting prediction counts:', error);
+    console.error('Error getting prediction stats per device:', error);
     return [];
   }
 };
+
 
 export const resetDatabase = async () => {
     try {
         await db.execAsync('DROP TABLE IF EXISTS prediction_data');
         await db.execAsync('DROP TABLE IF EXISTS devices');
-        initDatabase();
+        await initDatabase();
         return true;
     } catch (error) {
         console.error('Error resetting database:', error);

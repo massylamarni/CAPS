@@ -32,7 +32,7 @@ export default function HistoryComponentP({ historyState, dbStats }: { historySt
     <>
       <SimpleCard title={lang["history"]}>
         <DbListItem entryName={`${lang["cattle"]} X`}>
-          <TextListItemSubCard itemKey={`${lang["created_at"]}:`} itemValue={new Date(lastRow?.createdAt).toLocaleString()} />
+          <TextListItemSubCard itemKey={`${lang["created_at"]}:`} itemValue={new Date(lastRow?.createdAt ?? '0').toLocaleString()} />
           <TextListItemSubCard itemKey={`${lang["recorded"]}:`} itemValue={dbStats.row_count} />
         </DbListItem>
       </SimpleCard>

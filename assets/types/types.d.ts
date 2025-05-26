@@ -34,23 +34,29 @@ declare type DbStateC = {
   setIsDbConnected: React.Dispatch<React.SetStateAction<boolean>>;
   dbStats: {
     last_read: number;
-    last_row: DbEntry | null;
+    last_row: DbPredictionOutputC | null;
     row_count: number;
   };
   setDbStats: React.Dispatch<
     React.SetStateAction<{
       last_read: number;
-      last_row: DbEntry | null;
+      last_row: DbPredictionOutputC | null;
       row_count: number;
     }>
   >;
 };
 declare type HistoryStateC = {
-  lastRow: DbEntry[] | null;
-  setLastRow: React.Dispatch<React.SetStateAction<DbEntry[] | null>>;
-  predictionStats: { predictedClass: number; count: number }[] | null;
+  lastRow: DbPredictionOutputC[] | null;
+  setLastRow: React.Dispatch<React.SetStateAction<DbPredictionOutputC[] | null>>;
+  predictionStats: {
+    predictedClass: number;
+    count: number;
+  }[] | null;
   setPredictionStats: React.Dispatch<
-    React.SetStateAction<{ predictedClass: number; count: number }[] | null>
+    React.SetStateAction<{
+      predictedClass: number;
+      count: number;
+    }[] | null>
   >;
 };
 declare type ModelStateC = {
@@ -127,20 +133,20 @@ declare type DbStateP = {
   setIsDbConnected: React.Dispatch<React.SetStateAction<boolean>>;
   dbStats: {
     last_read: number;
-    last_row: DbEntry | null;
+    last_row: DbSensorOutputP | null;
     row_count: number;
   };
   setDbStats: React.Dispatch<
     React.SetStateAction<{
       last_read: number;
-      last_row: DbEntry | null;
+      last_row: DbSensorOutputP | null;
       row_count: number;
     }>
   >;
 };
 declare type HistoryStateP = {
-  lastRow: DbEntry | null;
-  setLastRow: React.Dispatch<React.SetStateAction<DbEntry | null>>;
+  lastRow: DbSensorOutputP | null;
+  setLastRow: React.Dispatch<React.SetStateAction<DbSensorOutputP | null>>;
 };
 
 /* Settings */

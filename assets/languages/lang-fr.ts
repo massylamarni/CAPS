@@ -52,5 +52,7 @@ export const lang_fr = {
 
     sensor_info: "Infos capteurs",
     accelerometer: "Accéléromètre",
-    gyroscope: "Gyroscope"
+    gyroscope: "Gyroscope",
+
+    select: "Selectionner",
 }
