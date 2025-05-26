@@ -57,6 +57,8 @@ export const lang_en = {
     select: "Select",
     loading: "Loading...",
     receiving_from: "Receiving from",
+    waiting_for_data_reception: "Waiting for data reception...",
+
     change_lang_to_fr: "Change language to french",
     change_lang_to_en: "Change language to english",
     change_lang_to_ar: "Change language to arabic",

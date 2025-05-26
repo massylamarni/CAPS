@@ -3,12 +3,15 @@ import themeI from '@/assets/themes';
 import { BarChart } from "react-native-gifted-charts";
 import SimpleSubCard from './simpleSubcard';
 import Tex from '../base-components/tex';
+import { useLangs } from "@/utils/langContext";
 
 
 export default function HistoryBarChart({ barChartData }: { barChartData: HistoryBardChartData}) {
   const { labels, data } = barChartData;
+  const { lang } = useLangs();
+
   const formattedData = labels.map((label, index) => ({
-    label: label,
+    label: lang[label],
     value: data[index],
     topLabelComponent: () => (
       <Tex>{data[index]}</Tex>

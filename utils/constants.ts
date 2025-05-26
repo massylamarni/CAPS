@@ -1,5 +1,3 @@
-import { lang } from "@/assets/languages/lang-provider";
-
 /* Model */
 const input_3 = [
   [
@@ -32,7 +30,7 @@ const input_2 = [
 export const INPUT_SEQUENCE_LENGTH = 10;
 export const MIN_A = -74.08409134, MAX_A = 43.37365402;
 export const MIN_G = -16.51096916, MAX_G = 28.44993591;
-export const BEHAVIOR_MAPPING = [lang["grazing"], lang["standing"], lang["walking"], lang["resting"], lang["scratching"], lang["licking"]];
+export const BEHAVIOR_MAPPING = ["grazing", "standing", "walking", "resting", "scratching", "licking"];
 
 /* Bluetooth */
 export const RECEIVE_BUFFER_SIZE = 3;

@@ -7,7 +7,7 @@ import { lang_tif } from "@/assets/languages/lang_tif";
 
 type LangContextType = {
   lang: any;
-  updateLangTo: (langKey: "en" | "fr") => void;
+  updateLangTo: (langKey: 'en' | 'fr' | 'ar' | 'ch' | 'tif') => void;
 };
 
 const LangContext = createContext<LangContextType | undefined>(undefined);

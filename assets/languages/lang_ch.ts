@@ -57,6 +57,8 @@ export const lang_ch = {
     select: "选择",
     loading: "加载中...",
     receiving_from: "正在接收来自",
+    waiting_for_data_reception: "正在等待接收数据...",
+
     change_lang_to_fr: "切换语言为法语",
     change_lang_to_en: "切换语言为英语",
     change_lang_to_ar: "切换语言为阿拉伯语",

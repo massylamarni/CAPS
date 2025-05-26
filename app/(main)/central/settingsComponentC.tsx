@@ -25,6 +25,10 @@ export default function SettingsComponentC({ setSettings, setRole }: { setSettin
           label={lang["change_lang_to_en"]}
         />
         <ButtonListItem
+          onPressE={() => updateLangTo("ar")}
+          label={lang["change_lang_to_ar"]}
+        />
+        <ButtonListItem
           onPressE={() => setSettings((prev: any) => ({...prev, isSimulating: !prev.isSimulating }))}
           label={lang["simulate_data_reception"]}
         />

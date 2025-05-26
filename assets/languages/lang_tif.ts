@@ -57,6 +57,8 @@ export const lang_tif = {
     select: "ⵙⴻⵍⴻⴽⵜ",
     loading: "ⵉⴼⵓⵙⴰⵍ...",
     receiving_from: "ⴰⵎⵉ ⵓⵏ ⴰⵏⵓⴽⴽⵓ",
+    waiting_for_data_reception: "ⴰⴷⴷⵓⵔ ⴷ ⵜⴰⵏⵙⴼⴰⵙ ⵏ ⴰⴷⵔⴰⵔ...",
+
     change_lang_to_fr: "ⵙⴻⵍⴻⴽⵜ ⵜⴰⵎⴰⵣⵉⵖⵜ ና ⴼⵔⴰⵙⵉⵙⵜ",
     change_lang_to_en: "ⵙⴻⵍⴻⴽⵜ ⵜⴰⵎⴰⵣⵉⵖⵜ ና ⴰⵏⴳⵍⵉⵣⵉⵣ",
     change_lang_to_ar: "ⵙⴻⵍⴻⴽⵜ ⵜⴰⵎⴰⵣⵉⵖⵜ ና ⴰⵔⴰⴱⵉⵣⵜ",

@@ -24,6 +24,10 @@ export default function SettingsComponentP({ setRole }: { setRole: any}) {
           label={lang["change_lang_to_en"]}
         />
         <ButtonListItem
+          onPressE={() => updateLangTo("ar")}
+          label={lang["change_lang_to_ar"]}
+        />
+        <ButtonListItem
           onPressE={() => setRole((prev: 'CENTRAL' | 'PERIPHERAL') => (prev === 'CENTRAL' ? 'PERIPHERAL' : 'CENTRAL'))}
           label={lang["switch_roles"]}
         />

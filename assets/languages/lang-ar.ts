@@ -57,6 +57,8 @@ export const lang_ar = {
     select: "اختر",
     loading: "جارٍ التحميل...",
     receiving_from: "يتم الاستلام من",
+    waiting_for_data_reception: "في انتظار استلام البيانات...",
+
     change_lang_to_fr: "تغيير اللغة إلى الفرنسية",
     change_lang_to_en: "تغيير اللغة إلى الإنجليزية",
     change_lang_to_ar: "تغيير اللغة إلى العربية",

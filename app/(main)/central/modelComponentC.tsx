@@ -176,16 +176,18 @@ export default function ModelComponentC({ modelState, receivedData, address }: {
       <SimpleCard title={lang["model_info"]} >
         {(predictions && isDbBufferedR) ? <>
           {predictions.length != 0 && (predictions[0].map((prediction: any, index: any) => (
-            <ProbabilityItem key={index} itemKey={BEHAVIOR_MAPPING[index]} itemValue={prediction.toFixed(2) * 100} />
+            <ProbabilityItem key={index} itemKey={lang[BEHAVIOR_MAPPING[index]]} itemValue={prediction.toFixed(2) * 100} />
           )))}
-        </> : <>
-          <Tex>{`${lang["loading"]} ${dbReceptionProgress}`}</Tex>
-        </>}
-        <>
-          <Tex>{`${lang["receiving from"]} ${address}`}</Tex>
-          <Tex>{`${lang["processing_chunk"]} ${dbBuffer.length+streamBuffer.length}/10...`}</Tex>
+          <Tex>{`${lang["processing_chunk"]} ${dbBuffer.length + streamBuffer.length}/10...`}</Tex>
           {isPredicting && <Tex>{lang["making_a_prediction"]}</Tex>}
-        </>
+        </> : <>
+          {dbReceptionProgress ? <>
+            {address && <Tex>{`${lang["receiving_from"]} ${address}`}</Tex>}
+            <Tex>{`${lang["loading"]} ${dbReceptionProgress}`}</Tex>
+          </> : <>
+            <Tex>{lang["waiting_for_data_reception"]}</Tex>
+          </>}
+        </>}
       </SimpleCard>
     </>
   );
