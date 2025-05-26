@@ -52,5 +52,14 @@ export const lang_tif = {
 
     sensor_info: "ⴰⵙⵏⴼⴰⴼ ⵏ ⵜⴰⵣⵓⵍⵍⵉ",
     accelerometer: "ⴰⴽⵙⵍⵉⵔⵓⵎⴻⵜⵓⵔ",
-    gyroscope: "ⴳⵉⵔⵓⵙⴽⵓⵎ"
+    gyroscope: "ⴳⵉⵔⵓⵙⴽⵓⵎ",
+
+    select: "ⵙⴻⵍⴻⴽⵜ",
+    loading: "ⵉⴼⵓⵙⴰⵍ...",
+    receiving_from: "ⴰⵎⵉ ⵓⵏ ⴰⵏⵓⴽⴽⵓ",
+    change_lang_to_fr: "ⵙⴻⵍⴻⴽⵜ ⵜⴰⵎⴰⵣⵉⵖⵜ ና ⴼⵔⴰⵙⵉⵙⵜ",
+    change_lang_to_en: "ⵙⴻⵍⴻⴽⵜ ⵜⴰⵎⴰⵣⵉⵖⵜ ና ⴰⵏⴳⵍⵉⵣⵉⵣ",
+    change_lang_to_ar: "ⵙⴻⵍⴻⴽⵜ ⵜⴰⵎⴰⵣⵉⵖⵜ ና ⴰⵔⴰⴱⵉⵣⵜ",
+    change_lang_to_ch: "ⵙⴻⵍⴻⴽⵜ ⵜⴰⵎⴰⵣⵉⵖⵜ ና ⵛⵓⵏⵉⵣ",
+    change_lang_to_tif: "ⵙⴻⵍⴻⴽⵜ ⵜⴰⵎⴰⵣⵉⵖⵜ ና ⵜⵉⴼⵉⵏⴰⵖ",
 }

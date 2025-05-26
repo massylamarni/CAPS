@@ -54,5 +54,12 @@ export const lang_fr = {
     accelerometer: "Accéléromètre",
     gyroscope: "Gyroscope",
 
-    select: "Selectionner",
+    select: "Sélectionner",
+    loading: "Chargement...",
+    receiving_from: "Réception depuis",
+    change_lang_to_fr: "Changer la langue en français",
+    change_lang_to_en: "Changer la langue en anglais",
+    change_lang_to_ar: "Changer la langue en arabe",
+    change_lang_to_ch: "Changer la langue en chinois",
+    change_lang_to_tif: "Changer la langue en tamazight (tifinagh)",
 }

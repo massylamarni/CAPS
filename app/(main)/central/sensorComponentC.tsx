@@ -6,14 +6,15 @@ import styles from '@/assets/styles';
 import SimpleCard from '../mini-components/simpleCard';
 import SensorLineChart from '../mini-components/sensorLineChart';
 import { useLogs } from '@/utils/logContext';
+import { useLangs } from "@/utils/langContext";
 import { FREQUENCY, DRAWING_SEQUENCE_LENGTH } from '@/utils/constants';
-import { lang } from '@/assets/languages/lang-provider';
 import SimpleSubCard from '../mini-components/simpleSubcard';
 
 const TAG = "C/sensorComponent";
 
 export default function SensorComponentC({ sensorState, sensorSettings }: {sensorState: SensorStateP, sensorSettings:SensorViewSettingsP}) {
   const { addLog } = useLogs();
+  const { lang } = useLangs();
   
   const {
     sensorData,

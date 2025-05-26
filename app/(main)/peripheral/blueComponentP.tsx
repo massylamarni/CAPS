@@ -5,9 +5,9 @@ import { getAllSensorData, getLastRow } from '@/utils/sqlite_db_p';
 import SimpleCard from "../mini-components/simpleCard";
 import TextListItem from "../mini-components/textListItem";
 import { useLogs } from '@/utils/logContext';
-import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
+import { useLangs } from "@/utils/langContext";
+import { useStateLogger as useState } from '@/utils/useStateLogger';
 import { RECEIVE_BUFFER_SIZE } from "@/utils/constants";
-import { lang } from "@/assets/languages/lang-provider";
 
 const TAG = "P/blueComponent";
 
@@ -15,7 +15,9 @@ type StateChangeEvent = /*unresolved*/ any;
 
 export default function BlueComponentP({ blueState, sensorData }: { blueState: BlueStateP, sensorData: SensorStateP["sensorData"] }) {
   const [writeBuffer, setWriteBuffer] = useState([] as string[], "setWriteBuffer");
+  const [dbLength, setDbLength] = useState(0);
   const { addLog } = useLogs();
+  const { lang } = useLangs();
 
   const {
     arePermissionsGranted,
@@ -130,7 +132,10 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
     if (connectedDevice) {
       if (isDbBufferedS) {
         addLog(TAG, `Streaming data...`);
-        write(JSON.stringify(sensorData));
+        write(JSON.stringify({...sensorData,
+          id: dbLength + sendCount,
+          createdAt: Date.now(),
+        }));
       }
     }
     else if (isDbBufferedS) {
@@ -303,15 +308,16 @@ export default function BlueComponentP({ blueState, sensorData }: { blueState: B
 
   const exportDatabaseAsJson = async (_dbAnchor: number) => {
     addLog(TAG, `Exporting database...`);
-    const sensorData = await getAllSensorData(_dbAnchor);
+    const savedSensorData = await getAllSensorData(_dbAnchor);
+    setDbLength(savedSensorData.length);
 
     const smallMessage = JSON.stringify({
       header: {
-        dbLength: sensorData.length,
+        dbLength: savedSensorData.length,
       }
     });
     const largeMessage = JSON.stringify({
-      sensorData
+      savedSensorData
     });
 
     await write(smallMessage);

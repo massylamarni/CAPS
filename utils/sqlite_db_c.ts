@@ -13,7 +13,8 @@ export const initDatabase = async () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         mac TEXT UNIQUE NOT NULL,
         name TEXT,
-        createdAt INTEGER
+        createdAt INTEGER,
+        last_anchor_id INTEGER DEFAULT 0
     )`);
     await db.execAsync(
       `CREATE TABLE IF NOT EXISTS prediction_data (
@@ -60,13 +61,13 @@ const manageDeviceId = async (mac: string) => {
 };
 export const addPredictionData = async (data: DbPredictionInputC) => {
   try {
-    console.log(data);
     const deviceId = await manageDeviceId(data.mac);
     if (deviceId === -1) throw new Error('Device ID not found');
     await db.runAsync(
       'INSERT INTO prediction_data (predictionDateTime, xa, ya, za, xg, yg, zg, createdAt, predictedClass, confidence, device_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [Date.now(), data.xa, data.ya, data.za, data.xg, data.yg, data.zg, data.createdAt, data.predictedClass, data.confidence, deviceId]
     );
+    await setDeviceAnchor(data.mac, data.id);
   } catch (error) {
     console.error('Error saving data:', error);
   }
@@ -91,6 +92,30 @@ export const getLastRow = async () => {
   } catch (error) {
     console.error('Error fetching last row per device:', error);
     return [];
+  }
+};
+
+export const setDeviceAnchor = async (mac: string, anchorId: number) => {
+  try {
+    await db.runAsync(
+      'UPDATE devices SET last_anchor_id = ? WHERE mac = ?',
+      [anchorId, mac]
+    );
+  } catch (error) {
+    console.error('Error updating device anchor:', error);
+  }
+};
+
+export const getDeviceAnchor = async (mac: string): Promise<number> => {
+  try {
+    const result = await db.getFirstAsync<{ last_anchor_id: number }>(
+      'SELECT last_anchor_id FROM devices WHERE mac = ?',
+      [mac]
+    );
+    return result?.last_anchor_id ?? 0;
+  } catch (error) {
+    console.error('Error fetching device anchor:', error);
+    return 0;
   }
 };
 

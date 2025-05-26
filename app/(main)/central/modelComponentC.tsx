@@ -7,9 +7,9 @@ import { addPredictionData } from '@/utils/sqlite_db_c';
 import SimpleCard from '../mini-components/simpleCard';
 import ProbabilityItem from '../mini-components/probabilityItem';
 import { useLogs } from '@/utils/logContext';
+import { useLangs } from "@/utils/langContext";
 import { BEHAVIOR_MAPPING, MIN_A, MAX_A, MIN_G, MAX_G, INPUT_SEQUENCE_LENGTH } from '@/utils/constants';
-import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
-import { lang } from '@/assets/languages/lang-provider';
+import { useStateLogger as useState } from '@/utils/useStateLogger';
 
 const TAG = "C/modelComponent";
 
@@ -17,7 +17,9 @@ export default function ModelComponentC({ modelState, receivedData, address }: {
   const [streamBuffer, setStreamBuffer] = useState([] as any, "setStreamBuffer");
   const [dbBuffer, setDbBuffer] = useState([] as any, "setDbBuffer");
   const [receivedHeader, setReceivedHeader] = useState({ dbLength: null });
+  const [dbReceptionProgress, setDbReceptionProgress] = useState(0);
   const { addLog } = useLogs();
+  const { lang } = useLangs();
 
   const {
     model,
@@ -39,6 +41,29 @@ export default function ModelComponentC({ modelState, receivedData, address }: {
   useEffect(() => {
     chunkAndProcess();
   }, [receivedData]);
+
+  /* On header reception */
+  useEffect(() => {
+    if (receivedHeader.dbLength) {
+      const maxProgress = 100;
+      const estimatedTransferRate = 10;
+      const totalTime = (receivedHeader.dbLength / estimatedTransferRate) * 1000;
+      const updateInterval = 100; // ms
+      const step = maxProgress / (totalTime / updateInterval);
+
+      let current = 0;
+      const interval = setInterval(() => {
+        current += step;
+        if (current >= maxProgress) {
+          current = maxProgress;
+          clearInterval(interval);
+        }
+        setDbReceptionProgress(Math.round(current));
+      }, updateInterval);
+
+      return () => clearInterval(interval);
+    }
+  }, [receivedHeader]);
 
   const initModel = () => {
     loadModel();
@@ -149,16 +174,16 @@ export default function ModelComponentC({ modelState, receivedData, address }: {
   return (
     <>
       <SimpleCard title={lang["model_info"]} >
-        {predictions && <>
+        {(predictions && isDbBufferedR) ? <>
           {predictions.length != 0 && (predictions[0].map((prediction: any, index: any) => (
             <ProbabilityItem key={index} itemKey={BEHAVIOR_MAPPING[index]} itemValue={prediction.toFixed(2) * 100} />
           )))}
+        </> : <>
+          <Tex>{`${lang["loading"]} ${dbReceptionProgress}`}</Tex>
         </>}
         <>
-          <Tex>{isModelLoaded ? lang["model_loaded"] : lang["loading_model"]}</Tex>
+          <Tex>{`${lang["receiving from"]} ${address}`}</Tex>
           <Tex>{`${lang["processing_chunk"]} ${dbBuffer.length+streamBuffer.length}/10...`}</Tex>
-          {receivedHeader.dbLength && <Tex>{`Receiving database of lenght: ${receivedHeader.dbLength} from ${address}`}</Tex>}
-          {isDbBufferedR && <Tex>{lang["database_buffered"]}</Tex>}
           {isPredicting && <Tex>{lang["making_a_prediction"]}</Tex>}
         </>
       </SimpleCard>

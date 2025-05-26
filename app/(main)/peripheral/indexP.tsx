@@ -9,7 +9,7 @@ import DbComponentP from './dbComponentP';
 import HistoryComponentP from './historyComponentP';
 import SettingsComponentP from './settingsComponentP';
 import { useLogs } from '@/utils/logContext';
-import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
+import { useStateLogger as useState } from '@/utils/useStateLogger';
 
 const TAG = "P/index";
 

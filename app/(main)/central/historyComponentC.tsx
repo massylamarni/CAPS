@@ -8,9 +8,9 @@ import DbListItem from '../mini-components/dbListItem';
 import TextListItemSubCard from '../mini-components/textListItemSubCard';
 import HistoryBarChart from '../mini-components/historyBarChart';
 import { useLogs } from '@/utils/logContext';
+import { useLangs } from "@/utils/langContext";
 import { BEHAVIOR_MAPPING } from '@/utils/constants';
-import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
-import { lang } from '@/assets/languages/lang-provider';
+import { useStateLogger as useState } from '@/utils/useStateLogger';
 
 const TAG = "C/historyComponent";
 
@@ -18,6 +18,7 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
   const [barChartData, setBarChartData] = useState([0, 0, 0, 0, 0, 0] as HistoryBardChartData["data"], "setBarChartData");
   const [deviceId, setDeviceId] = useState(null);
   const { addLog } = useLogs();
+  const { lang } = useLangs();
   const getDefaultTimeRange = () => {
     const now = Date.now();
     return [now - (24 * 60 * 60 * 1000), now];

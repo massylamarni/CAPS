@@ -52,5 +52,14 @@ export const lang_ch = {
 
     sensor_info: "传感器信息",
     accelerometer: "加速度计",
-    gyroscope: "陀螺仪"
+    gyroscope: "陀螺仪",
+    
+    select: "选择",
+    loading: "加载中...",
+    receiving_from: "正在接收来自",
+    change_lang_to_fr: "切换语言为法语",
+    change_lang_to_en: "切换语言为英语",
+    change_lang_to_ar: "切换语言为阿拉伯语",
+    change_lang_to_ch: "切换语言为中文",
+    change_lang_to_tif: "切换语言为柏柏尔语（提芬纳格）",
 }

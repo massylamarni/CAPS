@@ -60,8 +60,8 @@ declare type HistoryStateC = {
   >;
 };
 declare type ModelStateC = {
-  model: tf.GraphModel | null;
-  setModel: React.Dispatch<React.SetStateAction<tf.GraphModel | null>>;
+  model: GraphModel | null;
+  setModel: React.Dispatch<React.SetStateAction<GraphModel | null>>;
   isModelLoaded: boolean;
   setIsModelLoaded: React.Dispatch<React.SetStateAction<boolean>>;
   isDbBufferedR: boolean;
@@ -190,7 +190,7 @@ declare type DbSensorOutputP = DualSensorData & {
   createdAt: number,
 }
 
-declare type DbPredictionInputC = Omit<DbSensorOutputP, "id"> & {
+declare type DbPredictionInputC = DbSensorOutputP & {
   predictedClass: number,
   confidence: number,
   mac: string,
@@ -207,6 +207,7 @@ declare type DbDeviceInputC = {
   mac: string;
   name?: string;
   createdAt: number;
+  lastAcnhorId?: number;
 }
 declare type DbDeviceOutputC = {
   id: number;
@@ -215,6 +216,6 @@ declare type DbDeviceOutputC = {
 }
 
 declare type ReceivedSensorDataC = DualSensorData & {
-  createdAt: number,
-  mac: string,
+  id: number,
+  createdAt: number
 }

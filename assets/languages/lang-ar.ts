@@ -52,5 +52,14 @@ export const lang_ar = {
 
     sensor_info: "معلومات المستشعر",
     accelerometer: "مقياس التسارع",
-    gyroscope: "جيروسكوب"
+    gyroscope: "جيروسكوب",
+    
+    select: "اختر",
+    loading: "جارٍ التحميل...",
+    receiving_from: "يتم الاستلام من",
+    change_lang_to_fr: "تغيير اللغة إلى الفرنسية",
+    change_lang_to_en: "تغيير اللغة إلى الإنجليزية",
+    change_lang_to_ar: "تغيير اللغة إلى العربية",
+    change_lang_to_ch: "تغيير اللغة إلى الصينية",
+    change_lang_to_tif: "تغيير اللغة إلى الأمازيغية (تيفيناغ)",
 }

@@ -4,14 +4,15 @@ import { View } from 'react-native';
 import SimpleCard from '../mini-components/simpleCard';
 import TextListItem from '../mini-components/textListItem';
 import { useLogs } from '@/utils/logContext';
-import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
-import { lang } from '@/assets/languages/lang-provider';
+import { useLangs } from "@/utils/langContext";
+import { useStateLogger as useState } from '@/utils/useStateLogger';
 
 const TAG = "P/dbComponent";
 
 export default function DbComponentP({ dbState, sensorData }: { dbState: DbStateP, sensorData: SensorStateP["sensorData"] }) {
   const  [sensorDataCount, setSensorDataCount] = useState(0, "setSensorDataCount");
   const { addLog } = useLogs();
+  const { lang } = useLangs();
 
   const {
     isDbConnected,

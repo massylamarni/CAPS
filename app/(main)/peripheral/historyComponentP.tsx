@@ -8,12 +8,13 @@ import DbListItem from '../mini-components/dbListItem';
 import TextListItemSubCard from '../mini-components/textListItemSubCard';
 import HistoryBarChart from '../mini-components/historyBarChart';
 import { useLogs } from '@/utils/logContext';
-import { lang } from '@/assets/languages/lang-provider';
+import { useLangs } from "@/utils/langContext";
 
 const TAG = "P/historyComponent";
 
 export default function HistoryComponentP({ historyState, dbStats }: { historyState: HistoryStateP, dbStats: DbStateP["dbStats"]}) {
   const { addLog } = useLogs();
+  const { lang } = useLangs();
   
   const {
     lastRow,

@@ -10,9 +10,9 @@ import DbComponentC from './dbComponentC';
 import HistoryComponentC from './historyComponentC';
 import { BluetoothDevice } from "react-native-bluetooth-classic";
 import { useLogs } from '@/utils/logContext';
-import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
+import { useLangs } from "@/utils/langContext";
+import { useStateLogger as useState } from '@/utils/useStateLogger';
 import { RECEIVE_BUFFER_SIZE } from '@/utils/constants';
-import { lang } from '@/assets/languages/lang-provider';
 
 
 const TAG = "C/index";
@@ -69,6 +69,7 @@ export default function IndexComponentC({ setRole }: {
     isSimulating: false,
   }, "setSettings");
   const { addLog } = useLogs();
+  const { lang } = useLangs();
 
   const blueState = {
     arePermissionsGranted,
@@ -154,7 +155,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0799,
             yg: 0.0884,
             zg: 0.1017,
-            device_id: 2
           },
           {
             id: 2,
@@ -165,7 +165,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0596,
             yg: -0.2700,
             zg: 0.0452,
-            device_id: 1
           },
           {
             id: 1,
@@ -176,7 +175,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0799,
             yg: 0.0884,
             zg: 0.1017,
-            device_id: 2
           },
           {
             id: 2,
@@ -187,7 +185,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0596,
             yg: -0.2700,
             zg: 0.0452,
-            device_id: 1
           },
           {
             id: 3,
@@ -198,7 +195,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0799,
             yg: 0.0884,
             zg: 0.1017,
-            device_id: 2
           },
           {
             id: 4,
@@ -209,7 +205,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0596,
             yg: -0.2700,
             zg: 0.0452,
-            device_id: 1
           },
           {
             id: 5,
@@ -220,7 +215,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0799,
             yg: 0.0884,
             zg: 0.1017,
-            device_id: 2
           },
           {
             id: 6,
@@ -231,7 +225,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0596,
             yg: -0.2700,
             zg: 0.0452,
-            device_id: 1
           },
           {
             id: 7,
@@ -242,7 +235,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0799,
             yg: 0.0884,
             zg: 0.1017,
-            device_id: 2
           },
           {
             id: 8,
@@ -253,7 +245,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0596,
             yg: -0.2700,
             zg: 0.0452,
-            device_id: 1
           },
           {
             id: 9,
@@ -264,7 +255,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0799,
             yg: 0.0884,
             zg: 0.1017,
-            device_id: 2
           },
           {
             id: 10,
@@ -275,7 +265,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0596,
             yg: -0.2700,
             zg: 0.0452,
-            device_id: 1
           },
           {
             id: 11,
@@ -286,7 +275,6 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0799,
             yg: 0.0884,
             zg: 0.1017,
-            device_id: 2
           },
           {
             id: 12,
@@ -297,13 +285,12 @@ export default function IndexComponentC({ setRole }: {
             xg: -0.0596,
             yg: -0.2700,
             zg: 0.0452,
-            device_id: 1
           }
         ],
       };
       const syntheticData = {...sensorState.sensorData,
+        id: receiveCount+1,
         createdAt: Date.now(),
-        mac: 'MAC',
       };
       if (isDbBufferedSS) {
         setReceivedData((prev: any) => (prev ? [...prev.slice(-(RECEIVE_BUFFER_SIZE-1)), JSON.stringify(syntheticData)] : [JSON.stringify(syntheticData)]));

@@ -1,15 +1,15 @@
 import RNBluetoothClassic, { BluetoothDevice, BluetoothDeviceEvent } from "react-native-bluetooth-classic";
 import React, { useEffect, useRef } from 'react';
 import { PermissionsAndroid, View, Platform } from 'react-native';
-import { getLastRow } from '@/utils/sqlite_db_c';
+import { getDeviceAnchor, getLastRow } from '@/utils/sqlite_db_c';
 import SimpleCard from "../mini-components/simpleCard";
 import TextListItem from "../mini-components/textListItem";
 import SimpleSubCard from "../mini-components/simpleSubcard";
 import TextListItemSubCard from "../mini-components/textListItemSubCard";
 import { useLogs } from '@/utils/logContext';
-import { useStateLogger as useState } from '@/app/(main)/useStateLogger';
+import { useLangs } from "@/utils/langContext";
+import { useStateLogger as useState } from '@/utils/useStateLogger';
 import { RECEIVE_BUFFER_SIZE } from "@/utils/constants";
-import { lang } from "@/assets/languages/lang-provider";
 import styles from "@/assets/styles";
 
 const TAG = "C/blueComponent";
@@ -20,6 +20,7 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
   const [writeBuffer, setWriteBuffer] = useState([] as string[], "setWriteBuffer");
   const [processingDevice, setProcessingDevice] = useState(null as string | null, "setProcessingDevice");
   const { addLog } = useLogs();
+  const { lang } = useLangs();
 
   const {
     arePermissionsGranted,
@@ -101,8 +102,8 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
     const onReceivedDataSub = connectedDevice?.onDataReceived((receivedData: any) => {
       if ((receivedData.data && receivedData.data !== "")) {
         addLog(TAG, `Received message with length: ${receivedData.data.length} !`);
-        setReceivedData((prev) => (prev ? [...prev.slice(-(RECEIVE_BUFFER_SIZE-1)), receivedData.data] : [receivedData.data]));
-        setReceiveCount((prev) => (prev+1));
+        setReceivedData((prev: any) => (prev ? [...prev.slice(-(RECEIVE_BUFFER_SIZE-1)), receivedData.data] : [receivedData.data]));
+        setReceiveCount((prev: any) => (prev+1));
       }
     });
     
@@ -289,23 +290,9 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
   const sendDbAnchor = async () => {
     if (!receivedData || receivedData.length === 0) {
       addLog(TAG, `Sending dbAnchor...`);
-      const message = JSON.stringify(0);
-      write(message);
+      const dbAnchor = await getDeviceAnchor(connectedDevice?.address ?? 'MAC');
+      write(JSON.stringify(dbAnchor));
     }
-    /*
-    const lastRow = await getLastRow();
-    if (lastRow.length !== 0) {  // Needs rework (Save anchor in database and exchange it with peripheral)
-      const most_recent_row = lastRow.reduce((latest, current) =>
-        current.createdAt > latest.createdAt ? current : latest
-      );
-
-      const message = JSON.stringify(most_recent_row.id);
-      write(message);
-    } else {
-      const message = JSON.stringify(0);
-      write(message);
-    }
-    */
   };
 
   return (

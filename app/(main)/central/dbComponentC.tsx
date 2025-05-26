@@ -4,12 +4,13 @@ import { View } from 'react-native';
 import SimpleCard from '../mini-components/simpleCard';
 import TextListItem from '../mini-components/textListItem';
 import { useLogs } from '@/utils/logContext';
-import { lang } from '@/assets/languages/lang-provider';
+import { useLangs } from "@/utils/langContext";
 
 const TAG = "C/dbComponent";
 
 export default function DbComponentC({ dbState, predictions }: { dbState: DbStateC, predictions: ModelStateC["predictions"] }) {
   const { addLog } = useLogs();
+    const { lang } = useLangs();
 
   const {
     isDbConnected,

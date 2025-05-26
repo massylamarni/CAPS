@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 
+const LOG_BUFFER_SIZE = 100;
+
 type LogContextType = {
   logs: string[];
   addLog: (tag:string, message: string) => void;
@@ -20,7 +22,7 @@ export const LogProvider = ({ children }: { children: React.ReactNode }) => {
   console.log(logs[logs.length-1]);
 
   const addLog = (tag: string, message: string) => {
-    setLogs(prev => [...prev, `[${tag}] ${message}`]);
+    setLogs(prev => [...prev.slice(-(LOG_BUFFER_SIZE-1)), `[${tag}] ${message}`]);
   };
 
   return (
