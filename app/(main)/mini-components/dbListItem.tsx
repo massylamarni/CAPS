@@ -9,7 +9,7 @@ export default function DbListItem({ entryName, children, onPressE = null }: { e
   const { lang } = useLangs();
   
   return(
-    <SimpleSubCard title={entryName} onPressE={onPressE} potentialValue={lang["select"]}>
+    <SimpleSubCard title={entryName} onPressE={onPressE} potentialValue={onPressE ? lang["select"] : ''}>
       {children}
     </SimpleSubCard>
   )
