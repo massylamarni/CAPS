@@ -165,9 +165,10 @@ export default function ModelComponentC({ modelState, receivedData, address }: {
         output.dispose();
       }
       inputTensor.dispose();
-      setIsPredicting(false);
     } catch (error) {
       addLog(TAG, `${error}`);
+    } finally {
+      setIsPredicting(false);
     }
   };
 
@@ -183,7 +184,7 @@ export default function ModelComponentC({ modelState, receivedData, address }: {
         </> : <>
           {dbReceptionProgress ? <>
             {address && <Tex>{`${lang["receiving_from"]} ${address}`}</Tex>}
-            <Tex>{`${lang["loading"]} ${dbReceptionProgress}`}</Tex>
+            <Tex>{`${lang["loading"]} ${dbReceptionProgress}%`}</Tex>
           </> : <>
             <Tex>{lang["waiting_for_data_reception"]}</Tex>
           </>}

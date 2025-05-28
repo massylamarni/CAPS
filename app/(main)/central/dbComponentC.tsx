@@ -47,6 +47,8 @@ export default function DbComponentC({ dbState, predictions }: { dbState: DbStat
         last_read: Date.now(),
         last_row: most_recent_row,
         row_count: row_count_sum,
+        last_row_specific: lastRow,
+        row_count_specific: rowCount
       });
     };
   };

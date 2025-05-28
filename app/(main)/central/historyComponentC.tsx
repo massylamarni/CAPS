@@ -76,7 +76,7 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
         {(lastRow && lastRow.length !== 0) ? (lastRow.map((entry, index) => (
           <DbListItem key={index} onPressE={() => {setDeviceId(entry.device_id)}} entryName={`${lang["cattle"]} ${entry.device_id}`}>
             <TextListItemSubCard itemKey={`${lang["created_at"]}:`} itemValue={new Date(entry.createdAt).toLocaleString()} />
-            <TextListItemSubCard itemKey={`${lang["recorded"]}:`} itemValue={dbStats.row_count} />
+            <TextListItemSubCard itemKey={`${lang["recorded"]}:`} itemValue={dbStats.row_count_specific[index].count} />
           </DbListItem>
         ))) : <Tex>{lang["no_entries_to_show"]}</Tex>}
       </SimpleCard>

@@ -36,12 +36,16 @@ declare type DbStateC = {
     last_read: number;
     last_row: DbPredictionOutputC | null;
     row_count: number;
+    last_row_specific: DbPredictionOutputC[] | null;
+    row_count_specific: { device_id: number; count: number; }[]
   };
   setDbStats: React.Dispatch<
     React.SetStateAction<{
       last_read: number;
       last_row: DbPredictionOutputC | null;
       row_count: number;
+      last_row_specific: DbPredictionOutputC[] | null;
+      row_count_specific: { device_id: number; count: number; }[]
     }>
   >;
 };

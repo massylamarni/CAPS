@@ -172,9 +172,10 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
       const unpairedDevices_ = await RNBluetoothClassic.startDiscovery();
       setUnpairedDevices(unpairedDevices_);
       addLog(TAG, `Found ${unpairedDevices_.length} devices.`);
-      setIsDiscovering(false);
     } catch (error) {
       addLog(TAG, `${error}`);
+    } finally {
+      setIsDiscovering(false);
     }
   }
   const cancelDiscovery = async () => {
@@ -194,9 +195,10 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
       const connectedDevice_ = await RNBluetoothClassic.accept({});
       addLog(TAG, `Accepting success !`);
       setConnectedDevice(connectedDevice_);
-      setIsAccepting(false);
     } catch (error) {
       addLog(TAG, `${error}`);
+    } finally {
+      setIsAccepting(false);
     }
   }
   const cancelAcceptConnections = async () => {
@@ -237,9 +239,10 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
         setConnectedDevice(_device);
         addLog(TAG, `Connection success !`);
       }
-      setIsConnecting(false);
     } catch (error) {
       addLog(TAG, `${error}`);
+    } finally {
+      setIsConnecting(false);
     }
   }
   const disconnect = async () => {
@@ -250,9 +253,10 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
         setConnectedDevice(null);
         addLog(TAG, `Disconnect success !`);
       }
-      setIsDisconnecting(false);
     } catch (error) {
       addLog(TAG, `${error}`);
+    } finally {
+      setIsDisconnecting(false);
     }
   }
   const unpairDevice = async (deviceAddr: string) => {
@@ -260,9 +264,10 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
       setIsUnpairing(true);
       const unpairedDevice_ = await RNBluetoothClassic.unpairDevice(deviceAddr);
       addLog(TAG, `Unpair success !`);
-      setIsUnpairing(false);
     } catch (error) {
       addLog(TAG, `${error}`);
+    } finally {
+      setIsUnpairing(false);
     }
   }
 
@@ -281,9 +286,10 @@ export default function BlueComponentC({ blueState }: { blueState: BlueStateC })
       addLog(TAG, `Writing message with length: ${message.length} !`);
       const writeStatus = await connectedDevice?.write(`${message}\n`);
       if (writeStatus) addLog(TAG, `Write success !`);
-      setIsWriting(false);
     } catch (error) {
       addLog(TAG, `${error}`);
+    } finally {
+      setIsWriting(false);
     }
   }
 
