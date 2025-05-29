@@ -58,8 +58,8 @@ export default function DbComponentC({ dbState, predictions }: { dbState: DbStat
       <SimpleCard title={lang["database_info"]}>
         <View>
           <TextListItem itemKey={lang["status"]} itemValue={isDbConnected ? lang["connected"] : lang["disconnected"]} />
-          <TextListItem itemKey={lang["last_read"]} itemValue={new Date(dbStats?.last_read).toLocaleString()} />
-          <TextListItem itemKey={lang["last_write"]} itemValue={new Date(dbStats?.last_row?.createdAt ?? 0).toLocaleString()} />
+          <TextListItem itemKey={lang["last_read"]} itemValue={dbStats?.last_read ? new Date(dbStats.last_read).toLocaleString() : "?"} />
+          <TextListItem itemKey={lang["last_write"]} itemValue={dbStats?.last_row?.createdAt ? new Date(dbStats.last_row.createdAt).toLocaleString() : "?"} />
           <TextListItem itemKey={lang["row_count"]} itemValue={dbStats?.row_count} />
         </View>
       </SimpleCard>
