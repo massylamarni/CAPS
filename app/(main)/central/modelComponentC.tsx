@@ -16,8 +16,8 @@ const TAG = "C/modelComponent";
 export default function ModelComponentC({ modelState, receivedData, address }: { modelState: ModelStateC, receivedData: BlueStateC["receivedData"], address: 'string' | undefined}) {
   const [streamBuffer, setStreamBuffer] = useState([] as any, "setStreamBuffer");
   const [dbBuffer, setDbBuffer] = useState([] as any, "setDbBuffer");
-  const [receivedHeader, setReceivedHeader] = useState({ dbLength: null });
-  const [dbReceptionProgress, setDbReceptionProgress] = useState(0);
+  const [receivedHeader, setReceivedHeader] = useState({ dbLength: null }, "setReceivedHeader");
+  const [dbReceptionProgress, setDbReceptionProgress] = useState(0, "setDbReceptionProgress");
   const { addLog } = useLogs();
   const { lang } = useLangs();
 
@@ -46,7 +46,7 @@ export default function ModelComponentC({ modelState, receivedData, address }: {
   useEffect(() => {
     if (receivedHeader.dbLength) {
       const maxProgress = 100;
-      const estimatedTransferRate = 10;
+      const estimatedTransferRate = 100;
       const totalTime = (receivedHeader.dbLength / estimatedTransferRate) * 1000;
       const updateInterval = 100; // ms
       const step = maxProgress / (totalTime / updateInterval);
@@ -89,12 +89,14 @@ export default function ModelComponentC({ modelState, receivedData, address }: {
       const receivedData_ = receivedData;
       if (receivedData_ && receivedData_[receivedData_.length-1]) {
         const data = JSON.parse(receivedData_[receivedData_.length-1]);
+
         if (data.header) {
+          addLog(TAG, `Header received !`);
           setReceivedHeader(data.header);
         }
-        else if (data.sensorData) {
+        else if (data.savedSensorData) {
           addLog(TAG, `Chunking received database...`);
-          const dbData = data.sensorData;
+          const dbData = data.savedSensorData;
           let dbBuffer_ = [...dbBuffer];
           dbData.forEach((entry: any) => {
             if (dbBuffer_.length < INPUT_SEQUENCE_LENGTH) {
@@ -157,7 +159,7 @@ export default function ModelComponentC({ modelState, receivedData, address }: {
       const confidence = Math.max(...prediction_[0]);
       const predictedClass = prediction_[0].indexOf(confidence);
       addLog(TAG, `Saving prediction...`);
-      addPredictionData({...rawEntry, mac: address ?? 'MAC', confidence: confidence, predictedClass: predictedClass});
+      addPredictionData({...rawEntry, mac: address ?? 'MAC__', confidence: confidence, predictedClass: predictedClass});
 
       if (Array.isArray(output)) {
         output.forEach(t => t.dispose());

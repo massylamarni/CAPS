@@ -4,7 +4,7 @@ export function useStateLogger(initialValue: any, name = "Unknown state") {
   const [state, setState] = useState(initialValue);
 
   useEffect(() => {
-    //console.log(`${name} was updated to:`, state);
+    // console.log(`${name} was updated to:`, state);
   }, [state]);
 
   return [state, setState];
