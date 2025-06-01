@@ -64,4 +64,13 @@ export const lang_fr = {
     change_lang_to_ar: "Changer la langue en arabe",
     change_lang_to_ch: "Changer la langue en chinois",
     change_lang_to_tif: "Changer la langue en tamazight (tifinagh)",
+
+    predicted_behavior_count_by_cattle: "Nombre de comportements prédits par bovin",
+    since_the_past_24: "Depuis les dernières 24h",
+    since_last_week: "Depuis la semaine dernière",
+    since_last_month: "Depuis le mois dernier",
+    this_year: "Cette année",
+    since_always: "Depuis toujours",
+    from: "De",
+    to: "À"
 }

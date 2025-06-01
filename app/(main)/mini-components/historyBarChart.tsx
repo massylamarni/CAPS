@@ -19,7 +19,7 @@ export default function HistoryBarChart({ barChartData }: { barChartData: Histor
   }));
 
   return(
-    <SimpleSubCard title='Nombre total de comportements enregistés'>
+    <SimpleSubCard title={`${lang["predicted_behavior_count_by_cattle"]} (${lang["since_the_past_24"]})`}>
         <BarChart
           data={formattedData}
           frontColor="#fff"

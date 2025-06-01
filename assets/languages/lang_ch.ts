@@ -64,4 +64,13 @@ export const lang_ch = {
     change_lang_to_ar: "切换语言为阿拉伯语",
     change_lang_to_ch: "切换语言为中文",
     change_lang_to_tif: "切换语言为柏柏尔语（提芬纳格）",
+
+    predicted_behavior_count_by_cattle: "按牛只预测的行为次数",
+    since_the_past_24: "过去24小时内",
+    since_last_week: "自上周以来",
+    since_last_month: "自上月以来",
+    this_year: "今年",
+    since_always: "自始至终",
+    from: "从",
+    to: "到"
 }

@@ -64,4 +64,13 @@ export const lang_ar = {
     change_lang_to_ar: "تغيير اللغة إلى العربية",
     change_lang_to_ch: "تغيير اللغة إلى الصينية",
     change_lang_to_tif: "تغيير اللغة إلى الأمازيغية (تيفيناغ)",
+
+    predicted_behavior_count_by_cattle: "عدد السلوكيات المتوقعة لكل بقرة",
+    since_the_past_24: "منذ آخر 24 ساعة",
+    since_last_week: "منذ الأسبوع الماضي",
+    since_last_month: "منذ الشهر الماضي",
+    this_year: "هذا العام",
+    since_always: "منذ البداية",
+    from: "من",
+    to: "إلى"
 }

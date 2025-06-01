@@ -65,4 +65,12 @@ export const lang_en = {
     change_lang_to_ch: "Change language to chinese",
     change_lang_to_tif: "Change language to tamazight (tifinagh)",
 
+    predicted_behavior_count_by_cattle: "Predicted behavior count by cattle",
+    since_the_past_24: "Since the past 24h",
+    since_last_week: "Since last week",
+    since_last_month: "Since last month",
+    this_year: "This year",
+    since_always: "Since always",
+    from: "From",
+    to: "To",
 }

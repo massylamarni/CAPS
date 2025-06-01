@@ -124,7 +124,7 @@ export default function IndexComponentP({ setRole }: {
             <HistoryComponentP historyState={historyState} dbStats={dbState.dbStats} />
           </View>
           <View style={[styles.VIEW, pageIndex !== 2 && styles.HIDDEN]}>
-            <SettingsComponentP setRole={setRole} />
+            <SettingsComponentP setRole={setRole} setDbStats={dbState.setDbStats} />
           </View>
         </ScrollView>
         <View style={styles.navbar}>

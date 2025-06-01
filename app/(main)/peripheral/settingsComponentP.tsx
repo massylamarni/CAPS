@@ -8,7 +8,7 @@ import SimpleCard from '../mini-components/simpleCard';
 
 const TAG = "P/settingsComponent";
 
-export default function SettingsComponentP({ setRole }: { setRole: any}) {
+export default function SettingsComponentP({ setRole, setDbStats }: { setRole: any, setDbStats: any}) {
   const { logs, addLog } = useLogs();
   const { lang, updateLangTo } = useLangs();
   
@@ -32,7 +32,14 @@ export default function SettingsComponentP({ setRole }: { setRole: any}) {
           label={lang["switch_roles"]}
         />
         <ButtonListItem
-          onPressE={() => resetDatabase()}
+          onPressE={() => {
+            resetDatabase();
+            setDbStats({
+              last_read: 0,
+              last_row: null,
+              row_count: 0,
+            });
+          }}
           label={lang["reset_database"]}
         />
       </SimpleCard>

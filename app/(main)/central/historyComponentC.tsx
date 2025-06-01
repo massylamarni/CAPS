@@ -37,20 +37,25 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
     if (deviceId) {
       const [startTime, endTime] = getDefaultTimeRange();
       const _predictionStats = await getPredictionStats(startTime, endTime);
+      let found = false;
       _predictionStats.forEach(_predictionStat => {
         if (_predictionStat.device_id === deviceId) {
           setPredictionStats(_predictionStat.stats);
+          found = true;
         }
       });
+      if (!found) {
+        setPredictionStats([]);
+      }
     }
   };
 
   useEffect(() => {
     updateHistory();
-  }, [dbStats]);
+  }, [dbStats, deviceId]);
 
   useEffect(() => {
-    if (predictionStats && predictionStats.length !== 0) {
+    if (predictionStats) {
       addLog(TAG, `Got prediction stats with length: ${predictionStats.length} !`);
       const barChartData_ = [0, 0, 0, 0, 0, 0] as HistoryBardChartData["data"];
       BEHAVIOR_MAPPING.forEach((behavior, behaviorIndex) => {

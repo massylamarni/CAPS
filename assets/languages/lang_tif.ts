@@ -64,4 +64,13 @@ export const lang_tif = {
     change_lang_to_ar: "ⵙⴻⵍⴻⴽⵜ ⵜⴰⵎⴰⵣⵉⵖⵜ ና ⴰⵔⴰⴱⵉⵣⵜ",
     change_lang_to_ch: "ⵙⴻⵍⴻⴽⵜ ⵜⴰⵎⴰⵣⵉⵖⵜ ና ⵛⵓⵏⵉⵣ",
     change_lang_to_tif: "ⵙⴻⵍⴻⴽⵜ ⵜⴰⵎⴰⵣⵉⵖⵜ ና ⵜⵉⴼⵉⵏⴰⵖ",
+
+    predicted_behavior_count_by_cattle: "ⴰⵙⵉⴷⵉ ⵏ ⵉⵖⵔⵉ ⵏ ⵙⵙⵓⵙ ⵏ ⴰⵎⵓⵔ",
+    since_the_past_24: "ⴰⵣⵡⵉⵍ ⵏ 24 ⵀ",
+    since_last_week: "ⴰⵣⵡⵉⵍ ⵏ ⵉⵎⴰⴽⵓⵙ ⴰⴷⴷⵓⴷ",
+    since_last_month: "ⴰⵣⵡⵉⵍ ⵏ ⵉⵔⵉ ⴰⴷⴷⵓⴷ",
+    this_year: "ⴰⵙⵉⴷ ⴰⵙⵙ",
+    since_always: "ⴰⵣⵡⵉⵍ ⴰⴷⴷⵓⴷ",
+    from: "ⴷ",
+    to: "ⵏ"
 }

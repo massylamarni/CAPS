@@ -9,7 +9,7 @@ import styles from '@/assets/styles';
 
 const TAG = "C/settingsComponent";
 
-export default function SettingsComponentC({ setSettings, setRole }: { setSettings: any, setRole: any }) {
+export default function SettingsComponentC({ setSettings, setRole, setDbStats }: { setSettings: any, setRole: any, setDbStats: any }) {
   const { logs, addLog } = useLogs();
   const { lang, updateLangTo } = useLangs();
 
@@ -37,7 +37,14 @@ export default function SettingsComponentC({ setSettings, setRole }: { setSettin
           label={lang["switch_roles"]}
         />
         <ButtonListItem
-          onPressE={() => resetDatabase()}
+          onPressE={() => {
+            resetDatabase();
+            setDbStats({
+              last_read: 0,
+              last_row: null,
+              row_count: 0,
+            });
+          }}
           label={lang["reset_database"]}
         />
       </SimpleCard>
