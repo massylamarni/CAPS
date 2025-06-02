@@ -33,6 +33,10 @@ export default function SettingsComponentC({ setSettings, setRole, setDbStats }:
           label={lang["simulate_data_reception"]}
         />
         <ButtonListItem
+          onPressE={() => setSettings((prev: any) => ({...prev, isFModel: !prev.isFModel }))}
+          label={"Change language to chinese"}
+        />
+        <ButtonListItem
           onPressE={() => setRole((prev: 'CENTRAL' | 'PERIPHERAL') => (prev === 'CENTRAL' ? 'PERIPHERAL' : 'CENTRAL'))}
           label={lang["switch_roles"]}
         />

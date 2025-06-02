@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+  const socket = new WebSocket('ws://192.168.1.24:8080');
+  let sendInterval = null;
+  let lastPredictedClass = null;
+  
+  function predict(predictedClassIndex, baseConfidence = 0.5) {
+    const probs = new Array(6).fill(0);
+    const classSimilarity = {
+      0: [2],
+      1: [3],
+      2: [0],
+      3: [1],
+      4: [5],
+      5: [4],
+    };
+
+    // Slight variation in current prediction confidence
+    const currentConf = +(baseConfidence + (Math.random() - 0.5) * 0.04).toFixed(3);
+    probs[predictedClassIndex] = Math.min(currentConf, 0.95);
+
+    let remaining = 1 - currentConf;
+
+    // Assign 30–50% of the currentConf to last predicted class if different
+    let carryOverConf = 0;
+    if (lastPredictedClass !== null && lastPredictedClass !== predictedClassIndex) {
+      carryOverConf = +(Math.random() * 0.2 + 0.3 * currentConf).toFixed(3); // 30–50%
+      probs[lastPredictedClass] = carryOverConf;
+      remaining -= carryOverConf;
+    }
+
+    // Assign remaining to similar and other classes
+    const similarClasses = classSimilarity[predictedClassIndex] || [];
+    const otherClasses = probs.map((_, i) => i)
+      .filter(i => i !== predictedClassIndex && i !== lastPredictedClass && !similarClasses.includes(i));
+
+    // Random distribution to similar classes
+    let simTotal = 0;
+    similarClasses.forEach(i => {
+      const val = +(Math.random() * remaining * 0.7 / similarClasses.length).toFixed(3);
+      probs[i] = val;
+      simTotal += val;
+    });
+
+    // Random distribution to other classes
+    let otherTotal = 0;
+    otherClasses.forEach(i => {
+      const val = +(Math.random() * remaining * 0.3 / otherClasses.length).toFixed(3);
+      probs[i] = val;
+      otherTotal += val;
+    });
+
+    // Normalize remainder
+    const used = probs.reduce((a, b) => a + b, 0);
+    const diff = +(1 - used).toFixed(3);
+    probs[predictedClassIndex] = +(probs[predictedClassIndex] + diff).toFixed(3);
+
+    // Update last prediction
+    lastPredictedClass = predictedClassIndex;
+
+    return probs;
+  }
+
+  function sendMessage(predictedClass) {
+    if (sendInterval) clearInterval(sendInterval);
+    sendInterval = setInterval(() => {
+      const message = JSON.stringify(predict(predictedClass));
+      socket.send(message);
+    }, 2000);
+  }
+</script>
+
+<button onclick="sendMessage(0)"> grazing </button>
+<button onclick="sendMessage(1)"> standing </button>
+<button onclick="sendMessage(2)"> walking </button>
+<button onclick="sendMessage(3)"> resting </button>
+<button onclick="sendMessage(4)"> scratching </button>
+<button onclick="sendMessage(5)"> licking </button>
+
+</body>
+</html>

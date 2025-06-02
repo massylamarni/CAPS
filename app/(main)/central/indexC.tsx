@@ -13,6 +13,7 @@ import { useLogs } from '@/utils/logContext';
 import { useLangs } from "@/utils/langContext";
 import { useStateLogger as useState } from '@/utils/useStateLogger';
 import { RECEIVE_BUFFER_SIZE } from '@/utils/constants';
+import FmodelComponentC from './fmodelComponentC';
 
 
 const TAG = "C/index";
@@ -67,6 +68,7 @@ export default function IndexComponentC({ setRole }: {
   const [isDbBufferedSS, setIsDbBufferedSS] = useState(false, "setIsDbBufferedSS");
   const [settings, setSettings] = useState({
     isSimulating: false,
+    isFModel: false,
   }, "setSettings");
   const { addLog } = useLogs();
   const { lang } = useLangs();
@@ -145,7 +147,7 @@ export default function IndexComponentC({ setRole }: {
   useEffect(() => {
     if (settings.isSimulating) {
       const syntheticDb = {
-        sensorData: [
+        savedSensorData: [
           {
             id: 1,
             createdAt: 1747259742546,
@@ -309,7 +311,8 @@ export default function IndexComponentC({ setRole }: {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={[styles.VIEW, pageIndex !== 0 && styles.HIDDEN]}>
             <BlueComponentC blueState={blueState} />
-            <ModelComponentC modelState={modelState} receivedData={blueState.receivedData} address={blueState.connectedDevice?.address} />
+            {!settings.isFModel && <ModelComponentC modelState={modelState} receivedData={blueState.receivedData} address={blueState.connectedDevice?.address} />}
+            {settings.isFModel && <FmodelComponentC modelState={modelState} receivedData={blueState.receivedData} address={blueState.connectedDevice?.address} />}
             {settings.isSimulating && <SensorComponentC sensorState={sensorState} sensorSettings={{show_title: true, show_coord: true}} />}
             <DbComponentC dbState={dbState} predictions={modelState.predictions} />
           </View>
