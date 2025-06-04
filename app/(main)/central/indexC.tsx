@@ -145,7 +145,7 @@ export default function IndexComponentC({ setRole }: {
   useEffect(() => {
     if (settings.isSimulating) {
       const syntheticDb = {
-        sensorData: [
+        savedSensorData: [
           {
             id: 1,
             createdAt: 1747259742546,
