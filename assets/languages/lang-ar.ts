@@ -72,5 +72,17 @@ export const lang_ar = {
     this_year: "هذا العام",
     since_always: "منذ البداية",
     from: "من",
-    to: "إلى"
+    to: "إلى",
+
+    change_language: "تغيير اللغة",
+    french: "الفرنسية",
+    arabic: "العربية",
+    english: "الإنجليزية",
+    chinese: "الصينية",
+    tamazight_tifinagh: "الأمازيغية (تيفيناغ)",
+    do_you_want_to_proceed: "هل تريد المتابعة؟",
+    cancel: "إلغاء",
+    continue: "متابعة",
+    you_are_about_to_reset_the_database: "أنت على وشك إعادة تعيين قاعدة البيانات",
+    you_are_about_to_change_roles: "أنت على وشك تغيير الأدوار"
 }

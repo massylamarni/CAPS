@@ -72,5 +72,17 @@ export const lang_ch = {
     this_year: "今年",
     since_always: "自始至终",
     from: "从",
-    to: "到"
+    to: "到",
+
+    change_language: "更改语言",
+    french: "法语",
+    arabic: "阿拉伯语",
+    english: "英语",
+    chinese: "中文",
+    tamazight_tifinagh: "塔马齐格特语（提非纳字母）",
+    do_you_want_to_proceed: "您想继续吗？",
+    cancel: "取消",
+    continue: "继续",
+    you_are_about_to_reset_the_database: "您即将重置数据库",
+    you_are_about_to_change_roles: "您即将更改角色"
 }

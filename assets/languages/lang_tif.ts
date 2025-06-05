@@ -72,5 +72,17 @@ export const lang_tif = {
     this_year: "ⴰⵙⵉⴷ ⴰⵙⵙ",
     since_always: "ⴰⵣⵡⵉⵍ ⴰⴷⴷⵓⴷ",
     from: "ⴷ",
-    to: "ⵏ"
+    to: "ⵏ",
+
+    change_language: "ⵙⵉⴳ ⵜⴰⵎⴰⵣⵉⵖⵜ",
+    french: "ⴼⵔⴻⵏⵙⵉⵙ",
+    arabic: "ⴰⵄⵔⴰⴱⵉⵢⴰ",
+    english: "ⵉⵏⴳⵍⵉⵙ",
+    chinese: "ⴰⵛⵉⵏⵉⵙ",
+    tamazight_tifinagh: "ⵜⴰⵎⴰⵣⵉⵖⵜ (ⵜⵉⴼⵉⵏⴰⵖ)",
+    do_you_want_to_proceed: "ⴰⵣⵓⵍ ⵏⵓ ⵓⵙⵎⴰⵙⴷ ؟",
+    cancel: "ⴰⵎⵍⵍⵉⵍ",
+    continue: "ⵙⵎⴰⵙⴷ",
+    you_are_about_to_reset_the_database: "ⴰⵙⵉⵏⵉⴷ ⴰⵏⴰⵢ ⵢⴰⵏ ⵓⵙⴻⴷⵔⵉ ⴰⴳⴰⴷ ⴱⴷⴰⵙ",
+    you_are_about_to_change_roles: "ⴰⵙⵉⵏⵉⴷ ⴰⵏⴰⵢ ⵢⴰⵏ ⵓⵙⵏⴰⵢⵍ ⵜⵓⵙⵙⴰ"
 }

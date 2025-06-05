@@ -73,4 +73,17 @@ export const lang_en = {
     since_always: "Since always",
     from: "From",
     to: "To",
+
+    change_language: "Change language",
+    french: "French",
+    arabic: "Arabic",
+    english: "English",
+    chinese: "Chinese",
+    tamazight_tifinagh: "Tamazight (Tifinagh)",
+    do_you_want_to_proceed: "Do you want to proceed ?",
+    cancel: "Cencel",
+    continue: "Continue",
+    you_are_about_to_reset_the_database: "You are about to reset the database",
+    you_are_about_to_change_roles: "You are about to change roles"
+
 }

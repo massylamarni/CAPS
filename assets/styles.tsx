@@ -227,6 +227,59 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  }
+  },
+  collapsibleButtonItem: {
+    height: 35,
+    width: '100%',
+    paddingLeft: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  /* Confirm */
+  confirmView: {
+    position: 'absolute',
+    width: '110%',
+    height: '115%',
+    backgroundColor: '#00000090',
+    zIndex: 99,
+  },
+  confirmViewWrapper: {
+    alignSelf: 'center',
+    top: '50%',
+    transform: [
+      { translateY: '-50%' },
+    ],
+    borderRadius: themeI.borderRadius.md,
+    overflow: 'hidden',
+  },
+  confirmViewContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 80,
+    minWidth: 200,
+    padding: themeI.padding.lg,
+    backgroundColor: themeI.backgroundColors.component,
+  },
+  horizontalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignContent: 'center',
+    padding: themeI.padding.md,
+    backgroundColor: themeI.backgroundColors.componentTitle,
+  },
+  buttonSecondary: {
+    paddingHorizontal: themeI.padding.md,
+    paddingVertical: themeI.padding.sm,
+    borderRadius: themeI.borderRadius.md,
+    backgroundColor: themeI.backgroundColors.secondary,
+  },
+  buttonPrimary: {
+    paddingHorizontal: themeI.padding.md,
+    paddingVertical: 5,
+    borderRadius: themeI.borderRadius.md,
+    backgroundColor: 'green',
+  },
 });
 export default styles;

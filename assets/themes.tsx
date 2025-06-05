@@ -2,6 +2,7 @@ const themeI = {
   padding: {
     sm: 5,
     md: 10,
+    lg: 15, 
   },
   margin: {
     md: 10
@@ -21,7 +22,8 @@ const themeI = {
     component: '#202020',
     componentTitle: '#303030',
     navbar: '#171717',
-    preview: '#EEEEEE'
+    preview: '#EEEEEE',
+    secondary: '#ffffff20',
   },
   borderColors: {
     default: '#ffffff20',
@@ -34,6 +36,7 @@ const themeI = {
   },
   legendSize: {
     default: 16,
+    md: 24,
   },
   progressBar: {
     background: '#202020',

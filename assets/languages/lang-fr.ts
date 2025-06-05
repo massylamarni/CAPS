@@ -72,5 +72,17 @@ export const lang_fr = {
     this_year: "Cette année",
     since_always: "Depuis toujours",
     from: "De",
-    to: "À"
+    to: "À",
+
+    change_language: "Changer la langue",
+    french: "Français",
+    arabic: "Arabe",
+    english: "Anglais",
+    chinese: "Chinois",
+    tamazight_tifinagh: "Tamazight (Tifinagh)",
+    do_you_want_to_proceed: "Voulez-vous continuer ?",
+    cancel: "Annuler",
+    continue: "Continuer",
+    you_are_about_to_reset_the_database: "Vous êtes sur le point de réinitialiser la base de données",
+    you_are_about_to_change_roles: "Vous êtes sur le point de changer les rôles"
 }

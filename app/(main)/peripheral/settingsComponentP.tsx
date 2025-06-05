@@ -5,6 +5,7 @@ import { useLogs } from '@/utils/logContext';
 import { useLangs } from "@/utils/langContext";
 import Tex from '../base-components/tex';
 import SimpleCard from '../mini-components/simpleCard';
+import CollapsibleButton from '../mini-components/collaplisbleButton';
 
 const TAG = "P/settingsComponent";
 
@@ -15,21 +16,17 @@ export default function SettingsComponentP({ setRole, setDbStats }: { setRole: a
   return (
     <>
       <SimpleCard title={lang["settings"]}>
-        <ButtonListItem
-          onPressE={() => updateLangTo("fr")}
-          label={lang["change_lang_to_fr"]}
-        />
-        <ButtonListItem
-          onPressE={() => updateLangTo("en")}
-          label={lang["change_lang_to_en"]}
-        />
-        <ButtonListItem
-          onPressE={() => updateLangTo("ar")}
-          label={lang["change_lang_to_ar"]}
-        />
+        <CollapsibleButton value={lang["change_language"]} options={[lang["french"], lang["english"], lang["arabic"]]} onPressE={
+          [
+            () => updateLangTo("fr"),
+            () => updateLangTo("en"),
+            () => updateLangTo("ar")
+          ]
+        }/>
         <ButtonListItem
           onPressE={() => setRole((prev: 'CENTRAL' | 'PERIPHERAL') => (prev === 'CENTRAL' ? 'PERIPHERAL' : 'CENTRAL'))}
           label={lang["switch_roles"]}
+          warning={lang["you_are_about_to_change_roles"]}
         />
         <ButtonListItem
           onPressE={() => {
@@ -41,6 +38,7 @@ export default function SettingsComponentP({ setRole, setDbStats }: { setRole: a
             });
           }}
           label={lang["reset_database"]}
+          warning={lang["you_are_about_to_reset_the_database"]}
         />
       </SimpleCard>
 
