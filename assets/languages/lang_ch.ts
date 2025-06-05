@@ -1,4 +1,5 @@
 export const lang_ch = {
+    id_: "ch",
     bluetooth_info: "蓝牙信息",
     status: "状态",
     devices_found: "发现的设备",
@@ -73,6 +74,7 @@ export const lang_ch = {
     since_always: "自始至终",
     from: "从",
     to: "到",
+    change_time_interval: "更改时间间隔",
 
     change_language: "更改语言",
     french: "法语",

@@ -1,4 +1,5 @@
 export const lang_fr = {
+    id_: "fr",
     bluetooth_info: "Infos Bluetooth",
     status: "Statut",
     devices_found: "Appareils trouvés",
@@ -73,6 +74,7 @@ export const lang_fr = {
     since_always: "Depuis toujours",
     from: "De",
     to: "À",
+    change_time_interval: "Changer l'intervalle de temps",
 
     change_language: "Changer la langue",
     french: "Français",

@@ -1,4 +1,5 @@
 export const lang_tif = {
+    id_: "tif",
     bluetooth_info: "ⴱⵍⵓⵜⵓⵙ ⵉⵏⴼⵓⴼⵓⵙⵉⵏ",
     status: "ⴰⵙⵓⴷⵓ",
     devices_found: "ⴰⴷⵔⴰⵔ ⵉⵙⵉⵏ ⴼ ⵉⵙⴰⵏ",
@@ -73,6 +74,7 @@ export const lang_tif = {
     since_always: "ⴰⵣⵡⵉⵍ ⴰⴷⴷⵓⴷ",
     from: "ⴷ",
     to: "ⵏ",
+    change_time_interval: "ⵃⴰⵎ ⵉⵏⵉ ⵏ ⴰⴹⵓⵍ ⵏ ⴰⵙⴻⵏⴰⵡ",
 
     change_language: "ⵙⵉⴳ ⵜⴰⵎⴰⵣⵉⵖⵜ",
     french: "ⴼⵔⴻⵏⵙⵉⵙ",

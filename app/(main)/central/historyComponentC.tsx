@@ -11,18 +11,47 @@ import { useLogs } from '@/utils/logContext';
 import { useLangs } from "@/utils/langContext";
 import { BEHAVIOR_MAPPING } from '@/utils/constants';
 import { useStateLogger as useState } from '@/utils/useStateLogger';
+import CollapsibleButton from '../mini-components/collaplisbleButton';
+import SimpleSubCard from '../mini-components/simpleSubcard';
 
 const TAG = "C/historyComponent";
+
+const getTimeRange = (key?: string): [number, number] => {
+  const now = Date.now();
+  const ONE_DAY = 24 * 60 * 60 * 1000;
+
+  if (key === "since_the_past_24") {
+    return [now - ONE_DAY, now];
+  }
+  else if (key === "since_last_week") {
+    return [now - 7 * ONE_DAY, now];
+  }
+  else if (key === "since_last_month") {
+    const date = new Date(now);
+    date.setMonth(date.getMonth() - 1);
+    return [date.getTime(), now];
+  }
+  else if (key === "this_year") {
+    const date = new Date(now);
+    date.setMonth(0);
+    date.setDate(1);
+    date.setHours(0, 0, 0, 0);
+    return [date.getTime(), now];
+  }
+  else if (key === "since_always") {
+    return [0, now];
+  }
+  
+  return [now - ONE_DAY, now];
+};
+
 
 export default function HistoryComponentC({ historyState, dbStats }: { historyState: HistoryStateC, dbStats: DbStateC["dbStats"]}) {
   const [barChartData, setBarChartData] = useState([0, 0, 0, 0, 0, 0] as HistoryBardChartData["data"], "setBarChartData");
   const [deviceId, setDeviceId] = useState(null);
+  const [timeRange, setTimeRange] = useState("since_the_past_24");
   const { addLog } = useLogs();
   const { lang } = useLangs();
-  const getDefaultTimeRange = () => {
-    const now = Date.now();
-    return [now - (24 * 60 * 60 * 1000), now];
-  };
 
   const {
     lastRow,
@@ -35,7 +64,9 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
     addLog(TAG, `Gettings stats...`);
     setLastRow(await getLastRow());
     if (deviceId) {
-      const [startTime, endTime] = getDefaultTimeRange();
+      const [startTime, endTime] = getTimeRange(timeRange);
+      console.log(new Date(startTime).toDateString());
+      console.log(new Date(endTime).toDateString());
       const _predictionStats = await getPredictionStats(startTime, endTime);
       let found = false;
       _predictionStats.forEach(_predictionStat => {
@@ -52,7 +83,7 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
 
   useEffect(() => {
     updateHistory();
-  }, [dbStats, deviceId]);
+  }, [dbStats, deviceId, timeRange]);
 
   useEffect(() => {
     if (predictionStats) {
@@ -88,17 +119,27 @@ export default function HistoryComponentC({ historyState, dbStats }: { historySt
 
       {deviceId && <SimpleCard title={lang["behavior_stats"]}>
         <View style={styles.HISTORY_CHARTS}>
-          <View style={styles.HISTORY_CHARTS_HEADER}>
-            {/* <Tex style={styles.SUBCOMPONENT_TITLE}>Select TimeRange</Tex>
-            <Tex>Last 1h</Tex> */}
+          <View>
+            <CollapsibleButton value={lang["change_time_interval"]} options={[
+              lang["since_the_past_24"],
+              lang["since_last_week"],
+              lang["since_last_month"],
+              lang["this_year"],
+              lang["since_always"],
+            ]} onPressE={[
+              () => setTimeRange("since_the_past_24"),
+              () => setTimeRange("since_last_week"),
+              () => setTimeRange("since_last_month"),
+              () => setTimeRange("this_year"),
+              () => setTimeRange("since_always"),
+            ]} />
           </View>
           <View style={styles.HISTORY_CHARTS_BODY}>
             {/* <SensorView /> */}
             <View style={styles.STATS_BAR_CHART}>
-              <View style={styles.STATS_BAR_CHART_HEADER}>
-                {/* <Tex style={styles.SUBCOMPONENT_TITLE}>Behvaior count</Tex> */}
-              </View>
-              <HistoryBarChart barChartData={{labels: BEHAVIOR_MAPPING as HistoryBardChartData["labels"], data: barChartData}} />
+              <SimpleSubCard title={`${lang["predicted_behavior_count_by_cattle"]} (${lang[timeRange]})`}>
+                <HistoryBarChart barChartData={{labels: BEHAVIOR_MAPPING as HistoryBardChartData["labels"], data: barChartData}} />  
+              </SimpleSubCard>
             </View>
           </View>
         </View>

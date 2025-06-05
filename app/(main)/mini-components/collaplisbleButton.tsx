@@ -9,19 +9,19 @@ export default function CollapsibleButton({value, options, onPressE}: {value: st
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <>
+    <View style={styles.collabsibleButtonContainer}>
       <TouchableOpacity onPress={() => setIsCollapsed(prev => !prev)} style={styles.buttonListItem}>
         <Tex>{value}</Tex>
         <Icon name={isCollapsed ? 'chevron-down' : 'chevron-right'} color={themeI.legendColors.default} size={themeI.legendSize.default} />
       </TouchableOpacity>
-      {isCollapsed && <View>
+      {isCollapsed && <View style={styles.collapsibleButtonList}>
         {options.map((option, index) => 
-          <TouchableOpacity onPress={() => onPressE[index]()} style={styles.collapsibleButtonItem}>
+          <TouchableOpacity key={index} onPress={() => onPressE[index]()} style={styles.collapsibleButtonItem}>
             <Tex>{option}</Tex>
           </TouchableOpacity>
         )}
       </View>}
-    </>
+    </View>
   );
 }
 

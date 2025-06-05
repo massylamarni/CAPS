@@ -1,4 +1,5 @@
 export const lang_ar = {
+    id_: "ar",
     bluetooth_info: "معلومات البلوتوث",
     status: "الحالة",
     devices_found: "الأجهزة المُكتشفة",
@@ -73,6 +74,7 @@ export const lang_ar = {
     since_always: "منذ البداية",
     from: "من",
     to: "إلى",
+    change_time_interval: "تغيير الفترة الزمنية",
 
     change_language: "تغيير اللغة",
     french: "الفرنسية",

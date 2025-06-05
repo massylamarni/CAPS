@@ -1,4 +1,5 @@
 export const lang_en = {
+    id_: "en",
     bluetooth_info: "Bluetooth info",
     status: "Status",
     devices_found: "Devices found",
@@ -73,6 +74,7 @@ export const lang_en = {
     since_always: "Since always",
     from: "From",
     to: "To",
+    change_time_interval: "Change time interval",
 
     change_language: "Change language",
     french: "French",

@@ -24,6 +24,7 @@ const themeI = {
     navbar: '#171717',
     preview: '#EEEEEE',
     secondary: '#ffffff20',
+    absoluteList: '#282828'
   },
   borderColors: {
     default: '#ffffff20',

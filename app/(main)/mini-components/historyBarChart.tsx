@@ -1,7 +1,5 @@
-import { Dimensions, View } from 'react-native';
 import themeI from '@/assets/themes';
 import { BarChart } from "react-native-gifted-charts";
-import SimpleSubCard from './simpleSubcard';
 import Tex from '../base-components/tex';
 import { useLangs } from "@/utils/langContext";
 
@@ -19,25 +17,23 @@ export default function HistoryBarChart({ barChartData }: { barChartData: Histor
   }));
 
   return(
-    <SimpleSubCard title={`${lang["predicted_behavior_count_by_cattle"]} (${lang["since_the_past_24"]})`}>
-        <BarChart
-          data={formattedData}
-          frontColor="#fff"
-          hideRules
-          adjustToWidth
-          maxValue={Math.max(...data) + 1}
-          xAxisLabelTextStyle={{ color: "#fff", fontSize: 10 }}   
-          xAxisColor={"#fff"}
-          xAxisThickness={0}
-          yAxisLabelWidth={0}
-          yAxisColor={undefined}
-          yAxisThickness={0}
-          barBorderRadius={4}
-          barWidth={41}
-          initialSpacing={0}
-          spacing={22}
-          endSpacing={0}
-        />
-    </SimpleSubCard>
+    <BarChart
+      data={formattedData}
+      frontColor="#fff"
+      hideRules
+      adjustToWidth
+      maxValue={Math.max(...data) + 1}
+      xAxisLabelTextStyle={{ color: "#fff", fontSize: 10 }}   
+      xAxisColor={"#fff"}
+      xAxisThickness={0}
+      yAxisLabelWidth={0}
+      yAxisColor={undefined}
+      yAxisThickness={0}
+      barBorderRadius={4}
+      barWidth={41}
+      initialSpacing={0}
+      spacing={22}
+      endSpacing={0}
+    />
   )
 }

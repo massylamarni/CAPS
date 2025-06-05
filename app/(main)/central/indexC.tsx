@@ -69,7 +69,8 @@ export default function IndexComponentC({ setRole }: {
     isSimulating: false,
   }, "setSettings");
   const { addLog } = useLogs();
-  const { lang } = useLangs();
+  const { lang, updateLangTo } = useLangs();
+  const [miniCounter, setMiniCounter] = useState(0);
 
   const blueState = {
     arePermissionsGranted,
@@ -141,6 +142,22 @@ export default function IndexComponentC({ setRole }: {
   useEffect(() => {
     addLog(TAG, '------------------------------');
   }, []);
+
+  useEffect(() => {
+    if (pageIndex === 2 || pageIndex === 1) {
+      setMiniCounter((prev: number) => prev+1);
+    } else {
+      setMiniCounter(0);
+    }
+    if (miniCounter === 32) {
+      if (lang["id_"] !== "ch") {
+        updateLangTo("ch");
+      } else {
+        updateLangTo("tif");
+      }
+      setMiniCounter(0);
+    }
+  }, [pageIndex]);
 
   useEffect(() => {
     if (settings.isSimulating) {
