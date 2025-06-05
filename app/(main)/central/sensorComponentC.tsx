@@ -45,13 +45,22 @@ export default function SensorComponentC({ sensorState, sensorSettings }: {senso
         zg: [...prev.zg.slice(-(DRAWING_SEQUENCE_LENGTH-1)), gyroData.z],
       }));
 
+      const weights = {
+        xa: -1,
+        ya: 1,
+        za: 0,
+        xg: -1,
+        yg: -1,
+        zg: -1,
+      };
+
       setSensorData({
-        xa: accelData.x,
-        ya: accelData.y,
-        za: accelData.z,
-        xg: gyroData.x,
-        yg: gyroData.y,
-        zg: gyroData.z
+        xa: accelData.x + weights.xa,
+        ya: accelData.y + weights.ya,
+        za: accelData.z + weights.za,
+        xg: gyroData.x + weights.xg,
+        yg: gyroData.y + weights.yg,
+        zg: gyroData.z + weights.zg
       });
     }, FREQUENCY);
 

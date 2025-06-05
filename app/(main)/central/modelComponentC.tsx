@@ -8,7 +8,7 @@ import SimpleCard from '../mini-components/simpleCard';
 import ProbabilityItem from '../mini-components/probabilityItem';
 import { useLogs } from '@/utils/logContext';
 import { useLangs } from "@/utils/langContext";
-import { BEHAVIOR_MAPPING, MIN_A, MAX_A, MIN_G, MAX_G, INPUT_SEQUENCE_LENGTH } from '@/utils/constants';
+import { BEHAVIOR_MAPPING, INPUT_0, INPUT_1, INPUT_2, INPUT_3, INPUT_7, INPUT_8, MIN_A, MAX_A, MIN_G, MAX_G, INPUT_SEQUENCE_LENGTH, RAW_0 } from '@/utils/constants';
 import { useStateLogger as useState } from '@/utils/useStateLogger';
 
 const TAG = "C/modelComponent";
@@ -125,7 +125,7 @@ export default function ModelComponentC({ modelState, receivedData, address }: {
     }
   }
   const processAndMakePrediction = async (buffer: ReceivedSensorDataC[]) => {
-    const preprocessSingleRow = (data: any): number[] => {  // Needs debug
+    const preprocessSingleRow = (data: any): number[] => {
       const normalizedData = {
         xa: (data.xa - MIN_A) / (MAX_A - MIN_A),
         ya: (data.ya - MIN_A) / (MAX_A - MIN_A),
